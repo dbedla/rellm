@@ -1,7 +1,7 @@
 package main
 
 import (
-	"rellm/rellm"
+	"rellm/pkg/rellm"
 )
 
 const (

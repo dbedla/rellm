@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"path/filepath"
-	"rellm/rellm/conversation_storage"
+	"rellm/pkg/rellm/conversation_storage"
 )
 
 type EndpointBuilder struct {

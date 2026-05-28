@@ -2,7 +2,7 @@ package rellm
 
 import (
 	"encoding/json"
-	"rellm/rellm/conversation_storage"
+	"rellm/pkg/rellm/conversation_storage"
 
 	"github.com/rs/zerolog"
 )

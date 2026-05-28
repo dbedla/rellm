@@ -2,7 +2,7 @@ package main
 
 import (
 	"os"
-	"rellm/rellm/utils"
+	"rellm/pkg/utils"
 
 	"github.com/fatih/color"
 )

@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"rellm/rellm/utils"
+	"rellm/pkg/utils"
 )
 
 type ResponseApiEndpoint interface {
