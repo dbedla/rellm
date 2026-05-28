@@ -1,4 +1,4 @@
-package agent
+package rellm
 
 import (
 	"bytes"
@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"rellm/pkg/utils"
+	"rellm/rellm/utils"
 )
 
 type ResponseApiEndpoint interface {

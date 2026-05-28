@@ -1,27 +1,27 @@
 package main
 
 import (
-	"rellm/pkg/agent"
+	"rellm/rellm"
 )
 
 const (
 	baseAgentSysPrompt = `You are a helpful assistant.`
 )
 
-func buildLBaseAgent(workspace string) *agent.Agent {
+func buildLBaseAgent(workspace string) *rellm.Agent {
 
 	agentName := "BaseAgent"
 
-	params := agent.NewConversationParameterBuilder().
+	params := rellm.NewConversationParameterBuilder().
 		Build()
 
-	or := agent.NewCustomResponseEndpoint("http://127.0.0.1", "1234", "/v1/responses", nil)
-	ep := agent.NewEndpointBuilder().
+	or := rellm.NewCustomResponseEndpoint("http://127.0.0.1", "1234", "/v1/responses", nil)
+	ep := rellm.NewEndpointBuilder().
 		WithResponseApiEndpoint(or).
-		WithModel(agent.Model_Gemma_4).
+		WithModel(rellm.Model_Gemma_4).
 		Build()
 
-	baseAgent := agent.NewAgentBuilder().
+	baseAgent := rellm.NewAgentBuilder().
 		WithEndpoint(ep).
 		WithAgentName(agentName).
 		WithWorkspaceDir(workspace).

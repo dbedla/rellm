@@ -1,8 +1,8 @@
-package agent
+package rellm
 
 import (
 	"encoding/json"
-	"rellm/pkg/conversation_storage"
+	"rellm/rellm/conversation_storage"
 
 	"github.com/rs/zerolog"
 )

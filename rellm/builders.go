@@ -1,10 +1,10 @@
-package agent
+package rellm
 
 import (
 	"encoding/json"
 	"net/http"
 	"path/filepath"
-	"rellm/pkg/conversation_storage"
+	"rellm/rellm/conversation_storage"
 )
 
 type EndpointBuilder struct {
