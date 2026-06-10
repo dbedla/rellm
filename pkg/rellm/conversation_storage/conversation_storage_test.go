@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestConversationStorage(t *testing.T) {
@@ -13,7 +15,12 @@ func TestConversationStorage(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create temp dir: %v", err)
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() {
+		err := os.RemoveAll(tempDir)
+		if err != nil {
+			t.Fatalf("failed to remove temp dir: %v", err)
+		}
+	}()
 
 	storage := New(tempDir)
 
@@ -52,8 +59,10 @@ func TestConversationStorage(t *testing.T) {
 	var v1, v2 []any
 	dataOrig, _ := json.Marshal(originalConversation)
 	dataRestored, _ := json.Marshal(restored)
-	json.Unmarshal(dataOrig, &v1)
-	json.Unmarshal(dataRestored, &v2)
+	err = json.Unmarshal(dataOrig, &v1)
+	assert.NoError(t, err)
+	err = json.Unmarshal(dataRestored, &v2)
+	assert.NoError(t, err)
 
 	if !reflect.DeepEqual(v1, v2) {
 		t.Errorf("restored conversation does not match original")
@@ -76,8 +85,10 @@ func TestConversationStorage(t *testing.T) {
 	dataLatest, _ := json.Marshal(latestConversation)
 	dataRestoredLatest, _ := json.Marshal(restoredLatest)
 	var v3, v4 []any
-	json.Unmarshal(dataLatest, &v3)
-	json.Unmarshal(dataRestoredLatest, &v4)
+	err = json.Unmarshal(dataLatest, &v3)
+	assert.NoError(t, err)
+	err = json.Unmarshal(dataRestoredLatest, &v4)
+	assert.NoError(t, err)
 
 	if !reflect.DeepEqual(v3, v4) {
 		t.Errorf("restored latest conversation does not match expected")

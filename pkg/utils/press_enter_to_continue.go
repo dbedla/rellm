@@ -5,21 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
-
-	"github.com/fatih/color"
 )
-
-func PressEnterToContinue() {
-	color.Red("=============  Press Enter to continue... =============")
-	reader := bufio.NewReader(os.Stdin)
-
-	_, errInput := reader.ReadString('\n')
-	if errInput != nil {
-		panic(errInput)
-	}
-
-	color.Red("continue...")
-}
 
 func ReadConsoleInput() string {
 	reader := bufio.NewReader(os.Stdin)

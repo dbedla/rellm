@@ -1,18 +1,18 @@
 BIN_PATH=./output/bin/
-CMD_PATH=./cmd/
+EXAMPLES_PATH=./examples/
 COVERAGE_PATH=./output/coverage/
 COMPLEXITY_PATH=./output/complexity/
 
 go-all: go-build go-test go-bench go-lint go-cyclo go-coverage
 
 go-clean-build: go-clean go-nuke
-	go build -o ./output/bin/ ./cmd/...
+	go build -o ./output/bin/ ./examples/...
 
 go-run-base-agent:
-	go run ${CMD_PATH}base_agent
+	go run ${EXAMPLES_PATH}base_agent
 
 go-build:
-	go build -o ./output/bin/ ./cmd/...
+	go build -o ./output/bin/ ./examples/...
 
 go-test:
 	go test -v ./...
