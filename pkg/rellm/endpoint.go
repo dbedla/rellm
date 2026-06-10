@@ -24,7 +24,8 @@ const (
 	Model_Gpt5_4_mini      Model = "openai/gpt-5.4-mini"
 	Model_Gemini_2_5_flash Model = "google/gemini-2.5-flash"
 
-	Model_Gemma_4 = "google/gemma-4-26b-a4b"
+	Model_Gemma_4_26b_a4b = "google/gemma-4-26b-a4b"
+	Model_gemma_4_12b_qat = "google/gemma-4-12b-qat"
 )
 
 type ClientHttpDo interface {

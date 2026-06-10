@@ -42,21 +42,7 @@ go-clean:
 	rm ${COVERAGE_PATH}* || true
 	rm ${COMPLEXITY_PATH}* || true
 
-# docker-server-build-run-local:
-# 	docker build --platform linux/arm64  -t omnibus-test-server .
-# 	docker run --platform linux/arm64 -p 8080:8080 omnibus-test-server
-
-# docker-server-build-run-remote:
-# 	echo "missing"
-
-# docker-local-purge:
-# 	- docker rm -f $(shell docker ps -aq --filter ancestor=omnibus-test-server:latest)
-# 	- docker rmi -f $(shell docker images -q omnibus-test-server)
-
-# docker-local-build-server-for-linux:
-# 	docker build --platform linux/amd64  -t omnibus-test-server-linux-x64 .
-# 	docker save -o output/docker_img/docker-img-omnibus-test-server-linux-x64.tar omnibus-test-server-linux-x64
-# 	#docker load -i file.tar
-
-# docker-remote-deploy-server-on-linux:
-# 	docker save omnibus-test-server-linux-x64:latest | ssh dawid@192.168.1.17 'docker load && docker rm -f omnibus-test-server-linux-x64 2>/dev/null || true && docker run -d --name omnibus-test-server-linux-x64 -p 8080:8080 omnibus-test-server-linux-x64:latest'
+lms-set-gemma-4-12b:
+	lms get gemma-4-12b-qat --yes
+	lms load gemma-4-12b-qat
+	lms server start --port 1234
