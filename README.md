@@ -2,7 +2,7 @@
 `rellm` is an experimental Go library for building custom agents based on the Responses API endpoint.
 
 ## What endpoint is used?
-Right now, rellm uses the Responses API proposed by OpenAI. But do not worry, this endpoint is implemented by other providers too. LM Studio provides it, so it can be used with models run locally. OpenRouter is a unified API gateway and also implements this endpoint.
+Right now, `rellm` uses the Responses API proposed by OpenAI. But do not worry, this endpoint is implemented by other providers too. LM Studio provides it, so it can be used with models run locally. OpenRouter is a unified API gateway and also implements this endpoint.
 
 ## Can it work with local models?
 Yes.

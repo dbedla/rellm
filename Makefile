@@ -8,9 +8,6 @@ go-all: go-build go-test go-bench go-lint go-cyclo go-coverage
 go-clean-build: go-clean go-nuke
 	go build -o ./output/bin/ ./examples/...
 
-go-run-base-agent:
-	go run ${EXAMPLES_PATH}base_agent
-
 go-build:
 	go build -o ./output/bin/ ./examples/...
 

@@ -7,17 +7,20 @@ import (
 )
 
 func main() {
-	agentLogDir, err := utils.CreateDirInSysTmp("agent-log")
+	baseAgentWorkspace, err := utils.CreateDirInSysTmp("agent-log")
 	if err != nil {
 		panic(err)
 	}
 
-	color.Red("Agent log dir: %s", agentLogDir)
+	color.Red("Agent log dir: %s", baseAgentWorkspace)
 
-	agent := buildLBaseAgent(agentLogDir)
+	fsAgent, err := buildFSAgent(baseAgentWorkspace)
+	if err != nil {
+		panic(err)
+	}
 
 	defer func() {
-		err := agent.StoreConversation()
+		err := fsAgent.StoreConversation()
 		if err != nil {
 			color.Red("unable to store conversation: %s", err)
 		}
@@ -28,8 +31,7 @@ func main() {
 		if msg == "EXIT" {
 			return
 		}
-		llmResp := agent.Ask(msg)
+		llmResp := fsAgent.Ask(msg)
 		color.Blue(llmResp)
 	}
-
 }
