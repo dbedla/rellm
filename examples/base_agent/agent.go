@@ -18,7 +18,7 @@ func buildLBaseAgent(workspace string) *rellm.Agent {
 	or := rellm.NewCustomResponseEndpoint("http://127.0.0.1", "1234", "/v1/responses", nil)
 	ep := rellm.NewEndpointBuilder().
 		WithResponseApiEndpoint(or).
-		WithModel(rellm.Model_gemma_4_12b_qat).
+		WithModel(rellm.Model_Gemma_4_26b_a4b).
 		Build()
 
 	baseAgent := rellm.NewAgentBuilder().

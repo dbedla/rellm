@@ -39,7 +39,7 @@ go-clean:
 	rm ${COVERAGE_PATH}* || true
 	rm ${COMPLEXITY_PATH}* || true
 
-lms-set-gemma-4-12b:
-	lms get gemma-4-12b-qat --yes
-	lms load gemma-4-12b-qat
+lms-set-gemma-4-26b-a4b:
+	lms get gemma-4-26b-a4b --yes
+	lms load google/gemma-4-26b-a4b
 	lms server start --port 1234
