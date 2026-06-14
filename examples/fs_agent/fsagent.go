@@ -31,7 +31,7 @@ func buildFSAgent(workspace string) (*rellm.Agent, error) {
 	or := rellm.NewCustomResponseEndpoint("http://127.0.0.1", "1234", "/v1/responses", nil)
 	ep := rellm.NewEndpointBuilder().
 		WithResponseApiEndpoint(or).
-		WithModel(rellm.Model_Gemma_4_26b_a4b).
+		WithModel(rellm.Model_LMS_Google_Gemma_4_26B_A4B).
 		Build()
 
 	baseAgent := rellm.NewAgentBuilder().

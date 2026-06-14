@@ -16,18 +16,6 @@ type ResponseApiEndpoint interface {
 
 type Model string
 
-const (
-	Model_Gpt5_4                 Model = "openai/gpt-5.4"
-	Model_Gemini_3_flash_preview Model = "google/gemini-3-flash-preview"
-	Model_Claude_sonnet_4_6      Model = "anthropic/claude-sonnet-4-6"
-
-	Model_Gpt5_4_mini      Model = "openai/gpt-5.4-mini"
-	Model_Gemini_2_5_flash Model = "google/gemini-2.5-flash"
-
-	Model_Gemma_4_26b_a4b = "google/gemma-4-26b-a4b"
-	Model_gemma_4_12b_qat = "google/gemma-4-12b-qat"
-)
-
 type ClientHttpDo interface {
 	Do(request *http.Request) (*http.Response, error)
 }
