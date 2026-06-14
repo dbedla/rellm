@@ -6,6 +6,8 @@ import (
 	"rellm/pkg/rellm"
 )
 
+var _ rellm.Toolset = (*FSToolset)(nil)
+
 type FSToolset struct {
 	*LimitedFileSystem
 }
