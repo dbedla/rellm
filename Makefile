@@ -41,5 +41,5 @@ go-clean:
 
 lms-set-gemma-4-26b-a4b:
 	lms get gemma-4-26b-a4b --yes
-	lms load google/gemma-4-26b-a4b
+	lms load gemma-4-26b-a4b
 	lms server start --port 1234

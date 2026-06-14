@@ -61,7 +61,10 @@ func checkReadAccess(path string) error {
 	if err != nil {
 		return fmt.Errorf("directory %s is not readable: %w", path, err)
 	}
-	defer f.Close()
+	err = f.Close()
+	if err != nil {
+		return fmt.Errorf("file %s is not readable: %w", path, err)
+	}
 	return nil
 }
 
@@ -71,7 +74,10 @@ func checkWriteAccess(path string) error {
 	if err != nil {
 		return fmt.Errorf("directory %s is not writable: %w", path, err)
 	}
-	f.Close()
+	err = f.Close()
+	if err != nil {
+		return fmt.Errorf("file %s is not writable: %w", path, err)
+	}
 
 	err = os.Remove(testFile)
 	if err != nil {
