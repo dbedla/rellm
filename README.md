@@ -25,6 +25,15 @@ Recommendations:
  - Local models -> LM Studio
  - Top high-end paid models -> OpenRouter
 
+## Quick start guide: build own agent
+Reference usage of a library can be found:
+- [base agent - chat functionaliuty](./examples/base_agent)
+- [agent with toolset - limited support of file system operation in a restricted path](./examples/fs_agent)
+
+### How to extend an agent with user-defined functions?
+If you want build agent and extend his interaction abilities you can use [Tool & Function Calling] (https://openrouter.ai/docs/guides/features/tool-calling) from `v1/responses` endpoint.
+See [the fs_agent example](./examples/fs_agent) for more details.
+
 ## Quick start guide (run example in `./examples/base_agent`)
 [Install LM Studio](https://lmstudio.ai/download) on your machine; it will be used to run local models.
 Then go to the root of this repository and execute the following commands:

@@ -7,14 +7,14 @@ import (
 )
 
 func main() {
-	baseAgentWorkspace, err := utils.CreateDirInSysTmp("agent-log")
+	fsAgentSpace, err := utils.CreateDirInSysTmp("agent-log")
 	if err != nil {
 		panic(err)
 	}
 
-	color.Red("Agent log dir: %s", baseAgentWorkspace)
+	color.Red("Agent space dir: %s", fsAgentSpace)
 
-	fsAgent, err := buildFSAgent(baseAgentWorkspace)
+	fsAgent, err := buildFSAgent(fsAgentSpace)
 	if err != nil {
 		panic(err)
 	}

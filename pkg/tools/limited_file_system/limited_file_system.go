@@ -32,6 +32,131 @@ func NewLimitedFileSystem(readOnlyDirs []string, outputDir string) (*LimitedFile
 	}, nil
 }
 
+// GetReadOnlyPaths returns a list of paths that are allowed to be read-only from
+func (s *LimitedFileSystem) GetReadOnlyPaths() []string {
+	return s.readOnlyDirs
+}
+
+// GetOutputDir returns the path of the output directory
+// in this directory read, write and delete operation are allowed
+func (s *LimitedFileSystem) GetOutputDir() string {
+	return s.outputDir
+}
+
+// GetFileContentAsString returns the content of the file at the given path as a string
+// error will be returned if the path is outside FSSandbox.readOnlyDirs or FSSandbox.outputDir
+// error will be returned if the path does not exist or is not accessible.
+func (s *LimitedFileSystem) GetFileContentAsString(path string) (string, error) {
+	absPath, err := s.validatePath(path, false)
+	if err != nil {
+		return "", err
+	}
+
+	content, err := os.ReadFile(absPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to read file %s: %w", path, err)
+	}
+
+	return string(content), nil
+}
+
+// GetFileContentAsByte returns the content of the file at the given path as a []byte
+// error will be returned if the path is outside FSSandbox.readOnlyDirs or FSSandbox.outputDir
+// error will be returned if the path does not exist or is not accessible.
+func (s *LimitedFileSystem) GetFileContentAsByte(path string) ([]byte, error) {
+	absPath, err := s.validatePath(path, false)
+	if err != nil {
+		return nil, err
+	}
+
+	content, err := os.ReadFile(absPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read file %s: %w", path, err)
+	}
+
+	return content, nil
+}
+
+// WriteBytesToFile writes bytes into a specific file.
+// if the file does not exist, it will be created
+// error will be if the file already exists
+// error will be returned if the path is outside FSSandbox.outputDir
+func (s *LimitedFileSystem) WriteBytesToFile(content []byte, path string) error {
+	absPath, err := s.validateWritePath(path)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(absPath, content, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write to file %s: %w", path, err)
+	}
+
+	return nil
+}
+
+// DeleteFile delete file.
+// error will be returned if the path is outside FSSandbox.outputDir
+// error will be returned in any other standard case during deletion
+func (s *LimitedFileSystem) DeleteFile(path string) error {
+	absPath, err := s.validateInOutputDir(path)
+	if err != nil {
+		return err
+	}
+
+	info, err := os.Stat(absPath)
+	if err != nil {
+		return fmt.Errorf("failed to get file info for %s: %w", path, err)
+	}
+
+	if info.IsDir() {
+		return fmt.Errorf("path %s is a directory, not a file", path)
+	}
+
+	err = os.Remove(absPath)
+	if err != nil {
+		return fmt.Errorf("failed to delete file %s: %w", path, err)
+	}
+
+	return nil
+}
+
+// ListFilesIn returns a list of files in the given path
+// error will be returned if the path does not exist or is not accessible.
+// error will be returned if the path is not a directory
+// error will be returned if the path is outside FSSandbox.readOnlyDirs or FSSandbox.outputDir
+func (s *LimitedFileSystem) ListFilesIn(path string) ([]string, error) {
+	absPath, err := s.validatePath(path, true)
+	if err != nil {
+		return nil, err
+	}
+
+	entries, err := os.ReadDir(absPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read directory %s: %w", path, err)
+	}
+
+	return filterFiles(absPath, entries), nil
+}
+
+// WriteStringToFile writes a given string into a specific file.
+// if the file does not exist, it will be created
+// error will be if the file already exists
+// error will be returned if the path is outside FSSandbox.outputDir
+func (s *LimitedFileSystem) WriteStringToFile(content, path string) error {
+	absPath, err := s.validateWritePath(path)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(absPath, []byte(content), 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write to file %s: %w", path, err)
+	}
+
+	return nil
+}
+
 func validateReadOnlyDirs(dirs []string) error {
 	for _, dir := range dirs {
 		if err := checkReadAccess(dir); err != nil {
@@ -111,51 +236,6 @@ func (s *LimitedFileSystem) validatePath(path string, shouldBeDir bool) (string,
 	return absPath, nil
 }
 
-// GetReadOnlyPaths returns a list of paths that are allowed to be read-only from
-func (s *LimitedFileSystem) GetReadOnlyPaths() []string {
-	return s.readOnlyDirs
-}
-
-// GetOutputDir returns the path of the output directory
-// in this directory read, write and delete operation are allowed
-func (s *LimitedFileSystem) GetOutputDir() string {
-	return s.outputDir
-}
-
-// GetFileContentAsString returns the content of the file at the given path as a string
-// error will be returned if the path is outside FSSandbox.readOnlyDirs or FSSandbox.outputDir
-// error will be returned if the path does not exist or is not accessible.
-func (s *LimitedFileSystem) GetFileContentAsString(path string) (string, error) {
-	absPath, err := s.validatePath(path, false)
-	if err != nil {
-		return "", err
-	}
-
-	content, err := os.ReadFile(absPath)
-	if err != nil {
-		return "", fmt.Errorf("failed to read file %s: %w", path, err)
-	}
-
-	return string(content), nil
-}
-
-// GetFileContentAsByte returns the content of the file at the given path as a []byte
-// error will be returned if the path is outside FSSandbox.readOnlyDirs or FSSandbox.outputDir
-// error will be returned if the path does not exist or is not accessible.
-func (s *LimitedFileSystem) GetFileContentAsByte(path string) ([]byte, error) {
-	absPath, err := s.validatePath(path, false)
-	if err != nil {
-		return nil, err
-	}
-
-	content, err := os.ReadFile(absPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read file %s: %w", path, err)
-	}
-
-	return content, nil
-}
-
 func (s *LimitedFileSystem) validateWritePath(path string) (string, error) {
 	absPath, err := s.validateInOutputDir(path)
 	if err != nil {
@@ -185,86 +265,6 @@ func (s *LimitedFileSystem) validateInOutputDir(path string) (string, error) {
 	}
 
 	return absPath, nil
-}
-
-// WriteStringToFile writes a given string into a specific file.
-// if the file does not exist, it will be created
-// error will be if the file already exists
-// error will be returned if the path is outside FSSandbox.outputDir
-func (s *LimitedFileSystem) WriteStringToFile(content, path string) error {
-	absPath, err := s.validateWritePath(path)
-	if err != nil {
-		return err
-	}
-
-	err = os.WriteFile(absPath, []byte(content), 0644)
-	if err != nil {
-		return fmt.Errorf("failed to write to file %s: %w", path, err)
-	}
-
-	return nil
-}
-
-// WriteBytesToFile writes bytes into a specific file.
-// if the file does not exist, it will be created
-// error will be if the file already exists
-// error will be returned if the path is outside FSSandbox.outputDir
-func (s *LimitedFileSystem) WriteBytesToFile(content []byte, path string) error {
-	absPath, err := s.validateWritePath(path)
-	if err != nil {
-		return err
-	}
-
-	err = os.WriteFile(absPath, content, 0644)
-	if err != nil {
-		return fmt.Errorf("failed to write to file %s: %w", path, err)
-	}
-
-	return nil
-}
-
-// DeleteFile delete file.
-// error will be returned if the path is outside FSSandbox.outputDir
-// error will be returned in any other standard case during deletion
-func (s *LimitedFileSystem) DeleteFile(path string) error {
-	absPath, err := s.validateInOutputDir(path)
-	if err != nil {
-		return err
-	}
-
-	info, err := os.Stat(absPath)
-	if err != nil {
-		return fmt.Errorf("failed to get file info for %s: %w", path, err)
-	}
-
-	if info.IsDir() {
-		return fmt.Errorf("path %s is a directory, not a file", path)
-	}
-
-	err = os.Remove(absPath)
-	if err != nil {
-		return fmt.Errorf("failed to delete file %s: %w", path, err)
-	}
-
-	return nil
-}
-
-// ListFilesIn returns a list of files in the given path
-// error will be returned if the path does not exist or is not accessible.
-// error will be returned if the path is not a directory
-// error will be returned if the path is outside FSSandbox.readOnlyDirs or FSSandbox.outputDir
-func (s *LimitedFileSystem) ListFilesIn(path string) ([]string, error) {
-	absPath, err := s.validatePath(path, true)
-	if err != nil {
-		return nil, err
-	}
-
-	entries, err := os.ReadDir(absPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read directory %s: %w", path, err)
-	}
-
-	return filterFiles(absPath, entries), nil
 }
 
 func filterFiles(basePath string, entries []os.DirEntry) []string {

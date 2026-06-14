@@ -49,11 +49,11 @@ func buildFSAgent(workspace string) (*rellm.Agent, error) {
 }
 
 func buildFSToolset(readOnlyDir, outputDir string) (*lfs.FSToolset, error) {
-	smallFS, err := lfs.NewLimitedFileSystem([]string{readOnlyDir}, outputDir)
+	fs, err := lfs.NewLimitedFileSystem([]string{readOnlyDir}, outputDir)
 	if err != nil {
 		return nil, err
 	}
-	fsToolset := lfs.NewFSToolset(smallFS)
+	fsToolset := lfs.NewFSToolset(fs)
 
 	return fsToolset, nil
 }
