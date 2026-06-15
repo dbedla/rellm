@@ -24,10 +24,6 @@ func buildFSAgent(workspace string) (*rellm.Agent, error) {
 		return nil, err
 	}
 
-	params := rellm.NewConversationParameterBuilder().
-		WithToolset(fsToolset.BuildTools()).
-		Build()
-
 	or := rellm.NewCustomResponseEndpoint("http://127.0.0.1", "1234", "/v1/responses", nil)
 	ep := rellm.NewEndpointBuilder().
 		WithResponseApiEndpoint(or).
@@ -40,9 +36,8 @@ func buildFSAgent(workspace string) (*rellm.Agent, error) {
 		WithWorkspaceDir(logDir).
 		WithMaxToolsIterationWithoutReturnMessage(20).
 		WithContinueConversation(true).
-		WithConversationParameters(params).
+		WithToolset(fsToolset).
 		WithSystemMessage(fsAgentSysPrompt).
-		WithToolsDispatcher(fsToolset.DispatchTools).
 		Build()
 
 	return baseAgent, nil

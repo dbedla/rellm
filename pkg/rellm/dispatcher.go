@@ -10,9 +10,9 @@ type OutputType struct {
 	Type string `json:"type"`
 }
 
-func (a *Agent) Process(conversation []json.RawMessage) ([]json.RawMessage, string) {
+func (a *Agent) Process(conversation []json.RawMessage, proParameterSet FuncLikeProSet) ([]json.RawMessage, string, *ConversationResponse) {
 	for range a.maxToolsIterationWithoutReturnMessage {
-		conversationResponse, err := a.endpoint.Post(conversation, a.conversationParameters)
+		conversationResponse, err := a.endpoint.Post(conversation, proParameterSet, a.toolset)
 		if err != nil {
 			panic(err)
 		}
@@ -27,12 +27,12 @@ func (a *Agent) Process(conversation []json.RawMessage) ([]json.RawMessage, stri
 
 		// only msg
 		if len(functionResultAsConversation) == 1 && msgRespFromLLM != "" {
-			return conversation, msgRespFromLLM
+			return conversation, msgRespFromLLM, conversationResponse
 		}
 	}
 
 	a.logger.Warn().Msg("too many function call iterations without return message")
-	return conversation, "Warn too many function call iterations without return message"
+	return conversation, "Warn too many function call iterations without return message", nil
 }
 
 func (a *Agent) dispatchFunctionOutput(output []json.RawMessage) ([]json.RawMessage, string) {
@@ -74,13 +74,13 @@ func (a *Agent) handleFunctionCall(o json.RawMessage) []json.RawMessage {
 		return nil
 	}
 
-	if a.toolDispatcher == nil {
+	if a.toolset == nil {
 		a.logger.Warn().Msgf("tool call (%s) but no tools provider)", fn.Name)
 		return nil
 	}
 
 	a.logger.Debug().Msgf("tool call %s with id %s with args: %s", fn.Name, fn.CallId, fn.Arguments)
-	if funcCallResp, ok := a.toolDispatcher(fn.Name, fn.CallId, fn.Arguments); ok {
+	if funcCallResp, ok := a.toolset.DispatchTools(fn.Name, fn.CallId, fn.Arguments); ok {
 		a.logger.Debug().Msgf("tool returned call id: %s, value: %s", funcCallResp.CallId, funcCallResp.Output)
 		var conversationElements []json.RawMessage
 		conversationElements = append(conversationElements, o)

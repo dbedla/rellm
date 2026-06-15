@@ -5,12 +5,12 @@ import (
 )
 
 const (
-	baseAgentSysPrompt = `You are a helpful assistant.`
+	proAgentSysPrompt = `You are a helpful assistant with deep weather knowledge.`
 )
 
-func buildLBaseAgent(workspace string) *rellm.Agent {
+func buildProAgent(workspace string) *rellm.Agent {
 
-	agentName := "BaseAgent"
+	agentName := "ProAgent"
 
 	or := rellm.NewCustomResponseEndpoint("http://127.0.0.1", "1234", "/v1/responses", nil)
 	ep := rellm.NewEndpointBuilder().
@@ -24,8 +24,14 @@ func buildLBaseAgent(workspace string) *rellm.Agent {
 		WithWorkspaceDir(workspace).
 		WithMaxToolsIterationWithoutReturnMessage(20).
 		WithContinueConversation(false).
-		WithSystemMessage(baseAgentSysPrompt).
+		WithSystemMessage(proAgentSysPrompt).
+		WithToolset(&WeatherToolset{}).
 		Build()
 
 	return baseAgent
+}
+
+func SetParameters(req *rellm.ResponsesApiRequest) {
+	req.Reasoning = &rellm.ReasoningConfig{Effort: "low"}
+	req.Temperature = 0.5
 }

@@ -46,35 +46,6 @@ func (b *EndpointBuilder) Build() *Endpoint {
 	return &b.endpoint
 }
 
-// ToDo: should provide template for post req not own structure
-func NewConversationParameterBuilder() *ConversationParameterBuilder {
-	return &ConversationParameterBuilder{}
-}
-
-type ConversationParameterBuilder struct {
-	cp ConversationParameters
-}
-
-func (b *ConversationParameterBuilder) WithToolset(tools []Tool) *ConversationParameterBuilder {
-	b.cp.tools = tools
-	return b
-}
-
-func (b *ConversationParameterBuilder) WithReasoning(effort ReasoningEffort) *ConversationParameterBuilder {
-	if effort == "" {
-		return b
-	}
-
-	r := ReasoningConfig{Effort: string(effort)}
-	b.cp.Reasoning = &r
-
-	return b
-}
-
-func (b *ConversationParameterBuilder) Build() *ConversationParameters {
-	return &b.cp
-}
-
 type AgentBuilder struct {
 	agent Agent
 }
@@ -88,8 +59,8 @@ func (b *AgentBuilder) WithEndpoint(endpoint *Endpoint) *AgentBuilder {
 	return b
 }
 
-func (b *AgentBuilder) WithConversationParameters(params *ConversationParameters) *AgentBuilder {
-	b.agent.conversationParameters = params
+func (b *AgentBuilder) WithToolset(toolset Toolset) *AgentBuilder {
+	b.agent.toolset = toolset
 	return b
 }
 
@@ -105,11 +76,6 @@ func (b *AgentBuilder) WithStdOutLogger() *AgentBuilder {
 
 func (b *AgentBuilder) WithConversationStorage(storage *conversation_storage.ConversationStorage) *AgentBuilder {
 	b.agent.conversationStorage = storage
-	return b
-}
-
-func (b *AgentBuilder) WithToolsDispatcher(tools func(string, callID string, arguments string) (FunctionCallResp, bool)) *AgentBuilder {
-	b.agent.toolDispatcher = tools
 	return b
 }
 
