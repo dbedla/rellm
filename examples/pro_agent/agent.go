@@ -5,12 +5,12 @@ import (
 )
 
 const (
-	askLikeProAgentSysPrompt = `You are a helpful assistant with deep weather knowledge.`
+	proAgentSysPrompt = `You are a helpful assistant with deep weather knowledge.`
 )
 
-func buildLAskLikeProAgent(workspace string) *rellm.Agent {
+func buildProAgent(workspace string) *rellm.Agent {
 
-	agentName := "AskLikeProAgent"
+	agentName := "ProAgent"
 
 	or := rellm.NewCustomResponseEndpoint("http://127.0.0.1", "1234", "/v1/responses", nil)
 	ep := rellm.NewEndpointBuilder().
@@ -24,7 +24,7 @@ func buildLAskLikeProAgent(workspace string) *rellm.Agent {
 		WithWorkspaceDir(workspace).
 		WithMaxToolsIterationWithoutReturnMessage(20).
 		WithContinueConversation(false).
-		WithSystemMessage(askLikeProAgentSysPrompt).
+		WithSystemMessage(proAgentSysPrompt).
 		WithToolset(&WeatherToolset{}).
 		Build()
 

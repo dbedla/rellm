@@ -15,7 +15,7 @@ func main() {
 
 	color.Red("Agent log dir: %s", agentLogDir)
 
-	agent := buildLAskLikeProAgent(agentLogDir)
+	agent := buildProAgent(agentLogDir)
 
 	defer func() {
 		err := agent.StoreConversation()
