@@ -29,8 +29,7 @@ func main() {
 		if msg == "EXIT" {
 			return
 		}
-		llmResp := agent.Ask(msg)
+		llmResp := agent.AskLikePro(msg, SetParameters)
 		color.Blue(llmResp)
 	}
-
 }

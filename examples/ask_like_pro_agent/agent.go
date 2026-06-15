@@ -30,3 +30,8 @@ func buildLAskLikeProAgent(workspace string) *rellm.Agent {
 
 	return baseAgent
 }
+
+func SetParameters(req *rellm.ResponsesApiRequest) {
+	req.Reasoning = &rellm.ReasoningConfig{Effort: "low"}
+	req.Temperature = 0.5
+}
