@@ -34,19 +34,14 @@ const (
 	ReasoningEffort_Medium ReasoningEffort = "medium"
 )
 
-type ConversationParameters struct {
-	Reasoning *ReasoningConfig
-	tools     []Tool
-}
-
-func (e *Endpoint) Post(conversation []json.RawMessage, params *ConversationParameters) (*ConversationResponse, error) {
+func (e *Endpoint) Post(conversation []json.RawMessage, proParameterSet FuncLikeProSet) (*ConversationResponse, error) {
 
 	apiUrl, err := url.Parse(e.rae.GetUrl())
 	if err != nil {
 		return nil, err
 	}
 
-	body, err := e.buildRequestBody(conversation, params)
+	body, err := e.buildRequestBody(conversation, proParameterSet)
 	if err != nil {
 		return nil, err
 	}
@@ -78,21 +73,14 @@ func (e *Endpoint) Post(conversation []json.RawMessage, params *ConversationPara
 	return &conversationResponse, nil
 }
 
-func (e *Endpoint) buildRequestBody(conversation []json.RawMessage, params *ConversationParameters) ([]byte, error) {
+func (e *Endpoint) buildRequestBody(conversation []json.RawMessage, proParameterSet FuncLikeProSet) ([]byte, error) {
 
 	respBody := ResponsesApiRequest{
 		Model: string(e.model),
 		Input: conversation,
 	}
 
-	if params != nil {
-		if params.Reasoning != nil {
-			respBody.Reasoning = params.Reasoning
-		}
-		if len(params.tools) > 0 {
-			respBody.Tools = params.tools
-		}
-	}
+	proParameterSet(&respBody)
 
 	marshaled, err := json.Marshal(respBody)
 	if err != nil {

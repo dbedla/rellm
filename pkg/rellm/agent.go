@@ -20,10 +20,9 @@ type FunctionCallResp struct {
 
 type Agent struct {
 	endpoint                              *Endpoint
-	conversationParameters                *ConversationParameters
+	toolset                               Toolset
 	logger                                *zerolog.Logger
 	conversationStorage                   *conversation_storage.ConversationStorage
-	toolDispatcher                        func(name string, callID string, arguments string) (FunctionCallResp, bool)
 	agentName                             string
 	workspaceDir                          string
 	sysMsg                                string
@@ -33,6 +32,16 @@ type Agent struct {
 }
 
 func (a *Agent) Ask(question string) string {
+
+	nopProParamSet := func(r *ResponsesApiRequest) {}
+	msg := a.AskLikePro(question, nopProParamSet)
+
+	return msg
+}
+
+type FuncLikeProSet func(*ResponsesApiRequest)
+
+func (a *Agent) AskLikePro(question string, proParameterSet FuncLikeProSet) string {
 	a.logger.Info().Msgf("question to agent: %s", question)
 	defer a.logger.Info().Msg("question answered")
 
@@ -45,7 +54,7 @@ func (a *Agent) Ask(question string) string {
 	}
 	conversation = append(conversation, userMsg)
 
-	newConversation, msg := a.Process(conversation)
+	newConversation, msg := a.Process(conversation, proParameterSet)
 
 	a.inMemoryConversation = newConversation
 

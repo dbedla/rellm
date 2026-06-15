@@ -12,9 +12,6 @@ func buildLBaseAgent(workspace string) *rellm.Agent {
 
 	agentName := "BaseAgent"
 
-	params := rellm.NewConversationParameterBuilder().
-		Build()
-
 	or := rellm.NewCustomResponseEndpoint("http://127.0.0.1", "1234", "/v1/responses", nil)
 	ep := rellm.NewEndpointBuilder().
 		WithResponseApiEndpoint(or).
@@ -27,7 +24,6 @@ func buildLBaseAgent(workspace string) *rellm.Agent {
 		WithWorkspaceDir(workspace).
 		WithMaxToolsIterationWithoutReturnMessage(20).
 		WithContinueConversation(false).
-		WithConversationParameters(params).
 		WithSystemMessage(baseAgentSysPrompt).
 		Build()
 
