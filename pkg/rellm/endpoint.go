@@ -34,14 +34,14 @@ const (
 	ReasoningEffort_Medium ReasoningEffort = "medium"
 )
 
-func (e *Endpoint) Post(conversation []json.RawMessage, proParameterSet FuncLikeProSet) (*ConversationResponse, error) {
+func (e *Endpoint) Post(conversation []json.RawMessage, proParameterSet FuncLikeProSet, toolset Toolset) (*ConversationResponse, error) {
 
 	apiUrl, err := url.Parse(e.rae.GetUrl())
 	if err != nil {
 		return nil, err
 	}
 
-	body, err := e.buildRequestBody(conversation, proParameterSet)
+	body, err := e.buildRequestBody(conversation, proParameterSet, toolset)
 	if err != nil {
 		return nil, err
 	}
@@ -73,11 +73,15 @@ func (e *Endpoint) Post(conversation []json.RawMessage, proParameterSet FuncLike
 	return &conversationResponse, nil
 }
 
-func (e *Endpoint) buildRequestBody(conversation []json.RawMessage, proParameterSet FuncLikeProSet) ([]byte, error) {
+func (e *Endpoint) buildRequestBody(conversation []json.RawMessage, proParameterSet FuncLikeProSet, toolset Toolset) ([]byte, error) {
 
 	respBody := ResponsesApiRequest{
 		Model: string(e.model),
 		Input: conversation,
+	}
+
+	if toolset != nil {
+		respBody.Tools = toolset.BuildTools()
 	}
 
 	proParameterSet(&respBody)

@@ -12,7 +12,7 @@ type OutputType struct {
 
 func (a *Agent) Process(conversation []json.RawMessage, proParameterSet FuncLikeProSet) ([]json.RawMessage, string) {
 	for range a.maxToolsIterationWithoutReturnMessage {
-		conversationResponse, err := a.endpoint.Post(conversation, proParameterSet)
+		conversationResponse, err := a.endpoint.Post(conversation, proParameterSet, a.toolset)
 		if err != nil {
 			panic(err)
 		}
