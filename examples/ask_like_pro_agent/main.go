@@ -29,7 +29,12 @@ func main() {
 		if msg == "EXIT" {
 			return
 		}
-		llmResp := agent.AskLikePro(msg, SetParameters)
+		llmResp, rawRsp := agent.AskLikeAPro(msg, SetParameters)
 		color.Blue(llmResp)
+		if rawRsp != nil {
+			color.Yellow("This conversation total cost in tokens: %d\n", rawRsp.Usage.TotalTokens)
+			color.Yellow("input tokens: %d\n", rawRsp.Usage.InputTokens)
+			color.Yellow("output tokens: %d\n", rawRsp.Usage.OutputTokens)
+		}
 	}
 }

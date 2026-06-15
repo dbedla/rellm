@@ -34,14 +34,14 @@ type Agent struct {
 func (a *Agent) Ask(question string) string {
 
 	nopProParamSet := func(r *ResponsesApiRequest) {}
-	msg := a.AskLikePro(question, nopProParamSet)
+	msg, _ := a.AskLikeAPro(question, nopProParamSet)
 
 	return msg
 }
 
 type FuncLikeProSet func(*ResponsesApiRequest)
 
-func (a *Agent) AskLikePro(question string, proParameterSet FuncLikeProSet) string {
+func (a *Agent) AskLikeAPro(question string, proParameterSet FuncLikeProSet) (string, *ConversationResponse) {
 	a.logger.Info().Msgf("question to agent: %s", question)
 	defer a.logger.Info().Msg("question answered")
 
@@ -50,17 +50,17 @@ func (a *Agent) AskLikePro(question string, proParameterSet FuncLikeProSet) stri
 	userMsg, err := PromptMessageToConversation(question, "user")
 	if err != nil {
 		a.logger.Error().Err(err).Msg("unable to build conversation")
-		return err.Error()
+		return err.Error(), nil
 	}
 	conversation = append(conversation, userMsg)
 
-	newConversation, msg := a.Process(conversation, proParameterSet)
+	newConversation, msg, rawResp := a.Process(conversation, proParameterSet)
 
 	a.inMemoryConversation = newConversation
 
 	a.logger.Info().Msgf("message: %s", msg)
 
-	return msg
+	return msg, rawResp
 }
 
 func (a *Agent) CurrentConversation() []json.RawMessage {

@@ -10,7 +10,7 @@ type OutputType struct {
 	Type string `json:"type"`
 }
 
-func (a *Agent) Process(conversation []json.RawMessage, proParameterSet FuncLikeProSet) ([]json.RawMessage, string) {
+func (a *Agent) Process(conversation []json.RawMessage, proParameterSet FuncLikeProSet) ([]json.RawMessage, string, *ConversationResponse) {
 	for range a.maxToolsIterationWithoutReturnMessage {
 		conversationResponse, err := a.endpoint.Post(conversation, proParameterSet, a.toolset)
 		if err != nil {
@@ -27,12 +27,12 @@ func (a *Agent) Process(conversation []json.RawMessage, proParameterSet FuncLike
 
 		// only msg
 		if len(functionResultAsConversation) == 1 && msgRespFromLLM != "" {
-			return conversation, msgRespFromLLM
+			return conversation, msgRespFromLLM, conversationResponse
 		}
 	}
 
 	a.logger.Warn().Msg("too many function call iterations without return message")
-	return conversation, "Warn too many function call iterations without return message"
+	return conversation, "Warn too many function call iterations without return message", nil
 }
 
 func (a *Agent) dispatchFunctionOutput(output []json.RawMessage) ([]json.RawMessage, string) {
