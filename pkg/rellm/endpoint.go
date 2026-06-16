@@ -11,7 +11,7 @@ import (
 	"rellm/pkg/utils"
 )
 
-type ResponseApiEndpoint interface {
+type ResponsesApiEndpoint interface {
 	GetUrl() string
 	GetHttpHeader() http.Header
 }
@@ -25,7 +25,7 @@ type ClientHttpDo interface {
 type Endpoint struct {
 	client ClientHttpDo
 	model  Model
-	rae    ResponseApiEndpoint
+	rae    ResponsesApiEndpoint
 }
 
 type ReasoningEffort string
@@ -93,4 +93,39 @@ func (e *Endpoint) buildRequestBody(conversation []json.RawMessage, proParameter
 	}
 
 	return marshaled, nil
+}
+
+type UniversalResponsesEndpoint struct {
+	baseUrl              string
+	port                 string
+	responsesApiEndpoint string
+	httpHeader           http.Header
+}
+
+func NewUniversalResponsesEndpoint(baseUrl, port, responsesApiEndpoint string, httpHeader http.Header) *UniversalResponsesEndpoint {
+	return &UniversalResponsesEndpoint{
+		baseUrl:              baseUrl,
+		port:                 port,
+		responsesApiEndpoint: responsesApiEndpoint,
+		httpHeader:           httpHeader,
+	}
+}
+
+func (e *UniversalResponsesEndpoint) GetUrl() string {
+	port := ""
+	if e.port != "" {
+		port = ":" + e.port
+	}
+
+	return e.baseUrl + port + e.responsesApiEndpoint
+}
+
+func (e *UniversalResponsesEndpoint) GetHttpHeader() http.Header {
+	if e.httpHeader != nil {
+		return e.httpHeader
+	}
+
+	header := make(http.Header)
+	header.Set("Content-Type", "application/json")
+	return header
 }

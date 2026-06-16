@@ -12,7 +12,7 @@ func buildProAgent(workspace string) (*rellm.Agent, error) {
 
 	agentName := "ProAgent"
 
-	or := rellm.NewCustomResponseEndpoint("http://127.0.0.1", "1234", "/v1/responses", nil)
+	or := rellm.NewUniversalResponsesEndpoint("http://127.0.0.1", "1234", "/v1/responses", nil)
 	ep, err := rellm.NewEndpointBuilder().
 		WithResponseApiEndpoint(or).
 		WithModel(rellm.Model_LMS_Google_Gemma_4_26B_A4B).

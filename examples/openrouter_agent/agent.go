@@ -39,7 +39,7 @@ func buildLBaseAgent(workspace string) (*rellm.Agent, error) {
 		Build()
 }
 
-func newOpenRouterEndpoint() (rellm.ResponseApiEndpoint, error) {
+func newOpenRouterEndpoint() (rellm.ResponsesApiEndpoint, error) {
 	err := godotenv.Load()
 	if err != nil {
 		return nil, fmt.Errorf("cannot load .env: %w", err)
@@ -54,6 +54,6 @@ func newOpenRouterEndpoint() (rellm.ResponseApiEndpoint, error) {
 	header.Set("Content-Type", "application/json")
 	header.Set("Authorization", "Bearer "+apiKey)
 
-	return rellm.NewCustomResponseEndpoint("https://openrouter.ai", "", "/api/v1/responses", header), nil
+	return rellm.NewUniversalResponsesEndpoint("https://openrouter.ai", "", "/api/v1/responses", header), nil
 
 }
