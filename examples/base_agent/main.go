@@ -28,7 +28,11 @@ func main() {
 		if msg == "EXIT" {
 			return
 		}
-		llmResp := agent.Ask(msg)
+		llmResp, err := agent.Ask(msg)
+		if err != nil {
+			color.Red("unable to ask question: %s", err.Error())
+			continue
+		}
 		color.Blue(llmResp)
 	}
 

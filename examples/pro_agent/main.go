@@ -29,7 +29,11 @@ func main() {
 		if msg == "EXIT" {
 			return
 		}
-		llmResp, rawRsp := agent.AskLikeAPro(msg, SetParameters)
+		llmResp, rawRsp, err := agent.AskLikeAPro(msg, SetParameters)
+		if err != nil {
+			color.Red("unable to ask question: %s", err.Error())
+			continue
+		}
 		color.Blue(llmResp)
 		if rawRsp != nil {
 			color.Yellow("This conversation total cost in tokens: %d\n", rawRsp.Usage.TotalTokens)

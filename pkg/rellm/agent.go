@@ -31,17 +31,17 @@ type Agent struct {
 	maxToolsIterationWithoutReturnMessage int
 }
 
-func (a *Agent) Ask(question string) string {
+func (a *Agent) Ask(question string) (string, error) {
 
 	nopProParamSet := func(r *ResponsesApiRequest) {}
-	msg, _ := a.AskLikeAPro(question, nopProParamSet)
+	msg, _, err := a.AskLikeAPro(question, nopProParamSet)
 
-	return msg
+	return msg, err
 }
 
 type FuncLikeProSet func(*ResponsesApiRequest)
 
-func (a *Agent) AskLikeAPro(question string, proParameterSet FuncLikeProSet) (string, *ConversationResponse) {
+func (a *Agent) AskLikeAPro(question string, proParameterSet FuncLikeProSet) (string, *ConversationResponse, error) {
 	a.logger.Info().Msgf("question to agent: %s", question)
 	defer a.logger.Info().Msg("question answered")
 
@@ -49,18 +49,23 @@ func (a *Agent) AskLikeAPro(question string, proParameterSet FuncLikeProSet) (st
 
 	userMsg, err := PromptMessageToConversation(question, "user")
 	if err != nil {
-		a.logger.Error().Err(err).Msg("unable to build conversation")
-		return err.Error(), nil
+		a.logger.Error().Err(err).Msgf("unable to build conversation %s", err.Error())
+		return "", nil, err
 	}
 	conversation = append(conversation, userMsg)
 
-	newConversation, msg, rawResp := a.Process(conversation, proParameterSet)
+	newConversation, msg, rawResp, err := a.Process(conversation, proParameterSet)
+
+	if err != nil {
+		a.logger.Error().Err(err).Msgf("unable to process conversation %s", err.Error())
+		return "", nil, err
+	}
 
 	a.inMemoryConversation = newConversation
 
 	a.logger.Info().Msgf("message: %s", msg)
 
-	return msg, rawResp
+	return msg, rawResp, nil
 }
 
 func (a *Agent) CurrentConversation() []json.RawMessage {
