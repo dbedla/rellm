@@ -26,7 +26,7 @@ func (b *EndpointBuilder) WithModel(model Model) *EndpointBuilder {
 	return b
 }
 
-func (b *EndpointBuilder) WithResponseApiEndpoint(endpoint ResponsesApiEndpoint) *EndpointBuilder {
+func (b *EndpointBuilder) WithResponsesApiEndpoint(endpoint ResponsesApiEndpoint) *EndpointBuilder {
 	b.endpoint.rae = endpoint
 	return b
 }

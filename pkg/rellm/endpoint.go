@@ -36,7 +36,7 @@ const (
 	ReasoningEffort_Medium ReasoningEffort = "medium"
 )
 
-func (e *Endpoint) Post(conversation []json.RawMessage, proParameterSet FuncLikeProSet, toolset Toolset) (*ConversationResponse, error) {
+func (e *Endpoint) Post(conversation []json.RawMessage, proParameterSet FuncLikeProSet, toolset Toolset) (*ResponsesApiResp, error) {
 
 	apiUrl, err := url.Parse(e.rae.GetUrl())
 	if err != nil {
@@ -65,7 +65,7 @@ func (e *Endpoint) Post(conversation []json.RawMessage, proParameterSet FuncLike
 	if err != nil {
 		return nil, err
 	}
-	conversationResponse, err := utils.Unmarshall[ConversationResponse](rawBody)
+	conversationResponse, err := utils.Unmarshall[ResponsesApiResp](rawBody)
 	if err != nil {
 		sb := string(rawBody)
 		return nil, errors.Join(err, fmt.Errorf("%s", sb))
@@ -76,7 +76,7 @@ func (e *Endpoint) Post(conversation []json.RawMessage, proParameterSet FuncLike
 
 func (e *Endpoint) buildRequestBody(conversation []json.RawMessage, proParameterSet FuncLikeProSet, toolset Toolset) ([]byte, error) {
 
-	respBody := ResponsesApiRequest{
+	respBody := ResponsesApiReq{
 		Model: string(e.model),
 		Input: conversation,
 	}

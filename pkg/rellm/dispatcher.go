@@ -10,7 +10,7 @@ type OutputType struct {
 	Type string `json:"type"`
 }
 
-func (a *Agent) Process(conversation []json.RawMessage, proParameterSet FuncLikeProSet) ([]json.RawMessage, string, *ConversationResponse, error) {
+func (a *Agent) Process(conversation []json.RawMessage, proParameterSet FuncLikeProSet) ([]json.RawMessage, string, *ResponsesApiResp, error) {
 	for range a.maxToolsIterationWithoutReturnMessage {
 		conversationResponse, err := a.endpoint.Post(conversation, proParameterSet, a.toolset)
 		if err != nil {

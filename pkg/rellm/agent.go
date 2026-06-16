@@ -33,15 +33,15 @@ type Agent struct {
 
 func (a *Agent) Ask(question string) (string, error) {
 
-	nopProParamSet := func(r *ResponsesApiRequest) {}
+	nopProParamSet := func(r *ResponsesApiReq) {}
 	msg, _, err := a.AskLikeAPro(question, nopProParamSet)
 
 	return msg, err
 }
 
-type FuncLikeProSet func(*ResponsesApiRequest)
+type FuncLikeProSet func(*ResponsesApiReq)
 
-func (a *Agent) AskLikeAPro(question string, proParameterSet FuncLikeProSet) (string, *ConversationResponse, error) {
+func (a *Agent) AskLikeAPro(question string, proParameterSet FuncLikeProSet) (string, *ResponsesApiResp, error) {
 	a.logger.Info().Msgf("question to agent: %s", question)
 	defer a.logger.Info().Msg("question answered")
 
