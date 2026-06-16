@@ -2,6 +2,7 @@ package rellm
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"path/filepath"
 	"rellm/pkg/rellm/conversation_storage"
@@ -30,20 +31,21 @@ func (b *EndpointBuilder) WithResponseApiEndpoint(endpoint ResponseApiEndpoint) 
 	return b
 }
 
-func (b *EndpointBuilder) Build() *Endpoint {
+func (b *EndpointBuilder) Build() (*Endpoint, error) {
 
 	if b.endpoint.client == nil {
 		b.endpoint.client = &http.Client{}
 	}
 
 	if b.endpoint.model == "" {
-		panic("missing model for endpoint")
+		return nil, fmt.Errorf("missing model for endpoint")
+
 	}
 	if b.endpoint.rae == nil {
-		panic("missing response api endpoint for endpoint")
+		return nil, fmt.Errorf("missing response api endpoint for endpoint")
 	}
 
-	return &b.endpoint
+	return &b.endpoint, nil
 }
 
 type AgentBuilder struct {
@@ -61,16 +63,6 @@ func (b *AgentBuilder) WithEndpoint(endpoint *Endpoint) *AgentBuilder {
 
 func (b *AgentBuilder) WithToolset(toolset Toolset) *AgentBuilder {
 	b.agent.toolset = toolset
-	return b
-}
-
-// WithStdOutLogger set logger output as stdout, by default, the log is in the *.log file in the workspace
-func (b *AgentBuilder) WithStdOutLogger() *AgentBuilder {
-	if b.agent.logger != nil {
-		panic("logger already set")
-	}
-	l := NewBaseStdOutLogger()
-	b.agent.logger = &l
 	return b
 }
 
@@ -109,14 +101,14 @@ func (b *AgentBuilder) WithMaxToolsIterationWithoutReturnMessage(max int) *Agent
 	return b
 }
 
-func (b *AgentBuilder) Build() *Agent {
+func (b *AgentBuilder) Build() (*Agent, error) {
 
 	if b.agent.workspaceDir == "" {
-		panic("missing workspaceDir")
+		return nil, fmt.Errorf("missing workspaceDir")
 	}
 
 	if b.agent.endpoint == nil {
-		panic("missing endpoint")
+		return nil, fmt.Errorf("missing endpoint")
 	}
 
 	if b.agent.agentName == "" {
@@ -125,7 +117,10 @@ func (b *AgentBuilder) Build() *Agent {
 
 	if b.agent.logger == nil {
 		fp := filepath.Join(b.agent.workspaceDir, b.agent.agentName+".log")
-		fl := NewBaseFileLogger(fp)
+		fl, err := NewBaseFileLogger(fp)
+		if err != nil {
+			return nil, fmt.Errorf("unable to create logger: %s", err.Error())
+		}
 		l := NewComponentLogger(fl, b.agent.agentName)
 		b.agent.logger = &l
 	}
@@ -140,5 +135,5 @@ func (b *AgentBuilder) Build() *Agent {
 
 	b.agent.logger.Info().Msgf("===== New agent %s ready to action =====", b.agent.agentName)
 
-	return &b.agent
+	return &b.agent, nil
 }
