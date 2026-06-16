@@ -14,7 +14,10 @@ func main() {
 
 	color.Red("Agent log dir: %s", agentLogDir)
 
-	agent := buildLBaseAgent(agentLogDir)
+	agent, err := buildLBaseAgent(agentLogDir)
+	if err != nil {
+		panic(err)
+	}
 
 	defer func() {
 		err := agent.StoreConversation()

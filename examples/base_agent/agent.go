@@ -8,17 +8,20 @@ const (
 	baseAgentSysPrompt = `You are a helpful assistant.`
 )
 
-func buildLBaseAgent(workspace string) *rellm.Agent {
+func buildLBaseAgent(workspace string) (*rellm.Agent, error) {
 
 	agentName := "BaseAgent"
 
 	or := rellm.NewCustomResponseEndpoint("http://127.0.0.1", "1234", "/v1/responses", nil)
-	ep := rellm.NewEndpointBuilder().
+	ep, err := rellm.NewEndpointBuilder().
 		WithResponseApiEndpoint(or).
 		WithModel(rellm.Model_LMS_Google_Gemma_4_26B_A4B).
 		Build()
+	if err != nil {
+		return nil, err
+	}
 
-	baseAgent := rellm.NewAgentBuilder().
+	return rellm.NewAgentBuilder().
 		WithEndpoint(ep).
 		WithAgentName(agentName).
 		WithWorkspaceDir(workspace).
@@ -26,6 +29,4 @@ func buildLBaseAgent(workspace string) *rellm.Agent {
 		WithContinueConversation(false).
 		WithSystemMessage(baseAgentSysPrompt).
 		Build()
-
-	return baseAgent
 }

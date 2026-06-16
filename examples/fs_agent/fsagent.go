@@ -25,12 +25,15 @@ func buildFSAgent(workspace string) (*rellm.Agent, error) {
 	}
 
 	or := rellm.NewCustomResponseEndpoint("http://127.0.0.1", "1234", "/v1/responses", nil)
-	ep := rellm.NewEndpointBuilder().
+	ep, err := rellm.NewEndpointBuilder().
 		WithResponseApiEndpoint(or).
 		WithModel(rellm.Model_LMS_Google_Gemma_4_26B_A4B).
 		Build()
+	if err != nil {
+		return nil, err
+	}
 
-	baseAgent := rellm.NewAgentBuilder().
+	return rellm.NewAgentBuilder().
 		WithEndpoint(ep).
 		WithAgentName(agentName).
 		WithWorkspaceDir(logDir).
@@ -39,8 +42,6 @@ func buildFSAgent(workspace string) (*rellm.Agent, error) {
 		WithToolset(fsToolset).
 		WithSystemMessage(fsAgentSysPrompt).
 		Build()
-
-	return baseAgent, nil
 }
 
 func buildFSToolset(readOnlyDir, outputDir string) (*lfs.FSToolset, error) {
