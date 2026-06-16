@@ -2,8 +2,7 @@ package rellm
 
 import "encoding/json"
 
-// ResponsesCreateRequest represents the POST body for /responses.
-type ResponsesApiRequest struct {
+type ResponsesApiReq struct {
 	// Required
 	Model string `json:"model"`
 
@@ -134,7 +133,7 @@ type ResponseFormat struct {
 type JSONSchemaDefinition struct {
 	// A friendly name for the schema
 	Name string `json:"name"`
-	// Enforce exact schema if supported by the model
+	// Enforce the exact schema if supported by the model
 	Strict bool `json:"strict,omitempty"`
 	// The actual JSON Schema (use a Go struct, map, or raw JSON)
 	Schema interface{} `json:"schema"`
@@ -162,7 +161,7 @@ type AttachmentTool struct {
 	Type string `json:"type"`
 }
 
-type ConversationResponse struct {
+type ResponsesApiResp struct {
 	Id                string            `json:"id"`
 	Object            string            `json:"object"`
 	CreatedAt         int               `json:"created_at"`

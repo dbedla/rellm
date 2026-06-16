@@ -12,9 +12,9 @@ func buildProAgent(workspace string) (*rellm.Agent, error) {
 
 	agentName := "ProAgent"
 
-	or := rellm.NewCustomResponseEndpoint("http://127.0.0.1", "1234", "/v1/responses", nil)
+	or := rellm.NewUniversalResponsesEndpoint("http://127.0.0.1", "1234", "/v1/responses", nil)
 	ep, err := rellm.NewEndpointBuilder().
-		WithResponseApiEndpoint(or).
+		WithResponsesApiEndpoint(or).
 		WithModel(rellm.Model_LMS_Google_Gemma_4_26B_A4B).
 		Build()
 	if err != nil {
@@ -32,7 +32,7 @@ func buildProAgent(workspace string) (*rellm.Agent, error) {
 		Build()
 }
 
-func SetParameters(req *rellm.ResponsesApiRequest) {
+func SetParameters(req *rellm.ResponsesApiReq) {
 	req.Reasoning = &rellm.ReasoningConfig{Effort: "low"}
 	req.Temperature = 0.5
 }
