@@ -64,7 +64,11 @@ func (a *Agent) processOutputItem(o json.RawMessage) ([]json.RawMessage, string,
 
 	switch outputType.Type {
 	case "function_call":
-		return a.handleFunctionCall(o), "", nil
+		fResp, err := a.handleFunctionCall(o)
+		if err != nil {
+			return nil, "", err
+		}
+		return fResp, "", nil
 	case "message":
 		return handleMessage(o)
 	default:
@@ -74,16 +78,16 @@ func (a *Agent) processOutputItem(o json.RawMessage) ([]json.RawMessage, string,
 	}
 }
 
-func (a *Agent) handleFunctionCall(o json.RawMessage) []json.RawMessage {
+func (a *Agent) handleFunctionCall(o json.RawMessage) ([]json.RawMessage, error) {
 	var fn ConversationFunctionOutput
 	if err := json.Unmarshal(o, &fn); err != nil {
 		log.Println(err)
-		return nil
+		return nil, err
 	}
 
 	if a.toolset == nil {
 		a.logger.Warn().Msgf("tool call (%s) but no tools provider)", fn.Name)
-		return nil
+		return nil, fmt.Errorf("tool call (%s) but no tools provider)", fn.Name)
 	}
 
 	a.logger.Debug().Msgf("tool call %s with id %s with args: %s", fn.Name, fn.CallId, fn.Arguments)
@@ -91,13 +95,17 @@ func (a *Agent) handleFunctionCall(o json.RawMessage) []json.RawMessage {
 		a.logger.Debug().Msgf("tool returned call id: %s, value: %s", funcCallResp.CallId, funcCallResp.Output)
 		var conversationElements []json.RawMessage
 		conversationElements = append(conversationElements, o)
-		conversationElements = append(conversationElements, ToRawJsonMsg(funcCallResp))
-		return conversationElements
+		rawFuncCallResp, err := json.Marshal(funcCallResp)
+		if err != nil {
+			return nil, err
+		}
+		conversationElements = append(conversationElements, rawFuncCallResp)
+		return conversationElements, nil
 	} else {
 		fmt.Printf("unknown function call: %s\n", fn.Name)
 	}
 
-	return nil
+	return nil, nil
 }
 
 func handleMessage(o json.RawMessage) ([]json.RawMessage, string, error) {
@@ -115,7 +123,11 @@ func handleMessage(o json.RawMessage) ([]json.RawMessage, string, error) {
 	var msgRespFromLLM string
 	for _, content := range msg.Content {
 		assistantMsg := UserMessage{Role: "assistant", Content: content.Text}
-		conversationElements = append(conversationElements, ToRawJsonMsg(assistantMsg))
+		rawAssistantMsg, err := json.Marshal(assistantMsg)
+		if err != nil {
+			return nil, "", err
+		}
+		conversationElements = append(conversationElements, rawAssistantMsg)
 		msgRespFromLLM = assistantMsg.Content
 	}
 
@@ -148,12 +160,4 @@ type ConversationMessageOutput struct {
 type UserMessage struct {
 	Role    string `json:"role"`
 	Content string `json:"content"`
-}
-
-func ToRawJsonMsg(fcr any) json.RawMessage {
-	b, err := json.Marshal(fcr)
-	if err != nil {
-		panic(err)
-	}
-	return b
 }
