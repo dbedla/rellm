@@ -125,7 +125,10 @@ func (b *AgentBuilder) Build() *Agent {
 
 	if b.agent.logger == nil {
 		fp := filepath.Join(b.agent.workspaceDir, b.agent.agentName+".log")
-		fl := NewBaseFileLogger(fp)
+		fl, err := NewBaseFileLogger(fp)
+		if err != nil {
+			panic(err)
+		}
 		l := NewComponentLogger(fl, b.agent.agentName)
 		b.agent.logger = &l
 	}

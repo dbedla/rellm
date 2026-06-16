@@ -6,16 +6,16 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func NewBaseFileLogger(pathToFile string) zerolog.Logger {
+func NewBaseFileLogger(pathToFile string) (zerolog.Logger, error) {
 	file, err := os.OpenFile(pathToFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
-		panic(err)
+		return zerolog.Logger{}, err
 	}
 
 	return zerolog.New(file).
 		With().
 		Timestamp().
-		Logger()
+		Logger(), nil
 }
 
 func NewComponentLogger(base zerolog.Logger, component string) zerolog.Logger {

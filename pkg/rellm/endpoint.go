@@ -3,6 +3,8 @@ package rellm
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -61,13 +63,12 @@ func (e *Endpoint) Post(conversation []json.RawMessage, proParameterSet FuncLike
 	defer utils.CloseAndLogIfError_DEFER_ME(resp.Body)
 	rawBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		panic("error reading body: " + err.Error())
+		return nil, err
 	}
 	conversationResponse, err := utils.Unmarshall[ConversationResponse](rawBody)
 	if err != nil {
 		sb := string(rawBody)
-		utils.PrintPrettyJsonFromString(&sb)
-		panic(err)
+		return nil, errors.Join(err, fmt.Errorf("%s", sb))
 	}
 
 	return &conversationResponse, nil
