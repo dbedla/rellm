@@ -9,13 +9,13 @@ import (
 
 type Toolset interface {
 	BuildTools() []Tool
-	DispatchTools(name string, callID string, arguments string) (FunctionCallResp, bool)
+	DispatchTools(name string, callID string, arguments json.RawMessage) (FunctionCallResp, bool)
 }
 
 type FunctionCallResp struct {
-	Type   string `json:"type"`
-	CallId string `json:"call_id"`
-	Output string `json:"output"`
+	Type   string          `json:"type"`
+	CallId string          `json:"call_id"`
+	Output json.RawMessage `json:"output"`
 }
 
 type Agent struct {
@@ -104,8 +104,9 @@ func (a *Agent) StoreConversation() error {
 func FuncResultToFunctionCallResp(callId string, funcResult any) FunctionCallResp {
 	b, err := json.Marshal(funcResult)
 	if err != nil {
-		return FunctionCallResp{Type: "function_call_output", CallId: callId, Output: "unable to execute function; " + err.Error()}
+		errorMsg, _ := json.Marshal("unable to execute function; " + err.Error())
+		return FunctionCallResp{Type: "function_call_output", CallId: callId, Output: errorMsg}
 	}
 
-	return FunctionCallResp{Type: "function_call_output", CallId: callId, Output: string(b)}
+	return FunctionCallResp{Type: "function_call_output", CallId: callId, Output: b}
 }

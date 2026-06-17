@@ -3,11 +3,23 @@ package rellm
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 )
 
-type OutputType struct {
-	Type string `json:"type"`
+type OutputItem struct {
+	Type   string `json:"type"`
+	Status string `json:"status"`
+	// Message fields
+	Role    string `json:"role,omitempty"`
+	Content []struct {
+		Type        string        `json:"type"`
+		Text        string        `json:"text"`
+		Annotations []interface{} `json:"annotations"`
+		Logprobs    []interface{} `json:"logprobs"`
+	} `json:"content,omitempty"`
+	// Function call fields
+	Name      string          `json:"name,omitempty"`
+	Arguments json.RawMessage `json:"arguments,omitempty"`
+	CallId    string          `json:"call_id,omitempty"`
 }
 
 func (a *Agent) Process(conversation []json.RawMessage, proParameterSet FuncLikeProSet) ([]json.RawMessage, string, *ResponsesApiResp, error) {
@@ -43,7 +55,12 @@ func (a *Agent) dispatchFunctionOutput(output []json.RawMessage) ([]json.RawMess
 	var msgRespFromLLM string
 
 	for _, o := range output {
-		elements, msg, err := a.processOutputItem(o)
+		var item OutputItem
+		if err := json.Unmarshal(o, &item); err != nil {
+			return nil, "", err
+		}
+
+		elements, msg, err := a.processOutputItem(item, o)
 		if err != nil {
 			return nil, "", err
 		}
@@ -56,45 +73,34 @@ func (a *Agent) dispatchFunctionOutput(output []json.RawMessage) ([]json.RawMess
 	return conversationElements, msgRespFromLLM, nil
 }
 
-func (a *Agent) processOutputItem(o json.RawMessage) ([]json.RawMessage, string, error) {
-	var outputType OutputType
-	if err := json.Unmarshal(o, &outputType); err != nil {
-		return nil, "", err
-	}
-
-	switch outputType.Type {
+func (a *Agent) processOutputItem(item OutputItem, raw json.RawMessage) ([]json.RawMessage, string, error) {
+	switch item.Type {
 	case "function_call":
-		fResp, err := a.handleFunctionCall(o)
+		fResp, err := a.handleFunctionCall(item, raw)
 		if err != nil {
 			return nil, "", err
 		}
 		return fResp, "", nil
 	case "message":
-		return handleMessage(o)
+		return handleMessage(item)
 	default:
 		//TODO: handle other output: reasoning
-		a.logger.Warn().Msgf("unknown output type: %s", outputType.Type)
+		a.logger.Warn().Msgf("unknown output type: %s", item.Type)
 		return nil, "", nil
 	}
 }
 
-func (a *Agent) handleFunctionCall(o json.RawMessage) ([]json.RawMessage, error) {
-	var fn ConversationFunctionOutput
-	if err := json.Unmarshal(o, &fn); err != nil {
-		log.Println(err)
-		return nil, err
-	}
-
+func (a *Agent) handleFunctionCall(fn OutputItem, raw json.RawMessage) ([]json.RawMessage, error) {
 	if a.toolset == nil {
 		a.logger.Warn().Msgf("tool call (%s) but no tools provider)", fn.Name)
 		return nil, fmt.Errorf("tool call (%s) but no tools provider)", fn.Name)
 	}
 
-	a.logger.Debug().Msgf("tool call %s with id %s with args: %s", fn.Name, fn.CallId, fn.Arguments)
+	a.logger.Debug().Msgf("tool call %s with id %s with args: %s", fn.Name, fn.CallId, string(fn.Arguments))
 	if funcCallResp, ok := a.toolset.DispatchTools(fn.Name, fn.CallId, fn.Arguments); ok {
-		a.logger.Debug().Msgf("tool returned call id: %s, value: %s", funcCallResp.CallId, funcCallResp.Output)
+		a.logger.Debug().Msgf("tool returned call id: %s, value: %s", funcCallResp.CallId, string(funcCallResp.Output))
 		var conversationElements []json.RawMessage
-		conversationElements = append(conversationElements, o)
+		conversationElements = append(conversationElements, raw)
 		rawFuncCallResp, err := json.Marshal(funcCallResp)
 		if err != nil {
 			return nil, err
@@ -108,12 +114,7 @@ func (a *Agent) handleFunctionCall(o json.RawMessage) ([]json.RawMessage, error)
 	return nil, nil
 }
 
-func handleMessage(o json.RawMessage) ([]json.RawMessage, string, error) {
-	var msg ConversationMessageOutput
-	if err := json.Unmarshal(o, &msg); err != nil {
-		return nil, "", err
-	}
-
+func handleMessage(msg OutputItem) ([]json.RawMessage, string, error) {
 	if len(msg.Content) > 1 {
 		fmt.Printf("Too many messages in response")
 		return nil, "", fmt.Errorf("too many messages in response")
@@ -132,29 +133,6 @@ func handleMessage(o json.RawMessage) ([]json.RawMessage, string, error) {
 	}
 
 	return conversationElements, msgRespFromLLM, nil
-}
-
-type ConversationFunctionOutput struct {
-	Id        string `json:"id"`
-	Type      string `json:"type"`
-	Status    string `json:"status"`
-	CallId    string `json:"call_id"`
-	Name      string `json:"name"`
-	Arguments string `json:"arguments"`
-}
-
-type ConversationMessageOutput struct {
-	Id      string `json:"id"`
-	Type    string `json:"type"`
-	Role    string `json:"role"`
-	Status  string `json:"status"`
-	Content []struct {
-		Type        string        `json:"type"`
-		Text        string        `json:"text"`
-		Annotations []interface{} `json:"annotations"`
-		Logprobs    []interface{} `json:"logprobs"`
-	} `json:"content"`
-	Phase string `json:"phase"`
 }
 
 type UserMessage struct {
