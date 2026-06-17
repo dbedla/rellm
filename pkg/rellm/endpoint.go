@@ -8,7 +8,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"rellm/pkg/utils"
 )
 
 type ResponsesApiEndpoint interface {
@@ -60,12 +59,12 @@ func (e *Endpoint) Post(conversation []json.RawMessage, proParameterSet FuncLike
 		return nil, err
 	}
 
-	defer utils.CloseAndLogIfError_DEFER_ME(resp.Body)
+	defer closeAndLogIfError_DEFER_ME(resp.Body)
 	rawBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
-	conversationResponse, err := utils.Unmarshall[ResponsesApiResp](rawBody)
+	conversationResponse, err := unmarshall[ResponsesApiResp](rawBody)
 	if err != nil {
 		sb := string(rawBody)
 		return nil, errors.Join(err, fmt.Errorf("%s", sb))
@@ -128,4 +127,21 @@ func (e *UniversalResponsesEndpoint) GetHttpHeader() http.Header {
 	header := make(http.Header)
 	header.Set("Content-Type", "application/json")
 	return header
+}
+
+func unmarshall[K any](rawBody []byte) (K, error) {
+	var data K
+	err := json.Unmarshal(rawBody, &data)
+	if err != nil {
+		return *new(K), fmt.Errorf("error unmarshalling: %s; unmarshaling type %T; raw: %s", err, data, string(rawBody))
+	}
+
+	return data, nil
+}
+
+func closeAndLogIfError_DEFER_ME(closeMe io.Closer) {
+	err := closeMe.Close()
+	if err != nil {
+		fmt.Printf("error closing: %s\n", err)
+	}
 }
