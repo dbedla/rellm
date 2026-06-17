@@ -17,12 +17,12 @@ func buildLBaseAgent(workspace string) (*rellm.Agent, error) {
 
 	agentName := "OpenRouterAgent"
 
-	or, err := newOpenRouterEndpoint()
+	orEndpoint, err := newOpenRouterEndpoint()
 	if err != nil {
 		return nil, err
 	}
 	ep, err := rellm.NewEndpointBuilder().
-		WithResponsesApiEndpoint(or).
+		WithResponsesApiEndpoint(orEndpoint).
 		WithModel(rellm.Model_OpenRouter_Google_Gemini_3_1_Flash_Lite).
 		Build()
 	if err != nil {
