@@ -130,7 +130,7 @@ func (f *FSToolset) BuildTools() []rellm.Tool {
 	}
 }
 
-func (f *FSToolset) DispatchTools(name string, callID string, arguments string) (rellm.FunctionCallResp, bool) {
+func (f *FSToolset) DispatchTools(name string, callID string, arguments json.RawMessage) (rellm.FunctionCallResp, bool) {
 	switch name {
 	case "FSToolset.GetReadOnlyPaths":
 		return rellm.FuncResultToFunctionCallResp(callID, f.GetReadOnlyPaths()), true
@@ -140,7 +140,7 @@ func (f *FSToolset) DispatchTools(name string, callID string, arguments string) 
 		var args struct {
 			Path string `json:"path"`
 		}
-		if err := json.Unmarshal([]byte(arguments), &args); err != nil {
+		if err := json.Unmarshal(arguments, &args); err != nil {
 			return rellm.FuncResultToFunctionCallResp(callID, fmt.Sprintf("error: %s", err)), true
 		}
 		res, err := f.GetFileContentAsString(args.Path)
@@ -152,7 +152,7 @@ func (f *FSToolset) DispatchTools(name string, callID string, arguments string) 
 		var args struct {
 			Path string `json:"path"`
 		}
-		if err := json.Unmarshal([]byte(arguments), &args); err != nil {
+		if err := json.Unmarshal(arguments, &args); err != nil {
 			return rellm.FuncResultToFunctionCallResp(callID, fmt.Sprintf("error: %s", err)), true
 		}
 		res, err := f.GetFileContentAsByte(args.Path)
@@ -165,7 +165,7 @@ func (f *FSToolset) DispatchTools(name string, callID string, arguments string) 
 			Content string `json:"content"`
 			Path    string `json:"path"`
 		}
-		if err := json.Unmarshal([]byte(arguments), &args); err != nil {
+		if err := json.Unmarshal(arguments, &args); err != nil {
 			return rellm.FuncResultToFunctionCallResp(callID, fmt.Sprintf("error: %s", err)), true
 		}
 		err := f.WriteStringToFile(args.Content, args.Path)
@@ -178,7 +178,7 @@ func (f *FSToolset) DispatchTools(name string, callID string, arguments string) 
 			Content []byte `json:"content"`
 			Path    string `json:"path"`
 		}
-		if err := json.Unmarshal([]byte(arguments), &args); err != nil {
+		if err := json.Unmarshal(arguments, &args); err != nil {
 			return rellm.FuncResultToFunctionCallResp(callID, fmt.Sprintf("error: %s", err)), true
 		}
 		err := f.WriteBytesToFile(args.Content, args.Path)
@@ -190,7 +190,7 @@ func (f *FSToolset) DispatchTools(name string, callID string, arguments string) 
 		var args struct {
 			Path string `json:"path"`
 		}
-		if err := json.Unmarshal([]byte(arguments), &args); err != nil {
+		if err := json.Unmarshal(arguments, &args); err != nil {
 			return rellm.FuncResultToFunctionCallResp(callID, fmt.Sprintf("error: %s", err)), true
 		}
 		err := f.DeleteFile(args.Path)
@@ -202,7 +202,7 @@ func (f *FSToolset) DispatchTools(name string, callID string, arguments string) 
 		var args struct {
 			Path string `json:"path"`
 		}
-		if err := json.Unmarshal([]byte(arguments), &args); err != nil {
+		if err := json.Unmarshal(arguments, &args); err != nil {
 			return rellm.FuncResultToFunctionCallResp(callID, fmt.Sprintf("error: %s", err)), true
 		}
 		res, err := f.ListFilesIn(args.Path)

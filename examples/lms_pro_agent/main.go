@@ -7,6 +7,7 @@ import (
 )
 
 func main() {
+
 	agentLogDir, err := utils.CreateDirInSysTmp("agent-log")
 	if err != nil {
 		panic(err)
@@ -14,7 +15,7 @@ func main() {
 
 	color.Red("Agent log dir: %s", agentLogDir)
 
-	agent, err := buildLBaseAgent(agentLogDir)
+	agent, err := buildProAgent(agentLogDir)
 	if err != nil {
 		panic(err)
 	}
@@ -27,16 +28,24 @@ func main() {
 	}()
 
 	for {
-		msg := utils.ReadConsoleInput()
+		msg, err := utils.ReadConsoleInput()
+		if err != nil {
+			color.Red("unable to read console input: %s", err)
+			return
+		}
 		if msg == "EXIT" {
 			return
 		}
-		llmResp, err := agent.Ask(msg)
+		llmResp, rawRsp, err := agent.AskLikeAPro(msg, SetParameters)
 		if err != nil {
 			color.Red("unable to ask question: %s", err.Error())
 			continue
 		}
 		color.Blue(llmResp)
+		if rawRsp != nil {
+			color.Yellow("This conversation total cost in tokens: %d\n", rawRsp.Usage.TotalTokens)
+			color.Yellow("input tokens: %d\n", rawRsp.Usage.InputTokens)
+			color.Yellow("output tokens: %d\n", rawRsp.Usage.OutputTokens)
+		}
 	}
-
 }

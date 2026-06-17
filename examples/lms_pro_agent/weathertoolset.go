@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"rellm/pkg/rellm"
 )
 
@@ -23,7 +24,7 @@ func (w *WeatherToolset) BuildTools() []rellm.Tool {
 	}
 }
 
-func (w *WeatherToolset) DispatchTools(name string, callID string, arguments string) (rellm.FunctionCallResp, bool) {
+func (w *WeatherToolset) DispatchTools(name string, callID string, arguments json.RawMessage) (rellm.FunctionCallResp, bool) {
 	switch name {
 	case "WeatherToolset.GetWeather":
 		res, err := GetWeather()

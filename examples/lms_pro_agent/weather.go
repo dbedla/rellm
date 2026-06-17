@@ -1,9 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"net/http"
-	"rellm/pkg/utils"
 )
 
 func GetWeather() (string, error) {
@@ -11,7 +11,12 @@ func GetWeather() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer utils.CloseAndLogIfError_DEFER_ME(resp.Body)
+	defer func() {
+		err := resp.Body.Close()
+		if err != nil {
+			fmt.Printf("error closing: %s\n", err)
+		}
+	}()
 
 	raw, err := io.ReadAll(resp.Body)
 	if err != nil {

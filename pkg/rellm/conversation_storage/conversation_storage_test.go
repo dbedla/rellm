@@ -45,7 +45,8 @@ func TestConversationStorage(t *testing.T) {
 
 	// We need to wait a second to ensure different timestamps if we store again
 	// but for single store we can just find the file
-	files, _ := os.ReadDir(tempDir)
+	files, err := os.ReadDir(tempDir)
+	assert.NoError(t, err)
 	var fileName string
 	for _, f := range files {
 		fileName = f.Name()
@@ -57,8 +58,10 @@ func TestConversationStorage(t *testing.T) {
 	}
 
 	var v1, v2 []any
-	dataOrig, _ := json.Marshal(originalConversation)
-	dataRestored, _ := json.Marshal(restored)
+	dataOrig, err := json.Marshal(originalConversation)
+	assert.NoError(t, err)
+	dataRestored, err := json.Marshal(restored)
+	assert.NoError(t, err)
 	err = json.Unmarshal(dataOrig, &v1)
 	assert.NoError(t, err)
 	err = json.Unmarshal(dataRestored, &v2)
@@ -82,8 +85,10 @@ func TestConversationStorage(t *testing.T) {
 		t.Errorf("RestoreLatest failed: %v", err)
 	}
 
-	dataLatest, _ := json.Marshal(latestConversation)
-	dataRestoredLatest, _ := json.Marshal(restoredLatest)
+	dataLatest, err := json.Marshal(latestConversation)
+	assert.NoError(t, err)
+	dataRestoredLatest, err := json.Marshal(restoredLatest)
+	assert.NoError(t, err)
 	var v3, v4 []any
 	err = json.Unmarshal(dataLatest, &v3)
 	assert.NoError(t, err)
