@@ -7,9 +7,12 @@ import (
 	"strings"
 )
 
-func ReadConsoleInput() string {
+func ReadConsoleInput() (string, error) {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("user input:\n")
-	input, _ := reader.ReadString('\n')
-	return strings.TrimSpace(input)
+	input, err := reader.ReadString('\n')
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(input), nil
 }

@@ -27,7 +27,11 @@ func main() {
 	}()
 
 	for {
-		msg := utils.ReadConsoleInput()
+		msg, err := utils.ReadConsoleInput()
+		if err != nil {
+			color.Red("unable to read console input: %s", err)
+			return
+		}
 		if msg == "EXIT" {
 			return
 		}
