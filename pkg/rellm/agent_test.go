@@ -175,14 +175,18 @@ func TestAgentAskLikeAProToolsCall(t *testing.T) {
 	assert.NoError(t, err, "failed to ask")
 
 	assert.NotNil(t, respMsg, "response message should not be nil")
-	//assert.Equal(t, "The first tool call to `GetStaticData` returned the value `42`. The second tool call to `GetDataFor` with the input \\\"the meaning of 42\\\" returned a list containing `[\\\"abc\\\", \\\"def\\\"]`. Therefore, based on these specific tool outputs, the data associated with the value 42 is \\\"abc\\\" and \\\"def\\\".", respMsg, "response message should match")
+	assert.Equal(t, "The first tool call to `GetStaticData` returned the value `42`. The second tool call to `GetDataFor` with the input \"the meaning of 42\" returned a list containing `[\"abc\", \"def\"]`. Therefore, based on these specific tool outputs, the data associated with the value 42 is \"abc\" and \"def\".", respMsg, "response message should match")
 
 	assert.NotNil(t, resp, "response should not be nil")
 
-	//jsonResp, err := json.Marshal(resp)
-	//assert.NoError(t, err, "failed to marshal response")
-	//assert.JSONEq(t, goldenProRespA3, string(jsonResp))
+	jsonResp, err := json.Marshal(resp)
+	assert.NoError(t, err, "failed to marshal response")
+	assert.JSONEq(t, goldenProRespA3, string(jsonResp))
 
+}
+
+func TestTooManyFunctionCall(t *testing.T) {
+	assert.True(t, false)
 }
 
 func TestFuncResultToFunctionCallRespSerializesOutputAsString(t *testing.T) {
