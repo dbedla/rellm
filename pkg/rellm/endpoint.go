@@ -64,6 +64,14 @@ func (e *Endpoint) Post(conversation []json.RawMessage, proParameterSet FuncLike
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Println(" === RESP ===")
+	//b, err := json.Marshal(rawRsp)
+	//if err != nil {
+	//	panic(err)
+	//}
+	fmt.Println(string(rawBody))
+
 	conversationResponse, err := unmarshall[ResponsesApiResp](rawBody)
 	if err != nil {
 		sb := string(rawBody)

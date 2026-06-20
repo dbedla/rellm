@@ -1,0 +1,146 @@
+{
+  "id": "resp_dea00a14f9e8dae037ae6aa28b0c3c58e289f2b05f074cb6",
+  "object": "response",
+  "created_at": 1781949323,
+  "model": "google/gemma-4-26b-a4b",
+  "status": "completed",
+  "completed_at": 1781949325,
+  "output": [
+    {
+      "id": "rs_jyb0fwf8mfn2jncgit4j4e",
+      "type": "reasoning",
+      "status": "completed",
+      "summary": [],
+      "content": [
+        {
+          "type": "reasoning_text",
+          "text": "\nThe user said \"Hi\". This is a standard greeting. I should respond with a friendly and helpful greeting to initiate the conversation.\n\nPlan:\n1. Acknowledge the greeting.\n2. Offer assistance."
+        }
+      ]
+    },
+    {
+      "id": "msg_mk6l1gh3wafh4s5d9jemw",
+      "type": "message",
+      "role": "assistant",
+      "status": "completed",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "Hello! How can I help you today?",
+          "annotations": [],
+          "logprobs": []
+        }
+      ]
+    }
+  ],
+  "error": null,
+  "incomplete_details": null,
+  "tools": [
+    {
+      "type": "function",
+      "name": "GetDataFor",
+      "description": "Get data for a specific input",
+      "strict": false,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": "",
+            "description": ""
+          },
+          "to": {
+            "type": "",
+            "description": ""
+          },
+          "subject": {
+            "type": "",
+            "description": ""
+          },
+          "body": {
+            "type": "",
+            "description": ""
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "type": "function",
+      "name": "GetStaticData",
+      "description": "Get static data",
+      "strict": false,
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": "",
+            "description": ""
+          },
+          "to": {
+            "type": "",
+            "description": ""
+          },
+          "subject": {
+            "type": "",
+            "description": ""
+          },
+          "body": {
+            "type": "",
+            "description": ""
+          }
+        },
+        "required": null,
+        "additionalProperties": false
+      }
+    }
+  ],
+  "tool_choice": "auto",
+  "parallel_tool_calls": true,
+  "max_output_tokens": null,
+  "temperature": 0.5,
+  "top_p": 0.95,
+  "presence_penalty": 0,
+  "frequency_penalty": 1.1,
+  "top_logprobs": 0,
+  "max_tool_calls": null,
+  "metadata": {},
+  "background": false,
+  "previous_response_id": null,
+  "service_tier": "default",
+  "truncation": "auto",
+  "store": true,
+  "instructions": null,
+  "text": {
+    "format": {
+      "type": "text"
+    }
+  },
+  "reasoning": {
+    "effort": "low",
+    "summary": null
+  },
+  "safety_identifier": null,
+  "prompt_cache_key": null,
+  "user": null,
+  "usage": {
+    "input_tokens": 89,
+    "input_tokens_details": {
+      "cached_tokens": 0
+    },
+    "output_tokens": 54,
+    "output_tokens_details": {
+      "reasoning_tokens": 45
+    },
+    "total_tokens": 143,
+    "cost": 0,
+    "is_byok": false,
+    "cost_details": {
+      "upstream_inference_cost": 0,
+      "upstream_inference_input_cost": 0,
+      "upstream_inference_output_cost": 0
+    }
+  }
+}

@@ -248,7 +248,7 @@ type ResponsesApiResp struct {
 
 type ErrorLLM struct {
 	Message  string `json:"message"`
-	Code     int    `json:"code"`
+	Code     any    `json:"code"`
 	Metadata struct {
 		ProviderName interface{} `json:"provider_name"`
 	} `json:"metadata"`
