@@ -98,7 +98,7 @@ func (a *Agent) handleFunctionCall(fn OutputItem, raw json.RawMessage) ([]json.R
 
 	a.logger.Debug().Msgf("tool call %s with id %s with args: %s", fn.Name, fn.CallId, string(fn.Arguments))
 	if funcCallResp, ok := a.toolset.DispatchTools(fn.Name, fn.CallId, fn.Arguments); ok {
-		a.logger.Debug().Msgf("tool returned call id: %s, value: %s", funcCallResp.CallId, string(funcCallResp.Output))
+		a.logger.Debug().Msgf("tool returned call id: %s, value: %s", funcCallResp.CallId, funcCallResp.Output)
 		var conversationElements []json.RawMessage
 		conversationElements = append(conversationElements, raw)
 		rawFuncCallResp, err := json.Marshal(funcCallResp)

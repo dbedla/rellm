@@ -13,9 +13,9 @@ type Toolset interface {
 }
 
 type FunctionCallResp struct {
-	Type   string          `json:"type"`
-	CallId string          `json:"call_id"`
-	Output json.RawMessage `json:"output"`
+	Type   string `json:"type"`
+	CallId string `json:"call_id"`
+	Output string `json:"output"`
 }
 
 type Agent struct {
@@ -104,9 +104,9 @@ func (a *Agent) StoreConversation() error {
 func FuncResultToFunctionCallResp(callId string, funcResult any) FunctionCallResp {
 	b, err := json.Marshal(funcResult)
 	if err != nil {
-		errorMsg, _ := json.Marshal("unable to execute function; " + err.Error())
+		errorMsg := "unable to execute function; " + err.Error()
 		return FunctionCallResp{Type: "function_call_output", CallId: callId, Output: errorMsg}
 	}
 
-	return FunctionCallResp{Type: "function_call_output", CallId: callId, Output: b}
+	return FunctionCallResp{Type: "function_call_output", CallId: callId, Output: string(b)}
 }

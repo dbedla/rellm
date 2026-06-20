@@ -40,10 +40,8 @@ func (d *DataSrcToolset) BuildTools() []rellm.Tool {
 func (d *DataSrcToolset) DispatchTools(name string, callID string, arguments json.RawMessage) (rellm.FunctionCallResp, bool) {
 	switch name {
 	case "GetDataFor":
-		var args struct {
-			Input string `json:"input"`
-		}
-		if err := json.Unmarshal(arguments, &args); err != nil {
+		args, err := parseGetDataForArgs(arguments)
+		if err != nil {
 			return rellm.FuncResultToFunctionCallResp(callID, "invalid arguments"), true
 		}
 		res := d.GetDataFor(args.Input)
@@ -53,4 +51,22 @@ func (d *DataSrcToolset) DispatchTools(name string, callID string, arguments jso
 		return rellm.FuncResultToFunctionCallResp(callID, res), true
 	}
 	return rellm.FunctionCallResp{}, false
+}
+
+type getDataForArgs struct {
+	Input string `json:"input"`
+}
+
+func parseGetDataForArgs(arguments json.RawMessage) (getDataForArgs, error) {
+	var args getDataForArgs
+	if err := json.Unmarshal(arguments, &args); err == nil {
+		return args, nil
+	}
+
+	var rawArgs string
+	if err := json.Unmarshal(arguments, &rawArgs); err != nil {
+		return args, err
+	}
+	err := json.Unmarshal([]byte(rawArgs), &args)
+	return args, err
 }

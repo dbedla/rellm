@@ -1,0 +1,70 @@
+{
+  "model": "google/gemma-4-26b-a4b",
+  "input": [
+    {
+      "role": "system",
+      "content": "You are a helpful assistant."
+    },
+    {
+      "role": "user",
+      "content": "call one tool, check output, then call second tool, check output, provide conclusion"
+    },
+    {
+      "id": "fc_vj91mcis9l80v6kqbagf2w",
+      "call_id": "call_4212414117110012",
+      "type": "function_call",
+      "name": "GetStaticData",
+      "arguments": "{}",
+      "status": "completed"
+    },
+    {
+      "type": "function_call_output",
+      "call_id": "call_4212414117110012",
+      "output": "42"
+    },
+    {
+      "id": "fc_jwu2mgpytunw5uvqha3hao",
+      "call_id": "call_4212414117110013",
+      "type": "function_call",
+      "name": "GetDataFor",
+      "arguments": "{\"input\":\"the meaning of 42\"}",
+      "status": "completed"
+    },
+    {
+      "type": "function_call_output",
+      "call_id": "call_4212414117110013",
+      "output": "[\"abc\",\"def\"]"
+    }
+  ],
+  "temperature": 0.5,
+  "tools": [
+    {
+      "type": "function",
+      "name": "GetDataFor",
+      "description": "Get data for a specific input",
+      "parameters": {
+        "properties": {
+          "input": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "type": "function",
+      "name": "GetStaticData",
+      "description": "Get static data",
+      "parameters": {
+        "properties": {},
+        "type": "object"
+      }
+    }
+  ],
+  "reasoning": {
+    "effort": "low"
+  }
+}

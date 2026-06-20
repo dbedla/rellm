@@ -1,0 +1,99 @@
+{
+  "id": "resp_12115c1802d73c3110c538d05aee813ca6a2b825ed92128d",
+  "object": "response",
+  "created_at": 1781962256,
+  "completed_at": 1781962261,
+  "status": "completed",
+  "incomplete_details": null,
+  "model": "google/gemma-4-26b-a4b",
+  "previous_response_id": null,
+  "instructions": null,
+  "output": [
+    {
+      "id": "rs_odt2b8zg1t5cr043hk169",
+      "type": "reasoning",
+      "status": "completed",
+      "summary": [],
+      "content": [
+        {
+          "type": "reasoning_text",
+          "text": "\nThe user wants me to demonstrate a sequence of operations: calling one tool, checking its output, calling a second tool, checking its output, and then providing a conclusion.\n\nI have already called `GetStaticData` and received the value `42`.\nNow I need to call a second tool. I'll use `GetDataFor` with an input related to the first result (e.g., \"the meaning of 42\") to make it a cohesive demonstration."
+        }
+      ]
+    },
+    {
+      "id": "fc_jwu2mgpytunw5uvqha3hao",
+      "call_id": "call_4212414117110013",
+      "type": "function_call",
+      "name": "GetDataFor",
+      "arguments": "{\"input\":\"the meaning of 42\"}",
+      "status": "completed"
+    }
+  ],
+  "error": null,
+  "tools": [
+    {
+      "type": "function",
+      "name": "GetDataFor",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "input": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "input"
+        ]
+      },
+      "strict": false,
+      "description": "Get data for a specific input"
+    },
+    {
+      "type": "function",
+      "name": "GetStaticData",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      },
+      "strict": false,
+      "description": "Get static data"
+    }
+  ],
+  "tool_choice": "auto",
+  "truncation": "auto",
+  "parallel_tool_calls": true,
+  "text": {
+    "format": {
+      "type": "text"
+    }
+  },
+  "top_p": 0.95,
+  "presence_penalty": 0,
+  "frequency_penalty": 1.1,
+  "top_logprobs": 0,
+  "temperature": 0.5,
+  "reasoning": {
+    "summary": null,
+    "effort": "low"
+  },
+  "usage": {
+    "input_tokens": 126,
+    "output_tokens": 99,
+    "total_tokens": 225,
+    "input_tokens_details": {
+      "cached_tokens": 100
+    },
+    "output_tokens_details": {
+      "reasoning_tokens": 99
+    }
+  },
+  "max_output_tokens": null,
+  "max_tool_calls": null,
+  "store": true,
+  "background": false,
+  "service_tier": "default",
+  "metadata": {},
+  "safety_identifier": null,
+  "prompt_cache_key": null
+}
