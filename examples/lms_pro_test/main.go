@@ -36,7 +36,7 @@ func main() {
 		if msg == "EXIT" {
 			return
 		}
-		llmResp, rawRsp, err := agent.AskLikeAPro(msg, SetParameters)
+		llmResp, rawRsp, err := agent.AskLikeAPro(msg, SetParametersWithReqLog)
 		if err != nil {
 			color.Red("unable to ask question: %s", err.Error())
 			continue

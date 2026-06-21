@@ -35,7 +35,7 @@ func buildTestProToolAgent(workspace string) (*rellm.Agent, error) {
 		Build()
 }
 
-func SetParameters(req *rellm.ResponsesApiReq) {
+func SetParametersWithReqLog(req *rellm.ResponsesApiReq) {
 	req.Reasoning = &rellm.ReasoningConfig{Effort: "low"}
 	req.Temperature = 0.5
 
