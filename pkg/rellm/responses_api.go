@@ -161,6 +161,35 @@ type AttachmentTool struct {
 	Type string `json:"type"`
 }
 
+type ResponsesApiUsage struct {
+	InputTokens        int `json:"input_tokens"`
+	InputTokensDetails struct {
+		CachedTokens int `json:"cached_tokens"`
+	} `json:"input_tokens_details"`
+	OutputTokens        int `json:"output_tokens"`
+	OutputTokensDetails struct {
+		ReasoningTokens int `json:"reasoning_tokens"`
+	} `json:"output_tokens_details"`
+	TotalTokens int                  `json:"total_tokens"`
+	Cost        *float64             `json:"cost,omitempty"`
+	IsByok      *bool                `json:"is_byok,omitempty"`
+	CostDetails *ResponseCostDetails `json:"cost_details,omitempty"`
+}
+
+type ResponseCostDetails struct {
+	UpstreamInferenceCost       float64 `json:"upstream_inference_cost"`
+	UpstreamInferenceInputCost  float64 `json:"upstream_inference_input_cost"`
+	UpstreamInferenceOutputCost float64 `json:"upstream_inference_output_cost"`
+}
+
+type ResponseTool struct {
+	Type        string `json:"type"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Parameters  any    `json:"parameters"`
+	Strict      bool   `json:"strict"`
+}
+
 type ResponsesApiResp struct {
 	Id                string            `json:"id"`
 	Object            string            `json:"object"`
@@ -171,44 +200,16 @@ type ResponsesApiResp struct {
 	Output            []json.RawMessage `json:"output"`
 	Error             *ErrorLLM         `json:"error"`
 	IncompleteDetails interface{}       `json:"incomplete_details"`
-	Tools             []struct {
-		Type        string `json:"type"`
-		Name        string `json:"name"`
-		Description string `json:"description"`
-		Strict      bool   `json:"strict"`
-		Parameters  struct {
-			Type       string `json:"type"`
-			Properties struct {
-				Location struct {
-					Type        string `json:"type"`
-					Description string `json:"description"`
-				} `json:"location,omitempty"`
-				To struct {
-					Type        string `json:"type"`
-					Description string `json:"description"`
-				} `json:"to,omitempty"`
-				Subject struct {
-					Type        string `json:"type"`
-					Description string `json:"description"`
-				} `json:"subject,omitempty"`
-				Body struct {
-					Type        string `json:"type"`
-					Description string `json:"description"`
-				} `json:"body,omitempty"`
-			} `json:"properties"`
-			Required             []string `json:"required"`
-			AdditionalProperties bool     `json:"additionalProperties"`
-		} `json:"parameters"`
-	} `json:"tools"`
-	ToolChoice        string      `json:"tool_choice"`
-	ParallelToolCalls bool        `json:"parallel_tool_calls"`
-	MaxOutputTokens   interface{} `json:"max_output_tokens"`
-	Temperature       float64     `json:"temperature"`
-	TopP              float64     `json:"top_p"`
-	PresencePenalty   float64     `json:"presence_penalty"`
-	FrequencyPenalty  float64     `json:"frequency_penalty"`
-	TopLogprobs       float64     `json:"top_logprobs"`
-	MaxToolCalls      interface{} `json:"max_tool_calls"`
+	Tools             []ResponseTool    `json:"tools"`
+	ToolChoice        string            `json:"tool_choice"`
+	ParallelToolCalls bool              `json:"parallel_tool_calls"`
+	MaxOutputTokens   interface{}       `json:"max_output_tokens"`
+	Temperature       float64           `json:"temperature"`
+	TopP              float64           `json:"top_p"`
+	PresencePenalty   float64           `json:"presence_penalty"`
+	FrequencyPenalty  float64           `json:"frequency_penalty"`
+	TopLogprobs       float64           `json:"top_logprobs"`
+	MaxToolCalls      interface{}       `json:"max_tool_calls"`
 	Metadata          struct {
 	} `json:"metadata"`
 	Background         bool        `json:"background"`
@@ -222,33 +223,16 @@ type ResponsesApiResp struct {
 			Type string `json:"type"`
 		} `json:"format"`
 	} `json:"text"`
-	Reasoning        interface{} `json:"reasoning"`
-	SafetyIdentifier interface{} `json:"safety_identifier"`
-	PromptCacheKey   interface{} `json:"prompt_cache_key"`
-	User             interface{} `json:"user"`
-	Usage            struct {
-		InputTokens        int `json:"input_tokens"`
-		InputTokensDetails struct {
-			CachedTokens int `json:"cached_tokens"`
-		} `json:"input_tokens_details"`
-		OutputTokens        int `json:"output_tokens"`
-		OutputTokensDetails struct {
-			ReasoningTokens int `json:"reasoning_tokens"`
-		} `json:"output_tokens_details"`
-		TotalTokens int     `json:"total_tokens"`
-		Cost        float64 `json:"cost"`
-		IsByok      bool    `json:"is_byok"`
-		CostDetails struct {
-			UpstreamInferenceCost       float64 `json:"upstream_inference_cost"`
-			UpstreamInferenceInputCost  float64 `json:"upstream_inference_input_cost"`
-			UpstreamInferenceOutputCost float64 `json:"upstream_inference_output_cost"`
-		} `json:"cost_details"`
-	} `json:"usage"`
+	Reasoning        interface{}       `json:"reasoning"`
+	SafetyIdentifier interface{}       `json:"safety_identifier"`
+	PromptCacheKey   interface{}       `json:"prompt_cache_key"`
+	User             json.RawMessage   `json:"user,omitempty"`
+	Usage            ResponsesApiUsage `json:"usage"`
 }
 
 type ErrorLLM struct {
 	Message  string `json:"message"`
-	Code     int    `json:"code"`
+	Code     any    `json:"code"`
 	Metadata struct {
 		ProviderName interface{} `json:"provider_name"`
 	} `json:"metadata"`

@@ -96,7 +96,7 @@ func (b *AgentBuilder) WithContinueConversation(cont bool) *AgentBuilder {
 	return b
 }
 
-func (b *AgentBuilder) WithMaxToolsIterationWithoutReturnMessage(max int) *AgentBuilder {
+func (b *AgentBuilder) WithMaxToolsIterationWithoutReturnMessage(max uint64) *AgentBuilder {
 	b.agent.maxToolsIterationWithoutReturnMessage = max
 	return b
 }
@@ -126,7 +126,7 @@ func (b *AgentBuilder) Build() (*Agent, error) {
 	}
 
 	if b.agent.maxToolsIterationWithoutReturnMessage == 0 {
-		b.agent.maxToolsIterationWithoutReturnMessage = 5
+		b.agent.maxToolsIterationWithoutReturnMessage = defaultMaxToolsIterationWithoutReturnMessage
 	}
 
 	if b.agent.conversationStorage == nil {
@@ -137,3 +137,7 @@ func (b *AgentBuilder) Build() (*Agent, error) {
 
 	return &b.agent, nil
 }
+
+const (
+	defaultMaxToolsIterationWithoutReturnMessage = 5
+)

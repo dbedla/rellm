@@ -1,0 +1,105 @@
+{
+  "id": "resp_9929e3435132bb0bc81f7d2186b563f15eaf0fd8a78a3b78",
+  "object": "response",
+  "created_at": 1781962261,
+  "completed_at": 1781962263,
+  "status": "completed",
+  "incomplete_details": null,
+  "model": "google/gemma-4-26b-a4b",
+  "previous_response_id": null,
+  "instructions": null,
+  "output": [
+    {
+      "id": "rs_qj6ka69vlsgsouws5c1z59",
+      "type": "reasoning",
+      "status": "completed",
+      "summary": [],
+      "content": [
+        {
+          "type": "reasoning_text",
+          "text": "\n"
+        }
+      ]
+    },
+    {
+      "id": "msg_zfd1xxjcyapnkdwjx1xfm",
+      "type": "message",
+      "role": "assistant",
+      "status": "completed",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "The first tool call to `GetStaticData` returned the value `42`. The second tool call to `GetDataFor` with the input \"the meaning of 42\" returned a list containing `[\"abc\", \"def\"]`. Therefore, based on these specific tool outputs, the data associated with the value 42 is \"abc\" and \"def\".",
+          "annotations": [],
+          "logprobs": []
+        }
+      ]
+    }
+  ],
+  "error": null,
+  "tools": [
+    {
+      "type": "function",
+      "name": "GetDataFor",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "input": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "input"
+        ]
+      },
+      "strict": false,
+      "description": "Get data for a specific input"
+    },
+    {
+      "type": "function",
+      "name": "GetStaticData",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      },
+      "strict": false,
+      "description": "Get static data"
+    }
+  ],
+  "tool_choice": "auto",
+  "truncation": "auto",
+  "parallel_tool_calls": true,
+  "text": {
+    "format": {
+      "type": "text"
+    }
+  },
+  "top_p": 0.95,
+  "presence_penalty": 0,
+  "frequency_penalty": 1.1,
+  "top_logprobs": 0,
+  "temperature": 0.5,
+  "reasoning": {
+    "summary": null,
+    "effort": "low"
+  },
+  "usage": {
+    "input_tokens": 164,
+    "output_tokens": 76,
+    "total_tokens": 240,
+    "input_tokens_details": {
+      "cached_tokens": 100
+    },
+    "output_tokens_details": {
+      "reasoning_tokens": 1
+    }
+  },
+  "max_output_tokens": null,
+  "max_tool_calls": null,
+  "store": true,
+  "background": false,
+  "service_tier": "default",
+  "metadata": {},
+  "safety_identifier": null,
+  "prompt_cache_key": null
+}

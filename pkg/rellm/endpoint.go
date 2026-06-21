@@ -64,6 +64,7 @@ func (e *Endpoint) Post(conversation []json.RawMessage, proParameterSet FuncLike
 	if err != nil {
 		return nil, err
 	}
+
 	conversationResponse, err := unmarshall[ResponsesApiResp](rawBody)
 	if err != nil {
 		sb := string(rawBody)

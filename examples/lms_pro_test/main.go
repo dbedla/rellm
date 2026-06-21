@@ -15,7 +15,7 @@ func main() {
 
 	color.Red("Agent log dir: %s", agentLogDir)
 
-	agent, err := buildProAgent(agentLogDir)
+	agent, err := buildTestProToolAgent(agentLogDir)
 	if err != nil {
 		panic(err)
 	}
@@ -36,7 +36,7 @@ func main() {
 		if msg == "EXIT" {
 			return
 		}
-		llmResp, rawRsp, err := agent.AskLikeAPro(msg, SetParameters)
+		llmResp, rawRsp, err := agent.AskLikeAPro(msg, SetParametersWithReqLog)
 		if err != nil {
 			color.Red("unable to ask question: %s", err.Error())
 			continue
