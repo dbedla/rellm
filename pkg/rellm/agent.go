@@ -28,7 +28,7 @@ type Agent struct {
 	sysMsg                                string
 	inMemoryConversation                  []json.RawMessage
 	continueConversation                  bool
-	maxToolsIterationWithoutReturnMessage int
+	maxToolsIterationWithoutReturnMessage uint64
 }
 
 func (a *Agent) Ask(question string) (string, error) {

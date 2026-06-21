@@ -17,11 +17,12 @@ import (
 )
 
 const (
-	testBaseUrl              = "http://127.0.0.1"
-	testPort                 = "1234"
-	testResponsesApiEndpoint = "/v1/responses"
-	testReasoningEffort      = "low"
-	testTemperature          = 0.5
+	testBaseUrl                                      = "http://127.0.0.1"
+	testPort                                         = "1234"
+	testResponsesApiEndpoint                         = "/v1/responses"
+	testReasoningEffort                              = "low"
+	testTemperature                                  = 0.5
+	TestDefaultMaxToolsIterationWithoutReturnMessage = 5
 )
 
 //go:embed testdata/base_api_req_hi.json
@@ -64,7 +65,7 @@ var goldenProReqHi string
 var goldenProRespHi string
 
 func TestAgentAskLikeAPro(t *testing.T) {
-	agent, httpDo := buildTestProToolAgent(t)
+	agent, httpDo := buildTestProToolAgent(t, TestDefaultMaxToolsIterationWithoutReturnMessage)
 	defer httpDo.AssertExpectations(t)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
@@ -117,7 +118,7 @@ var goldenProReqA3 string
 var goldenProRespA3 string
 
 func TestAgentAskLikeAProToolsCall(t *testing.T) {
-	agent, httpDo := buildTestProToolAgent(t)
+	agent, httpDo := buildTestProToolAgent(t, TestDefaultMaxToolsIterationWithoutReturnMessage)
 	defer httpDo.AssertExpectations(t)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
@@ -186,7 +187,51 @@ func TestAgentAskLikeAProToolsCall(t *testing.T) {
 }
 
 func TestTooManyFunctionCall(t *testing.T) {
-	assert.True(t, false)
+	const NotEnoughToolLoopLimit = 2
+	agent, httpDo := buildTestProToolAgent(t, NotEnoughToolLoopLimit)
+	defer httpDo.AssertExpectations(t)
+
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Run(func(args mock.Arguments) {
+			req := args.Get(0).(*http.Request)
+
+			b, err := io.ReadAll(req.Body)
+			assert.NoError(t, err, "failed to read request body")
+
+			req.Body = io.NopCloser(bytes.NewBuffer(b))
+
+			assert.JSONEq(t, goldenProReqA1, string(b))
+		}).
+		Return(&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(goldenProRespA1)),
+		}, nil)
+
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Run(func(args mock.Arguments) {
+			req := args.Get(0).(*http.Request)
+
+			b, err := io.ReadAll(req.Body)
+			assert.NoError(t, err, "failed to read request body")
+
+			req.Body = io.NopCloser(bytes.NewBuffer(b))
+
+			assert.JSONEq(t, goldenProReqA2, string(b))
+		}).
+		Return(&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(goldenProRespA2)),
+		}, nil)
+
+	respMsg, resp, err := agent.AskLikeAPro("call one tool, check output, then call second tool, check output, provide conclusion", setTestReasoningAndTemperature)
+	assert.NoError(t, err, "failed to ask")
+
+	assert.NotNil(t, respMsg, "response message should not be nil")
+	assert.Equal(t, "Warn too many function call iterations without return message", respMsg, "response message should match")
+
+	assert.Nil(t, resp, "response should not be nil")
 }
 
 func TestFuncResultToFunctionCallRespSerializesOutputAsString(t *testing.T) {
@@ -224,7 +269,7 @@ func buildTestAgent(t *testing.T) (*rellm.Agent, *HttpDo) {
 	return ta, mockHttp
 }
 
-func buildTestProToolAgent(t *testing.T) (*rellm.Agent, *HttpDo) {
+func buildTestProToolAgent(t *testing.T, maxToolsIterationWithoutReturnMessage uint64) (*rellm.Agent, *HttpDo) {
 
 	agentName := "TestProAgent"
 	workspace := inMemoryWorkspace(t)
@@ -242,7 +287,7 @@ func buildTestProToolAgent(t *testing.T) (*rellm.Agent, *HttpDo) {
 		WithEndpoint(ep).
 		WithAgentName(agentName).
 		WithWorkspaceDir(workspace).
-		WithMaxToolsIterationWithoutReturnMessage(20).
+		WithMaxToolsIterationWithoutReturnMessage(maxToolsIterationWithoutReturnMessage).
 		WithContinueConversation(false).
 		WithSystemMessage("You are a helpful assistant.").
 		WithToolset(&agentsutills.DataSrcToolset{}).

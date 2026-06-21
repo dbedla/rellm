@@ -46,13 +46,6 @@ func main() {
 			color.Yellow("This conversation total cost in tokens: %d\n", rawRsp.Usage.TotalTokens)
 			color.Yellow("input tokens: %d\n", rawRsp.Usage.InputTokens)
 			color.Yellow("output tokens: %d\n", rawRsp.Usage.OutputTokens)
-
-			//fmt.Println(" === RESP ===")
-			//b, err := json.Marshal(rawRsp)
-			//if err != nil {
-			//	panic(err)
-			//}
-			//fmt.Println(string(b))
 		}
 	}
 }
