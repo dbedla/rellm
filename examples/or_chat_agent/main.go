@@ -1,14 +1,14 @@
 package main
 
 import (
+	"rellm/pkg/agentsutills"
 	"rellm/pkg/rellm"
-	"rellm/pkg/utils"
 
 	"github.com/fatih/color"
 )
 
 func main() {
-	agentLogDir, err := utils.CreateDirInSysTmp("agent-log")
+	agentLogDir, err := agentsutills.CreateDirInSysTmp("agent-log")
 	if err != nil {
 		panic(err)
 	}
@@ -28,7 +28,7 @@ func main() {
 	}()
 
 	for {
-		msg, err := utils.ReadConsoleInput()
+		msg, err := agentsutills.ReadConsoleInput()
 		if err != nil {
 			color.Red("unable to read console input: %s", err)
 			return

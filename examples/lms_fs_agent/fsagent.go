@@ -1,9 +1,8 @@
 package main
 
 import (
+	"rellm/pkg/agentsutills"
 	"rellm/pkg/rellm"
-	"rellm/pkg/tools/limited_file_system"
-	"rellm/pkg/utils"
 )
 
 const (
@@ -44,28 +43,28 @@ func buildFSAgent(workspace string) (*rellm.Agent, error) {
 		Build()
 }
 
-func buildFSToolset(readOnlyDir, outputDir string) (*lfs.FSToolset, error) {
-	fs, err := lfs.NewLimitedFileSystem([]string{readOnlyDir}, outputDir)
+func buildFSToolset(readOnlyDir, outputDir string) (*agentsutills.FSToolset, error) {
+	fs, err := agentsutills.NewLimitedFileSystem([]string{readOnlyDir}, outputDir)
 	if err != nil {
 		return nil, err
 	}
-	fsToolset := lfs.NewFSToolset(fs)
+	fsToolset := agentsutills.NewFSToolset(fs)
 
 	return fsToolset, nil
 }
 
 func buildFsPath(workspace string) (string, string, string, error) {
-	readOnlyDir, err := utils.CreateSubDir(workspace, "readonly_agent_input")
+	readOnlyDir, err := agentsutills.CreateSubDir(workspace, "readonly_agent_input")
 	if err != nil {
 		return "", "", "", err
 	}
 
-	outputDir, err := utils.CreateSubDir(workspace, "output")
+	outputDir, err := agentsutills.CreateSubDir(workspace, "output")
 	if err != nil {
 		return "", "", "", err
 	}
 
-	logdir, err := utils.CreateSubDir(workspace, "logs")
+	logdir, err := agentsutills.CreateSubDir(workspace, "logs")
 	if err != nil {
 		return "", "", "", err
 	}
