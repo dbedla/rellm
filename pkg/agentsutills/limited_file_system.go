@@ -212,12 +212,16 @@ func checkWriteAccess(path string) error {
 }
 
 func (s *LimitedFileSystem) validatePath(path string, shouldBeDir bool) (string, error) {
-	absPath, err := filepath.Abs(path)
+	absPath, err := evalExistingPath(path)
 	if err != nil {
-		return "", fmt.Errorf("failed to get absolute path: %w", err)
+		return "", fmt.Errorf("path %s does not exist or is not accessible: %w", path, err)
 	}
 
-	if !s.isAllowed(absPath) {
+	allowed, err := s.isAllowed(absPath)
+	if err != nil {
+		return "", err
+	}
+	if !allowed {
 		return "", fmt.Errorf("path %s is outside of allowed directories", path)
 	}
 
@@ -255,16 +259,57 @@ func (s *LimitedFileSystem) validateInOutputDir(path string) (string, error) {
 		return "", fmt.Errorf("failed to get absolute path: %w", err)
 	}
 
-	absOutputDir, err := filepath.Abs(s.outputDir)
+	checkedPath, err := evalPathForContainment(absPath)
+	if err != nil {
+		return "", err
+	}
+
+	absOutputDir, err := evalExistingPath(s.outputDir)
 	if err != nil {
 		return "", fmt.Errorf("failed to get absolute output directory path: %w", err)
 	}
 
-	if !strings.HasPrefix(absPath, absOutputDir) {
+	inside, err := isInsideDir(absOutputDir, checkedPath)
+	if err != nil {
+		return "", err
+	}
+	if !inside {
 		return "", fmt.Errorf("path %s is outside of allowed output directory", path)
 	}
 
 	return absPath, nil
+}
+
+func evalExistingPath(path string) (string, error) {
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return "", err
+	}
+	return filepath.EvalSymlinks(absPath)
+}
+
+func evalPathForContainment(path string) (string, error) {
+	resolvedPath, err := filepath.EvalSymlinks(path)
+	if err == nil {
+		return resolvedPath, nil
+	}
+	if !os.IsNotExist(err) {
+		return "", fmt.Errorf("failed to resolve path %s: %w", path, err)
+	}
+
+	resolvedDir, err := evalExistingPath(filepath.Dir(path))
+	if err != nil {
+		return "", fmt.Errorf("failed to resolve parent directory for %s: %w", path, err)
+	}
+	return filepath.Join(resolvedDir, filepath.Base(path)), nil
+}
+
+func isInsideDir(baseDir, targetPath string) (bool, error) {
+	rel, err := filepath.Rel(baseDir, targetPath)
+	if err != nil {
+		return false, fmt.Errorf("failed to compare paths: %w", err)
+	}
+	return rel == "." || (!strings.HasPrefix(rel, "..") && !filepath.IsAbs(rel)), nil
 }
 
 func filterFiles(basePath string, entries []os.DirEntry) []string {
@@ -277,16 +322,21 @@ func filterFiles(basePath string, entries []os.DirEntry) []string {
 	return files
 }
 
-func (s *LimitedFileSystem) isAllowed(path string) bool {
+func (s *LimitedFileSystem) isAllowed(path string) (bool, error) {
 	allowedDirs := append(s.readOnlyDirs, s.outputDir)
 	for _, dir := range allowedDirs {
-		absDir, err := filepath.Abs(dir)
+		absDir, err := evalExistingPath(dir)
 		if err != nil {
 			continue
 		}
-		if strings.HasPrefix(path, absDir) {
-			return true
+
+		inside, err := isInsideDir(absDir, path)
+		if err != nil {
+			return false, err
+		}
+		if inside {
+			return true, nil
 		}
 	}
-	return false
+	return false, nil
 }
