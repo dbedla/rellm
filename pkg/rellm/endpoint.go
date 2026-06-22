@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 type ResponsesApiEndpoint interface {
@@ -27,6 +28,24 @@ type Endpoint struct {
 	rae    ResponsesApiEndpoint
 }
 
+type HTTPStatusError struct {
+	StatusCode int
+	Body       string
+	URL        string
+	RequestID  string
+}
+
+func (e *HTTPStatusError) Error() string {
+	parts := []string{fmt.Sprintf("api request failed with status %d", e.StatusCode), "url: " + e.URL}
+	if e.RequestID != "" {
+		parts = append(parts, "request_id: "+e.RequestID)
+	}
+	if e.Body != "" {
+		parts = append(parts, "body: "+e.Body)
+	}
+	return strings.Join(parts, "; ")
+}
+
 type ReasoningEffort string
 
 const (
@@ -36,7 +55,6 @@ const (
 )
 
 func (e *Endpoint) Post(conversation []json.RawMessage, proParameterSet FuncLikeProSet, toolset Toolset) (*ResponsesApiResp, error) {
-
 	apiUrl, err := url.Parse(e.rae.GetUrl())
 	if err != nil {
 		return nil, err
@@ -59,19 +77,51 @@ func (e *Endpoint) Post(conversation []json.RawMessage, proParameterSet FuncLike
 		return nil, err
 	}
 
+	if resp.Body == nil {
+		return nil, errors.New("empty response body")
+	}
 	defer closeAndLogIfError_DEFER_ME(resp.Body)
 	rawBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
 
+	return parseResponsesApiResponse(resp, rawBody, apiUrl.String())
+}
+
+func parseResponsesApiResponse(resp *http.Response, rawBody []byte, apiURL string) (*ResponsesApiResp, error) {
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		return nil, newHTTPStatusError(resp, rawBody, apiURL)
+	}
+
 	conversationResponse, err := unmarshall[ResponsesApiResp](rawBody)
 	if err != nil {
-		sb := string(rawBody)
-		return nil, errors.Join(err, fmt.Errorf("%s", sb))
+		return nil, errors.Join(err, fmt.Errorf("%s", string(rawBody)))
 	}
 
 	return &conversationResponse, nil
+}
+
+func newHTTPStatusError(resp *http.Response, rawBody []byte, apiURL string) *HTTPStatusError {
+	return &HTTPStatusError{
+		StatusCode: resp.StatusCode,
+		Body:       bodySnippet(rawBody),
+		URL:        apiURL,
+		RequestID:  responseRequestID(resp.Header),
+	}
+}
+
+func responseRequestID(header http.Header) string {
+	return header.Get("X-Request-ID")
+}
+
+func bodySnippet(rawBody []byte) string {
+	const maxBodySnippetLength = 1024
+	body := string(rawBody)
+	if len(body) <= maxBodySnippetLength {
+		return body
+	}
+	return body[:maxBodySnippetLength] + "..."
 }
 
 func (e *Endpoint) buildRequestBody(conversation []json.RawMessage, proParameterSet FuncLikeProSet, toolset Toolset) ([]byte, error) {
