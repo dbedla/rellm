@@ -131,6 +131,7 @@ func (f *FSToolset) BuildTools() []rellm.Tool {
 }
 
 func (f *FSToolset) DispatchTools(name string, callID string, arguments json.RawMessage) (rellm.FunctionCallResp, bool) {
+	arguments = normalizeToolArguments(arguments)
 	switch name {
 	case "FSToolset.GetReadOnlyPaths":
 		return rellm.FuncResultToFunctionCallResp(callID, f.GetReadOnlyPaths()), true
@@ -212,4 +213,15 @@ func (f *FSToolset) DispatchTools(name string, callID string, arguments json.Raw
 		return rellm.FuncResultToFunctionCallResp(callID, res), true
 	}
 	return rellm.FunctionCallResp{}, false
+}
+
+func normalizeToolArguments(arguments json.RawMessage) json.RawMessage {
+	var nested string
+	if err := json.Unmarshal(arguments, &nested); err != nil {
+		return arguments
+	}
+	if !json.Valid([]byte(nested)) {
+		return arguments
+	}
+	return json.RawMessage(nested)
 }
