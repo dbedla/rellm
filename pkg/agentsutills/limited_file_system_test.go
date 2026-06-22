@@ -90,7 +90,8 @@ func TestListFilesIn(t *testing.T) {
 	t.Run("List files in read-only dir", func(t *testing.T) {
 		files, err := sandbox.ListFilesIn(readOnlyDir)
 		assert.NoError(t, err, "expected no error")
-		expectedPath := filepath.Join(readOnlyDir, "file1.txt")
+		expectedPath, err := filepath.EvalSymlinks(filepath.Join(readOnlyDir, "file1.txt"))
+		assert.NoError(t, err)
 		assert.Len(t, files, 1)
 		assert.Equal(t, expectedPath, files[0])
 	})
@@ -98,7 +99,8 @@ func TestListFilesIn(t *testing.T) {
 	t.Run("List files in output dir", func(t *testing.T) {
 		files, err := sandbox.ListFilesIn(outputDir)
 		assert.NoError(t, err, "expected no error")
-		expectedPath := filepath.Join(outputDir, "file2.txt")
+		expectedPath, err := filepath.EvalSymlinks(filepath.Join(outputDir, "file2.txt"))
+		assert.NoError(t, err)
 		assert.Len(t, files, 1)
 		assert.Equal(t, expectedPath, files[0])
 	})
@@ -125,12 +127,15 @@ func TestGetFileContentAsString(t *testing.T) {
 	readOnlyDir := filepath.Join(tmpDir, "readonly")
 	outputDir := filepath.Join(tmpDir, "output")
 	outsideDir := filepath.Join(tmpDir, "outside")
+	readOnlySiblingDir := filepath.Join(tmpDir, "readonly-evil")
 
 	err := os.Mkdir(readOnlyDir, 0755)
 	assert.NoError(t, err)
 	err = os.Mkdir(outputDir, 0755)
 	assert.NoError(t, err)
 	err = os.Mkdir(outsideDir, 0755)
+	assert.NoError(t, err)
+	err = os.Mkdir(readOnlySiblingDir, 0755)
 	assert.NoError(t, err)
 
 	content1 := "content1"
@@ -140,6 +145,8 @@ func TestGetFileContentAsString(t *testing.T) {
 	err = os.WriteFile(filepath.Join(outputDir, "file2.txt"), []byte(content2), 0644)
 	assert.NoError(t, err)
 	err = os.WriteFile(filepath.Join(outsideDir, "file3.txt"), []byte("content3"), 0644)
+	assert.NoError(t, err)
+	err = os.WriteFile(filepath.Join(readOnlySiblingDir, "secret.txt"), []byte("secret"), 0644)
 	assert.NoError(t, err)
 
 	sandbox, err := NewLimitedFileSystem([]string{readOnlyDir}, outputDir)
@@ -160,6 +167,20 @@ func TestGetFileContentAsString(t *testing.T) {
 	t.Run("Error for outside path", func(t *testing.T) {
 		_, err := sandbox.GetFileContentAsString(filepath.Join(outsideDir, "file3.txt"))
 		assert.Error(t, err, "expected error for path outside sandbox")
+	})
+
+	t.Run("Error for sibling prefix attack", func(t *testing.T) {
+		_, err := sandbox.GetFileContentAsString(filepath.Join(readOnlySiblingDir, "secret.txt"))
+		assert.Error(t, err, "expected error for sibling prefix path")
+	})
+
+	t.Run("Error for symlink escape", func(t *testing.T) {
+		linkPath := filepath.Join(readOnlyDir, "outside_link")
+		err := os.Symlink(outsideDir, linkPath)
+		assert.NoError(t, err)
+
+		_, err = sandbox.GetFileContentAsString(filepath.Join(linkPath, "file3.txt"))
+		assert.Error(t, err, "expected error for symlink escape")
 	})
 
 	t.Run("Error for non-existent file", func(t *testing.T) {
@@ -208,10 +229,13 @@ func TestWriteToFile(t *testing.T) {
 
 	readOnlyDir := filepath.Join(tmpDir, "readonly")
 	outputDir := filepath.Join(tmpDir, "output")
+	outputSiblingDir := filepath.Join(tmpDir, "output-evil")
 
 	err := os.Mkdir(readOnlyDir, 0755)
 	assert.NoError(t, err)
 	err = os.Mkdir(outputDir, 0755)
+	assert.NoError(t, err)
+	err = os.Mkdir(outputSiblingDir, 0755)
 	assert.NoError(t, err)
 
 	sandbox, err := NewLimitedFileSystem([]string{readOnlyDir}, outputDir)
@@ -269,6 +293,27 @@ func TestWriteToFile(t *testing.T) {
 		path := filepath.Join(tmpDir, "completely_outside.txt")
 		err := sandbox.WriteStringToFile("content", path)
 		assert.Error(t, err, "expected error for path outside sandbox")
+	})
+
+	t.Run("Error for sibling prefix attack", func(t *testing.T) {
+		path := filepath.Join(outputSiblingDir, "secret.txt")
+		err := sandbox.WriteStringToFile("content", path)
+		assert.Error(t, err, "expected error for sibling prefix path")
+	})
+
+	t.Run("Error for parent traversal", func(t *testing.T) {
+		path := filepath.Join(outputDir, "..", "traversal.txt")
+		err := sandbox.WriteStringToFile("content", path)
+		assert.Error(t, err, "expected error for parent traversal")
+	})
+
+	t.Run("Error for symlink escape", func(t *testing.T) {
+		linkPath := filepath.Join(outputDir, "outside_link")
+		err := os.Symlink(outputSiblingDir, linkPath)
+		assert.NoError(t, err)
+
+		err = sandbox.WriteStringToFile("content", filepath.Join(linkPath, "secret.txt"))
+		assert.Error(t, err, "expected error for symlink escape")
 	})
 }
 
