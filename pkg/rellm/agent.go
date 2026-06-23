@@ -58,7 +58,7 @@ func (a *Agent) AskLikeAPro(question string, proParameterSet FuncLikeProSet) (st
 
 	if err != nil {
 		a.logger.Error().Err(err).Msgf("unable to process conversation %s", err.Error())
-		return "", nil, err
+		return "", rawResp, err
 	}
 
 	a.inMemoryConversation = newConversation

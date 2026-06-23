@@ -260,6 +260,43 @@ func TestAgentAskLikeAProToolsCall(t *testing.T) {
 
 }
 
+//go:embed testdata/pro_api_tool_A1_resp_unknown_fn_call.json
+var goldenProRespA1_UnknownFnCAll string
+
+func TestAgentAskLikeAProToolsCall_UnknownFnCall(t *testing.T) {
+	agent, httpDo := buildTestProToolAgent(t, TestDefaultMaxToolsIterationWithoutReturnMessage)
+	defer httpDo.AssertExpectations(t)
+
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Run(func(args mock.Arguments) {
+			req := args.Get(0).(*http.Request)
+
+			b, err := io.ReadAll(req.Body)
+			assert.NoError(t, err, "failed to read request body")
+
+			req.Body = io.NopCloser(bytes.NewBuffer(b))
+
+			assert.JSONEq(t, goldenProReqA1, string(b))
+		}).
+		Return(&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(goldenProRespA1_UnknownFnCAll)),
+		}, nil)
+
+	respMsg, resp, err := agent.AskLikeAPro("call one tool, check output, then call second tool, check output, provide conclusion", setTestReasoningAndTemperature)
+	assert.Error(t, err, "failed to ask")
+
+	assert.NotNil(t, respMsg, "response message should not be nil")
+	assert.Equal(t, "", respMsg, "response message should match")
+
+	assert.NotNil(t, resp, "response should not be nil")
+	jsonResp, err := json.Marshal(resp)
+	assert.NoError(t, err, "failed to marshal response")
+	assert.JSONEq(t, goldenProRespA1_UnknownFnCAll, string(jsonResp))
+
+}
+
 func TestTooManyFunctionCall(t *testing.T) {
 	const NotEnoughToolLoopLimit = 2
 	agent, httpDo := buildTestProToolAgent(t, NotEnoughToolLoopLimit)

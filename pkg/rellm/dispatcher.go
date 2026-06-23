@@ -26,17 +26,17 @@ func (a *Agent) Process(conversation []json.RawMessage, proParameterSet FuncLike
 	for range a.maxToolsIterationWithoutReturnMessage {
 		conversationResponse, err := a.endpoint.Post(conversation, proParameterSet, a.toolset)
 		if err != nil {
-			return nil, "", nil, err
+			return nil, "", conversationResponse, err
 		}
 
 		if conversationResponse.Error != nil {
 			a.logger.Error().Msgf("error in conversation response: %v", conversationResponse.Error.Message)
-			return nil, "", nil, fmt.Errorf("error in conversation response: %v", conversationResponse.Error.Message)
+			return nil, "", conversationResponse, fmt.Errorf("error in conversation response: %v", conversationResponse.Error.Message)
 		}
 
 		functionResultAsConversation, msgRespFromLLM, err := a.dispatchFunctionOutput(conversationResponse.Output)
 		if err != nil {
-			return nil, "", nil, err
+			return nil, "", conversationResponse, err
 		}
 		conversation = append(conversation, functionResultAsConversation...)
 
@@ -109,16 +109,13 @@ func (a *Agent) handleFunctionCall(fn OutputItem, raw json.RawMessage) ([]json.R
 		}
 		conversationElements = append(conversationElements, rawFuncCallResp)
 		return conversationElements, nil
-	} else {
-		fmt.Printf("unknown function call: %s\n", fn.Name)
 	}
 
-	return nil, nil
+	return nil, fmt.Errorf("tool call (%s) not found", fn.Name)
 }
 
 func handleMessage(msg OutputItem) ([]json.RawMessage, string, error) {
 	if len(msg.Content) > 1 {
-		fmt.Printf("Too many messages in response")
 		return nil, "", fmt.Errorf("too many messages in response")
 	}
 
