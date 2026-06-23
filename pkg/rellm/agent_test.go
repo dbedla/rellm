@@ -117,7 +117,7 @@ var goldenProReqHi string
 //go:embed testdata/pro_api_resp_hi.json
 var goldenProRespHi string
 
-//go:embed testdata/base_api_req_hi_reasoning.json
+//go:embed testdata/pro_api_req_hi_reasoning.json
 var goldenProReqAfterReasoning string
 
 func TestAgentAskLikeAPro(t *testing.T) {

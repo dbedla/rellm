@@ -7,16 +7,12 @@
   "completed_at": 1781949325,
   "output": [
     {
-      "id": "rs_jyb0fwf8mfn2jncgit4j4e",
+      "id": "rs_tmp_4hndaklxn8m",
       "type": "reasoning",
       "status": "completed",
       "summary": [],
-      "content": [
-        {
-          "type": "reasoning_text",
-          "text": "\nThe user said \"Hi\". This is a standard greeting. I should respond with a friendly and helpful greeting to initiate the conversation.\n\nPlan:\n1. Acknowledge the greeting.\n2. Offer assistance."
-        }
-      ]
+      "encrypted_content": "ENCRYPTED_CONTENT_HERE",
+      "format": "google-gemini-v1"
     },
     {
       "id": "msg_mk6l1gh3wafh4s5d9jemw",
