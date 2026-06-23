@@ -117,6 +117,9 @@ var goldenProReqHi string
 //go:embed testdata/pro_api_resp_hi.json
 var goldenProRespHi string
 
+//go:embed testdata/pro_api_req_hi_reasoning.json
+var goldenProReqAfterReasoning string
+
 func TestAgentAskLikeAPro(t *testing.T) {
 	agent, httpDo := buildTestProToolAgent(t, TestDefaultMaxToolsIterationWithoutReturnMessage)
 	defer httpDo.AssertExpectations(t)
@@ -137,6 +140,22 @@ func TestAgentAskLikeAPro(t *testing.T) {
 			StatusCode: http.StatusOK,
 			Body:       io.NopCloser(strings.NewReader(goldenProRespHi)),
 		}, nil)
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Run(func(args mock.Arguments) {
+			req := args.Get(0).(*http.Request)
+
+			b, err := io.ReadAll(req.Body)
+			assert.NoError(t, err, "failed to read request body")
+
+			req.Body = io.NopCloser(bytes.NewBuffer(b))
+
+			assert.JSONEq(t, goldenProReqAfterReasoning, string(b))
+		}).
+		Return(&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(goldenProRespHi)),
+		}, nil)
 
 	respMsg, resp, err := agent.AskLikeAPro("Hi", setTestReasoningAndTemperature)
 	assert.NoError(t, err, "failed to ask")
@@ -150,6 +169,8 @@ func TestAgentAskLikeAPro(t *testing.T) {
 	assert.NoError(t, err, "failed to marshal response")
 	assert.JSONEq(t, goldenProRespHi, string(jsonResp))
 
+	_, _, err = agent.AskLikeAPro("What did you reason about?", setTestReasoningAndTemperature)
+	assert.NoError(t, err, "failed to ask with reasoning in conversation")
 }
 
 //go:embed testdata/pro_api_tool_A1_req.json
