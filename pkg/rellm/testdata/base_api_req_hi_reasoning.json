@@ -1,0 +1,64 @@
+{
+	"model": "google/gemma-4-26b-a4b",
+	"input": [
+		{
+			"role": "system",
+			"content": "You are a helpful assistant."
+		},
+		{
+			"role": "user",
+			"content": "Hi"
+		},
+		{
+			"id": "rs_jyb0fwf8mfn2jncgit4j4e",
+			"type": "reasoning",
+			"status": "completed",
+			"summary": [],
+			"content": [
+				{
+					"type": "reasoning_text",
+					"text": "\nThe user said \"Hi\". This is a standard greeting. I should respond with a friendly and helpful greeting to initiate the conversation.\n\nPlan:\n1. Acknowledge the greeting.\n2. Offer assistance."
+				}
+			]
+		},
+		{
+			"role": "assistant",
+			"content": "Hello! How can I help you today?"
+		},
+		{
+			"role": "user",
+			"content": "What did you reason about?"
+		}
+	],
+	"temperature": 0.5,
+	"tools": [
+		{
+			"type": "function",
+			"name": "GetDataFor",
+			"description": "Get data for a specific input",
+			"parameters": {
+				"properties": {
+					"input": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"input"
+				],
+				"type": "object"
+			}
+		},
+		{
+			"type": "function",
+			"name": "GetStaticData",
+			"description": "Get static data",
+			"parameters": {
+				"properties": {},
+				"type": "object"
+			}
+		}
+	],
+	"reasoning": {
+		"effort": "low"
+	}
+}

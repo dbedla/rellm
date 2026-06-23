@@ -41,7 +41,7 @@ func (a *Agent) Process(conversation []json.RawMessage, proParameterSet FuncLike
 		conversation = append(conversation, functionResultAsConversation...)
 
 		// only msg
-		if len(functionResultAsConversation) == 1 && msgRespFromLLM != "" {
+		if msgRespFromLLM != "" {
 			return conversation, msgRespFromLLM, conversationResponse, nil
 		}
 	}
@@ -83,6 +83,8 @@ func (a *Agent) processOutputItem(item OutputItem, raw json.RawMessage) ([]json.
 		return fResp, "", nil
 	case "message":
 		return handleMessage(item)
+	case "reasoning":
+		return handleReasoning(raw)
 	default:
 		//TODO: handle other output: reasoning
 		a.logger.Warn().Msgf("unknown output type: %s", item.Type)
@@ -133,6 +135,10 @@ func handleMessage(msg OutputItem) ([]json.RawMessage, string, error) {
 	}
 
 	return conversationElements, msgRespFromLLM, nil
+}
+
+func handleReasoning(raw json.RawMessage) ([]json.RawMessage, string, error) {
+	return []json.RawMessage{raw}, "", nil
 }
 
 type UserMessage struct {
