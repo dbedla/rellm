@@ -2,7 +2,6 @@ package main
 
 import (
 	"rellm/pkg/agentsutills"
-	"rellm/pkg/rellm"
 
 	"github.com/fatih/color"
 )
@@ -36,8 +35,8 @@ func main() {
 		if msg == "EXIT" {
 			return
 		}
-		nopFunc := func(*rellm.ResponsesApiReq) {}
-		llmResp, rawResp, err := agent.AskLikeAPro(msg, nopFunc)
+
+		llmResp, rawResp, err := agent.AskLikeAPro(msg, nil, nil)
 		if err != nil {
 			color.Red("unable to ask question: %s", err.Error())
 			continue

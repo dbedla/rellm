@@ -46,3 +46,12 @@ func SetParametersWithReqLog(req *rellm.ResponsesApiReq) {
 	}
 	fmt.Println(string(b))
 }
+
+func SniffResp(req *rellm.ResponsesApiResp) {
+	fmt.Println(" === RESP ===")
+	b, err := json.Marshal(req)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(string(b))
+}

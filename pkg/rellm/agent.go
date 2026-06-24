@@ -33,15 +33,20 @@ type Agent struct {
 
 func (a *Agent) Ask(question string) (string, error) {
 
-	nopProParamSet := func(r *ResponsesApiReq) {}
-	msg, _, err := a.AskLikeAPro(question, nopProParamSet)
+	msg, _, err := a.AskLikeAPro(question, nil, nil)
 
 	return msg, err
 }
 
-type FuncLikeProSet func(*ResponsesApiReq)
+type InspectEachRequest func(*ResponsesApiReq)
 
-func (a *Agent) AskLikeAPro(question string, proParameterSet FuncLikeProSet) (string, *ResponsesApiResp, error) {
+func nopInspectReq(r *ResponsesApiReq) {}
+
+type InspectEachResponse func(resp *ResponsesApiResp)
+
+func nopInspectResp(r *ResponsesApiResp) {}
+
+func (a *Agent) AskLikeAPro(question string, inspectReq InspectEachRequest, inspectResp InspectEachResponse) (string, *ResponsesApiResp, error) {
 	a.logger.Info().Msgf("question to agent: %s", question)
 	defer a.logger.Info().Msg("question answered")
 
@@ -54,7 +59,14 @@ func (a *Agent) AskLikeAPro(question string, proParameterSet FuncLikeProSet) (st
 	}
 	conversation = append(conversation, userMsg)
 
-	newConversation, msg, rawResp, err := a.Process(conversation, proParameterSet)
+	if inspectReq == nil {
+		inspectReq = nopInspectReq
+	}
+	if inspectResp == nil {
+		inspectResp = nopInspectResp
+	}
+
+	newConversation, msg, rawResp, err := a.Process(conversation, inspectReq, inspectResp)
 
 	if err != nil {
 		a.logger.Error().Err(err).Msgf("unable to process conversation %s", err.Error())

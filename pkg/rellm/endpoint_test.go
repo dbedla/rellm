@@ -64,13 +64,13 @@ func assertHTTPStatusError(t *testing.T, err error, statusCode int, body string)
 func postWithValidResponse(t *testing.T) (*rellm.ResponsesApiResp, error) {
 	t.Helper()
 
-	return newTestEndpoint(t, http.StatusOK, `{"id":"resp_test"}`).Post(nil, noProParameters, nil)
+	return newTestEndpoint(t, http.StatusOK, `{"id":"resp_test"}`).Post(nil, tnopInspectReq, tnopInspectResp, nil)
 }
 
 func postWithResponse(t *testing.T, statusCode int, body string) error {
 	t.Helper()
 
-	_, err := newTestEndpoint(t, statusCode, body).Post(nil, noProParameters, nil)
+	_, err := newTestEndpoint(t, statusCode, body).Post(nil, tnopInspectReq, tnopInspectResp, nil)
 	return err
 }
 
@@ -85,8 +85,6 @@ func newTestEndpoint(t *testing.T, statusCode int, body string) *rellm.Endpoint 
 	require.NoError(t, err)
 	return endpoint
 }
-
-func noProParameters(_ *rellm.ResponsesApiReq) {}
 
 type testResponsesEndpoint struct{}
 
@@ -118,3 +116,6 @@ func (c testEndpointClient) Do(req *http.Request) (*http.Response, error) {
 	header.Set("X-Request-ID", "req_test")
 	return &http.Response{StatusCode: c.statusCode, Header: header, Body: io.NopCloser(strings.NewReader(c.body))}, nil
 }
+
+func tnopInspectReq(r *rellm.ResponsesApiReq)   {}
+func tnopInspectResp(r *rellm.ResponsesApiResp) {}

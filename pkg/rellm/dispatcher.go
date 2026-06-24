@@ -22,9 +22,9 @@ type OutputItem struct {
 	CallId    string          `json:"call_id,omitempty"`
 }
 
-func (a *Agent) Process(conversation []json.RawMessage, proParameterSet FuncLikeProSet) ([]json.RawMessage, string, *ResponsesApiResp, error) {
+func (a *Agent) Process(conversation []json.RawMessage, inspectReq InspectEachRequest, inspectResp InspectEachResponse) ([]json.RawMessage, string, *ResponsesApiResp, error) {
 	for range a.maxToolsIterationWithoutReturnMessage {
-		conversationResponse, err := a.endpoint.Post(conversation, proParameterSet, a.toolset)
+		conversationResponse, err := a.endpoint.Post(conversation, inspectReq, inspectResp, a.toolset)
 		if err != nil {
 			return nil, "", conversationResponse, err
 		}
@@ -113,7 +113,7 @@ func (a *Agent) handleFunctionCall(fn OutputItem, raw json.RawMessage) ([]json.R
 	invalidFnCAllRaw := FunctionCallResp{
 		Type:   "function_call_output",
 		CallId: fn.CallId,
-		Output: "invalid function call 9345867389475623456789",
+		Output: "invalid function call " + fn.Name,
 	}
 	rawInvalidFnCAll, err := json.Marshal(invalidFnCAllRaw)
 	if err != nil {

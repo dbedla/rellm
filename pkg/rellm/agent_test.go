@@ -157,7 +157,7 @@ func TestAgentAskLikeAPro(t *testing.T) {
 			Body:       io.NopCloser(strings.NewReader(goldenProRespHi)),
 		}, nil)
 
-	respMsg, resp, err := agent.AskLikeAPro("Hi", setTestReasoningAndTemperature)
+	respMsg, resp, err := agent.AskLikeAPro("Hi", setTestReasoningAndTemperature, nil)
 	assert.NoError(t, err, "failed to ask")
 
 	assert.NotNil(t, respMsg, "response message should not be nil")
@@ -169,7 +169,7 @@ func TestAgentAskLikeAPro(t *testing.T) {
 	assert.NoError(t, err, "failed to marshal response")
 	assert.JSONEq(t, goldenProRespHi, string(jsonResp))
 
-	_, _, err = agent.AskLikeAPro("What did you reason about?", setTestReasoningAndTemperature)
+	_, _, err = agent.AskLikeAPro("What did you reason about?", setTestReasoningAndTemperature, nil)
 	assert.NoError(t, err, "failed to ask with reasoning in conversation")
 }
 
@@ -246,7 +246,8 @@ func TestAgentAskLikeAProToolsCall(t *testing.T) {
 			Body:       io.NopCloser(strings.NewReader(goldenProRespA3)),
 		}, nil)
 
-	respMsg, resp, err := agent.AskLikeAPro("call one tool, check output, then call second tool, check output, provide conclusion", setTestReasoningAndTemperature)
+	q := "call one tool, check output, then call second tool, check output, provide conclusion"
+	respMsg, resp, err := agent.AskLikeAPro(q, setTestReasoningAndTemperature, nil)
 	assert.NoError(t, err, "failed to ask")
 
 	assert.NotNil(t, respMsg, "response message should not be nil")
@@ -310,7 +311,8 @@ func TestAgentAskLikeAProToolsCall_UnknownFnCall(t *testing.T) {
 			Body:       io.NopCloser(strings.NewReader(goldenProRespB2_UnknownFnCAll)),
 		}, nil)
 
-	respMsg, resp, err := agent.AskLikeAPro("call one tool, check output, then call second tool, check output, provide conclusion", setTestReasoningAndTemperature)
+	q := "call one tool, check output, then call second tool, check output, provide conclusion"
+	respMsg, resp, err := agent.AskLikeAPro(q, setTestReasoningAndTemperature, nil)
 	assert.NoError(t, err, "failed to ask")
 
 	assert.NotNil(t, respMsg, "response message should not be nil")
@@ -362,7 +364,8 @@ func TestTooManyFunctionCall(t *testing.T) {
 			Body:       io.NopCloser(strings.NewReader(goldenProRespA2)),
 		}, nil)
 
-	respMsg, resp, err := agent.AskLikeAPro("call one tool, check output, then call second tool, check output, provide conclusion", setTestReasoningAndTemperature)
+	q := "call one tool, check output, then call second tool, check output, provide conclusion"
+	respMsg, resp, err := agent.AskLikeAPro(q, setTestReasoningAndTemperature, nil)
 	assert.NoError(t, err, "failed to ask")
 
 	assert.NotNil(t, respMsg, "response message should not be nil")

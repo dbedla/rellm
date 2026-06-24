@@ -54,13 +54,13 @@ const (
 	ReasoningEffort_Medium ReasoningEffort = "medium"
 )
 
-func (e *Endpoint) Post(conversation []json.RawMessage, proParameterSet FuncLikeProSet, toolset Toolset) (*ResponsesApiResp, error) {
+func (e *Endpoint) Post(conversation []json.RawMessage, inspectReq InspectEachRequest, inspectResp InspectEachResponse, toolset Toolset) (*ResponsesApiResp, error) {
 	apiUrl, err := url.Parse(e.rae.GetUrl())
 	if err != nil {
 		return nil, err
 	}
 
-	body, err := e.buildRequestBody(conversation, proParameterSet, toolset)
+	body, err := e.buildRequestBody(conversation, inspectReq, toolset)
 	if err != nil {
 		return nil, err
 	}
@@ -86,10 +86,10 @@ func (e *Endpoint) Post(conversation []json.RawMessage, proParameterSet FuncLike
 		return nil, err
 	}
 
-	return parseResponsesApiResponse(resp, rawBody, apiUrl.String())
+	return parseResponsesApiResponse(resp, rawBody, apiUrl.String(), inspectResp)
 }
 
-func parseResponsesApiResponse(resp *http.Response, rawBody []byte, apiURL string) (*ResponsesApiResp, error) {
+func parseResponsesApiResponse(resp *http.Response, rawBody []byte, apiURL string, inspectResp InspectEachResponse) (*ResponsesApiResp, error) {
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
 		return nil, newHTTPStatusError(resp, rawBody, apiURL)
 	}
@@ -98,6 +98,8 @@ func parseResponsesApiResponse(resp *http.Response, rawBody []byte, apiURL strin
 	if err != nil {
 		return nil, errors.Join(err, fmt.Errorf("%s", string(rawBody)))
 	}
+
+	inspectResp(&conversationResponse)
 
 	return &conversationResponse, nil
 }
@@ -124,7 +126,7 @@ func bodySnippet(rawBody []byte) string {
 	return body[:maxBodySnippetLength] + "..."
 }
 
-func (e *Endpoint) buildRequestBody(conversation []json.RawMessage, proParameterSet FuncLikeProSet, toolset Toolset) ([]byte, error) {
+func (e *Endpoint) buildRequestBody(conversation []json.RawMessage, inspectReq InspectEachRequest, toolset Toolset) ([]byte, error) {
 
 	respBody := ResponsesApiReq{
 		Model: string(e.model),
@@ -135,7 +137,7 @@ func (e *Endpoint) buildRequestBody(conversation []json.RawMessage, proParameter
 		respBody.Tools = toolset.BuildTools()
 	}
 
-	proParameterSet(&respBody)
+	inspectReq(&respBody)
 
 	marshaled, err := json.Marshal(respBody)
 	if err != nil {

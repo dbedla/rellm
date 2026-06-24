@@ -32,7 +32,7 @@
     {
       "type": "function_call_output",
       "call_id": "call_4212414117110012",
-      "output": "invalid function call 9345867389475623456789"
+      "output": "invalid function call UnknownFunctionCall"
     }
   ],
   "temperature": 0.5,
