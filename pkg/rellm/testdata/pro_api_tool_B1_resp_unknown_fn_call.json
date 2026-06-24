@@ -25,7 +25,7 @@
       "id": "fc_vj91mcis9l80v6kqbagf2w",
       "call_id": "call_4212414117110012",
       "type": "function_call",
-      "name": "UNKNOWN_FUNCTION_NAME",
+      "name": "UnknownFunctionCall",
       "arguments": "{}",
       "status": "completed"
     }

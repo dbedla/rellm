@@ -86,7 +86,6 @@ func (a *Agent) processOutputItem(item OutputItem, raw json.RawMessage) ([]json.
 	case "reasoning":
 		return handleReasoning(raw)
 	default:
-		//TODO: handle other output: reasoning
 		a.logger.Warn().Msgf("unknown output type: %s", item.Type)
 		return nil, "", nil
 	}
@@ -111,7 +110,17 @@ func (a *Agent) handleFunctionCall(fn OutputItem, raw json.RawMessage) ([]json.R
 		return conversationElements, nil
 	}
 
-	return nil, fmt.Errorf("tool call (%s) not found", fn.Name)
+	invalidFnCAllRaw := FunctionCallResp{
+		Type:   "function_call_output",
+		CallId: fn.CallId,
+		Output: "invalid function call 9345867389475623456789",
+	}
+	rawInvalidFnCAll, err := json.Marshal(invalidFnCAllRaw)
+	if err != nil {
+		return nil, err
+	}
+
+	return []json.RawMessage{raw, rawInvalidFnCAll}, nil
 }
 
 func handleMessage(msg OutputItem) ([]json.RawMessage, string, error) {
