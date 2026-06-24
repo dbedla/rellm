@@ -98,29 +98,31 @@ func (a *Agent) handleFunctionCall(fn OutputItem, raw json.RawMessage) ([]json.R
 	}
 
 	a.logger.Debug().Msgf("tool call %s with id %s with args: %s", fn.Name, fn.CallId, string(fn.Arguments))
-	if funcCallResp, ok := a.toolset.DispatchTools(fn.Name, fn.CallId, fn.Arguments); ok {
-		a.logger.Debug().Msgf("tool returned call id: %s, value: %s", funcCallResp.CallId, funcCallResp.Output)
-		var conversationElements []json.RawMessage
-		conversationElements = append(conversationElements, raw)
-		rawFuncCallResp, err := json.Marshal(funcCallResp)
-		if err != nil {
-			return nil, err
-		}
-		conversationElements = append(conversationElements, rawFuncCallResp)
-		return conversationElements, nil
+	funcCallResp, ok := a.toolset.DispatchTools(fn.Name, fn.CallId, fn.Arguments)
+	if !ok {
+		funcCallResp = invalidFunctionCallResp(fn)
 	}
 
-	invalidFnCAllRaw := FunctionCallResp{
+	a.logger.Debug().Msgf("tool returned call id: %s, value: %s", funcCallResp.CallId, funcCallResp.Output)
+	return functionCallConversationElements(raw, funcCallResp)
+}
+
+func invalidFunctionCallResp(fn OutputItem) FunctionCallResp {
+	return FunctionCallResp{
 		Type:   "function_call_output",
 		CallId: fn.CallId,
 		Output: "invalid function call " + fn.Name,
 	}
-	rawInvalidFnCAll, err := json.Marshal(invalidFnCAllRaw)
+
+}
+
+func functionCallConversationElements(raw json.RawMessage, resp FunctionCallResp) ([]json.RawMessage, error) {
+	rawResp, err := json.Marshal(resp)
 	if err != nil {
 		return nil, err
 	}
 
-	return []json.RawMessage{raw, rawInvalidFnCAll}, nil
+	return []json.RawMessage{raw, rawResp}, nil
 }
 
 func handleMessage(msg OutputItem) ([]json.RawMessage, string, error) {
