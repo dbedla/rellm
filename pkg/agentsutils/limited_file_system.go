@@ -1,4 +1,4 @@
-package agentsutills
+package agentsutils
 
 import (
 	"fmt"
@@ -38,7 +38,7 @@ func (s *LimitedFileSystem) GetReadOnlyPaths() []string {
 }
 
 // GetOutputDir returns the path of the output directory
-// in this directory read, write and delete operation are allowed
+// in this directory read, write, and delete operation are allowed
 func (s *LimitedFileSystem) GetOutputDir() string {
 	return s.outputDir
 }
@@ -96,7 +96,7 @@ func (s *LimitedFileSystem) WriteBytesToFile(content []byte, path string) error 
 }
 
 // DeleteFile delete file.
-// error will be returned if the path is outside FSSandbox.outputDir
+// an error will be returned if the path is outside FSSandbox.outputDir
 // error will be returned in any other standard case during deletion
 func (s *LimitedFileSystem) DeleteFile(path string) error {
 	absPath, err := s.validateInOutputDir(path)

@@ -24,13 +24,13 @@ func TestConversationStorage(t *testing.T) {
 
 	storage := New(tempDir)
 
-	// 1. Test Restore from empty directory
-	msgs, err := storage.RestoreLatest()
+	// 1. Test Restore from an empty directory
+	messages, err := storage.RestoreLatest()
 	if err != nil {
 		t.Errorf("RestoreLatest from empty dir failed: %v", err)
 	}
-	if len(msgs) != 0 {
-		t.Errorf("expected empty conversation, got %d messages", len(msgs))
+	if len(messages) != 0 {
+		t.Errorf("expected empty conversation, got %d messages", len(messages))
 	}
 
 	// 2. Test Store and RestoreSpecific
@@ -99,12 +99,12 @@ func TestConversationStorage(t *testing.T) {
 		t.Errorf("restored latest conversation does not match expected")
 	}
 
-	// 4. Test RestoreSpecific with non-existent file
-	msgs, err = storage.RestoreSpecific("non-existent.json")
+	// 4. Test RestoreSpecific with a non-existent file
+	messages, err = storage.RestoreSpecific("non-existent.json")
 	if err != nil {
 		t.Errorf("RestoreSpecific for non-existent file failed: %v", err)
 	}
-	if len(msgs) != 0 {
-		t.Errorf("expected empty conversation for non-existent file, got %d messages", len(msgs))
+	if len(messages) != 0 {
+		t.Errorf("expected empty conversation for non-existent file, got %d messages", len(messages))
 	}
 }

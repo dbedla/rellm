@@ -7,7 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"rellm/pkg/agentsutills"
+	"rellm/pkg/agentsutils"
 	"rellm/pkg/rellm"
 	"strings"
 	"testing"
@@ -430,7 +430,7 @@ func buildTestProToolAgent(t *testing.T, maxToolsIterationWithoutReturnMessage u
 		WithMaxToolsIterationWithoutReturnMessage(maxToolsIterationWithoutReturnMessage).
 		WithContinueConversation(false).
 		WithSystemMessage("You are a helpful assistant.").
-		WithToolset(&agentsutills.DataSrcToolset{}).
+		WithToolset(&agentsutils.DataSrcToolset{}).
 		Build()
 
 	assert.NoError(t, err, "failed to create agent")

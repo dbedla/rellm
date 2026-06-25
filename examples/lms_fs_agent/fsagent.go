@@ -1,7 +1,7 @@
 package main
 
 import (
-	"rellm/pkg/agentsutills"
+	"rellm/pkg/agentsutils"
 	"rellm/pkg/rellm"
 )
 
@@ -43,28 +43,28 @@ func buildFSAgent(workspace string) (*rellm.Agent, error) {
 		Build()
 }
 
-func buildFSToolset(readOnlyDir, outputDir string) (*agentsutills.FSToolset, error) {
-	fs, err := agentsutills.NewLimitedFileSystem([]string{readOnlyDir}, outputDir)
+func buildFSToolset(readOnlyDir, outputDir string) (*agentsutils.FSToolset, error) {
+	fs, err := agentsutils.NewLimitedFileSystem([]string{readOnlyDir}, outputDir)
 	if err != nil {
 		return nil, err
 	}
-	fsToolset := agentsutills.NewFSToolset(fs)
+	fsToolset := agentsutils.NewFSToolset(fs)
 
 	return fsToolset, nil
 }
 
 func buildFsPath(workspace string) (string, string, string, error) {
-	readOnlyDir, err := agentsutills.CreateSubDir(workspace, "readonly_agent_input")
+	readOnlyDir, err := agentsutils.CreateSubDir(workspace, "readonly_agent_input")
 	if err != nil {
 		return "", "", "", err
 	}
 
-	outputDir, err := agentsutills.CreateSubDir(workspace, "output")
+	outputDir, err := agentsutils.CreateSubDir(workspace, "output")
 	if err != nil {
 		return "", "", "", err
 	}
 
-	logdir, err := agentsutills.CreateSubDir(workspace, "logs")
+	logdir, err := agentsutils.CreateSubDir(workspace, "logs")
 	if err != nil {
 		return "", "", "", err
 	}

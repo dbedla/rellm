@@ -1,4 +1,4 @@
-package agentsutills
+package agentsutils
 
 import (
 	"bufio"

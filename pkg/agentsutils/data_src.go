@@ -1,9 +1,9 @@
-package agentsutills
+package agentsutils
 
 type TestDataSource struct {
 }
 
-func (ds *TestDataSource) GetDataFor(input string) []string {
+func (ds *TestDataSource) GetDataFor(string) []string {
 	return []string{"abc", "def"}
 }
 

@@ -40,11 +40,11 @@ func (a *Agent) Ask(question string) (string, error) {
 
 type InspectEachRequest func(*ResponsesApiReq)
 
-func nopInspectReq(r *ResponsesApiReq) {}
+func nopInspectReq(*ResponsesApiReq) {}
 
 type InspectEachResponse func(resp *ResponsesApiResp)
 
-func nopInspectResp(r *ResponsesApiResp) {}
+func nopInspectResp(*ResponsesApiResp) {}
 
 func (a *Agent) AskLikeAPro(question string, inspectReq InspectEachRequest, inspectResp InspectEachResponse) (string, *ResponsesApiResp, error) {
 	a.logger.Info().Msgf("question to agent: %s", question)
