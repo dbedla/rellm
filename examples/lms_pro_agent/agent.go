@@ -29,6 +29,7 @@ func buildProAgent(workspace string) (*rellm.Agent, error) {
 		WithContinueConversation(false).
 		WithSystemMessage(proAgentSysPrompt).
 		WithToolset(&WeatherToolset{}).
+		WithWorkspaceLogger().
 		Build()
 }
 

@@ -403,6 +403,7 @@ func buildTestAgent(t *testing.T) (*rellm.Agent, *HttpDo) {
 		WithMaxToolsIterationWithoutReturnMessage(20).
 		WithContinueConversation(false).
 		WithSystemMessage("You are a helpful assistant with deep weather knowledge.").
+		WithNoOpLogger().
 		Build()
 
 	assert.NoError(t, err, "failed to create agent")
@@ -431,6 +432,7 @@ func buildTestProToolAgent(t *testing.T, maxToolsIterationWithoutReturnMessage u
 		WithContinueConversation(false).
 		WithSystemMessage("You are a helpful assistant.").
 		WithToolset(&agentsutils.DataSrcToolset{}).
+		WithNoOpLogger().
 		Build()
 
 	assert.NoError(t, err, "failed to create agent")

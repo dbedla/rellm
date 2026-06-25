@@ -33,6 +33,7 @@ func buildTestProToolAgent(workspace string) (*rellm.Agent, error) {
 		WithContinueConversation(false).
 		WithSystemMessage(sysprompt).
 		WithToolset(&agentsutils.DataSrcToolset{}).
+		WithWorkspaceLogger().
 		Build()
 }
 
