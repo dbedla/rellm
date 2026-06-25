@@ -1,0 +1,99 @@
+{
+  "id": "resp_c49263df51927372d8c99a6c343d682ab985bdced5bf698c",
+  "object": "response",
+  "created_at": 1781962246,
+  "completed_at": 1781962256,
+  "status": "completed",
+  "incomplete_details": null,
+  "model": "google/gemma-4-26b-a4b",
+  "previous_response_id": null,
+  "instructions": null,
+  "output": [
+    {
+      "id": "rs_76ulm03yc4d5edhsxwxjrs",
+      "type": "reasoning",
+      "status": "completed",
+      "summary": [],
+      "content": [
+        {
+          "type": "reasoning_text",
+          "text": "\nThe user wants me to perform a specific sequence of actions involving tool calls.\n1. Call one tool.\n2. Check the output of that first tool call.\n3. Call a second tool.\n4. Check the output of that second tool call.\n5. Provide a conclusion based on both outputs.\n\nLooking at the available tools:\n- `GetDataFor(input: string)`: This seems like it could be used to fetch information.\n- `GetStaticData()`: This retrieves static data.\n\nSince I don't have a specific task or topic, I need to choose two tool calls that make sense together. A good pattern would be to get some \"static\" context and then use it to look up \"specific\" data, or vice versa.\n\nLet's try this:\n1. Call `GetStaticData()` to see what kind of general information is available.\n2. Based on the output (if it contains a key or a topic), call `GetDataFor(input)` with that topic.\n3. Compare/Synthesize and conclude.\n\nWait, I can't \"check the output\" *before* deciding the second tool call in a single turn if the second tool depends on the first one's output. The model must execute one step at a time.\n\nStep 1: Call `GetStaticData`."
+        }
+      ]
+    },
+    {
+      "id": "fc_vj91mcis9l80v6kqbagf2w",
+      "call_id": "call_4212414117110012",
+      "type": "function_call",
+      "name": "UnknownFunctionCall",
+      "arguments": "{}",
+      "status": "completed"
+    }
+  ],
+  "error": null,
+  "tools": [
+    {
+      "type": "function",
+      "name": "GetDataFor",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "input": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "input"
+        ]
+      },
+      "strict": false,
+      "description": "Get data for a specific input"
+    },
+    {
+      "type": "function",
+      "name": "GetStaticData",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      },
+      "strict": false,
+      "description": "Get static data"
+    }
+  ],
+  "tool_choice": "auto",
+  "truncation": "auto",
+  "parallel_tool_calls": true,
+  "text": {
+    "format": {
+      "type": "text"
+    }
+  },
+  "top_p": 0.95,
+  "presence_penalty": 0,
+  "frequency_penalty": 1.1,
+  "top_logprobs": 0,
+  "temperature": 0.5,
+  "reasoning": {
+    "summary": null,
+    "effort": "low"
+  },
+  "usage": {
+    "input_tokens": 105,
+    "output_tokens": 283,
+    "total_tokens": 388,
+    "input_tokens_details": {
+      "cached_tokens": 0
+    },
+    "output_tokens_details": {
+      "reasoning_tokens": 283
+    }
+  },
+  "max_output_tokens": null,
+  "max_tool_calls": null,
+  "store": true,
+  "background": false,
+  "service_tier": "default",
+  "metadata": {},
+  "safety_identifier": null,
+  "prompt_cache_key": null
+}

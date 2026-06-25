@@ -22,21 +22,21 @@ type OutputItem struct {
 	CallId    string          `json:"call_id,omitempty"`
 }
 
-func (a *Agent) Process(conversation []json.RawMessage, proParameterSet FuncLikeProSet) ([]json.RawMessage, string, *ResponsesApiResp, error) {
+func (a *Agent) Process(conversation []json.RawMessage, inspectReq InspectEachRequest, inspectResp InspectEachResponse) ([]json.RawMessage, string, *ResponsesApiResp, error) {
 	for range a.maxToolsIterationWithoutReturnMessage {
-		conversationResponse, err := a.endpoint.Post(conversation, proParameterSet, a.toolset)
+		conversationResponse, err := a.endpoint.Post(conversation, inspectReq, inspectResp, a.toolset)
 		if err != nil {
-			return nil, "", nil, err
+			return nil, "", conversationResponse, err
 		}
 
 		if conversationResponse.Error != nil {
 			a.logger.Error().Msgf("error in conversation response: %v", conversationResponse.Error.Message)
-			return nil, "", nil, fmt.Errorf("error in conversation response: %v", conversationResponse.Error.Message)
+			return nil, "", conversationResponse, fmt.Errorf("error in conversation response: %v", conversationResponse.Error.Message)
 		}
 
 		functionResultAsConversation, msgRespFromLLM, err := a.dispatchFunctionOutput(conversationResponse.Output)
 		if err != nil {
-			return nil, "", nil, err
+			return nil, "", conversationResponse, err
 		}
 		conversation = append(conversation, functionResultAsConversation...)
 
@@ -86,7 +86,6 @@ func (a *Agent) processOutputItem(item OutputItem, raw json.RawMessage) ([]json.
 	case "reasoning":
 		return handleReasoning(raw)
 	default:
-		//TODO: handle other output: reasoning
 		a.logger.Warn().Msgf("unknown output type: %s", item.Type)
 		return nil, "", nil
 	}
@@ -99,26 +98,35 @@ func (a *Agent) handleFunctionCall(fn OutputItem, raw json.RawMessage) ([]json.R
 	}
 
 	a.logger.Debug().Msgf("tool call %s with id %s with args: %s", fn.Name, fn.CallId, string(fn.Arguments))
-	if funcCallResp, ok := a.toolset.DispatchTools(fn.Name, fn.CallId, fn.Arguments); ok {
-		a.logger.Debug().Msgf("tool returned call id: %s, value: %s", funcCallResp.CallId, funcCallResp.Output)
-		var conversationElements []json.RawMessage
-		conversationElements = append(conversationElements, raw)
-		rawFuncCallResp, err := json.Marshal(funcCallResp)
-		if err != nil {
-			return nil, err
-		}
-		conversationElements = append(conversationElements, rawFuncCallResp)
-		return conversationElements, nil
-	} else {
-		fmt.Printf("unknown function call: %s\n", fn.Name)
+	funcCallResp, ok := a.toolset.DispatchTools(fn.Name, fn.CallId, fn.Arguments)
+	if !ok {
+		funcCallResp = invalidFunctionCallResp(fn)
 	}
 
-	return nil, nil
+	a.logger.Debug().Msgf("tool returned call id: %s, value: %s", funcCallResp.CallId, funcCallResp.Output)
+	return functionCallConversationElements(raw, funcCallResp)
+}
+
+func invalidFunctionCallResp(fn OutputItem) FunctionCallResp {
+	return FunctionCallResp{
+		Type:   "function_call_output",
+		CallId: fn.CallId,
+		Output: "invalid function call " + fn.Name,
+	}
+
+}
+
+func functionCallConversationElements(raw json.RawMessage, resp FunctionCallResp) ([]json.RawMessage, error) {
+	rawResp, err := json.Marshal(resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return []json.RawMessage{raw, rawResp}, nil
 }
 
 func handleMessage(msg OutputItem) ([]json.RawMessage, string, error) {
 	if len(msg.Content) > 1 {
-		fmt.Printf("Too many messages in response")
 		return nil, "", fmt.Errorf("too many messages in response")
 	}
 
