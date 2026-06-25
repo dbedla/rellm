@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"rellm/pkg/agentsutills"
+	"rellm/pkg/agentsutils"
 	"rellm/pkg/rellm"
 
 	"github.com/fatih/color"
@@ -32,7 +32,7 @@ func buildTestProToolAgent(workspace string) (*rellm.Agent, error) {
 		WithMaxToolsIterationWithoutReturnMessage(20).
 		WithContinueConversation(false).
 		WithSystemMessage(sysprompt).
-		WithToolset(&agentsutills.DataSrcToolset{}).
+		WithToolset(&agentsutils.DataSrcToolset{}).
 		Build()
 }
 

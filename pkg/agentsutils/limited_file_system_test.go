@@ -1,4 +1,4 @@
-package agentsutills
+package agentsutils
 
 import (
 	"os"
@@ -37,7 +37,7 @@ func TestNewFSSandbox(t *testing.T) {
 	})
 
 	t.Run("ReadOnly dir no read access", func(t *testing.T) {
-		noAccessDir := filepath.Join(tmpDir, "noaccess")
+		noAccessDir := filepath.Join(tmpDir, "no_access")
 		err := os.Mkdir(noAccessDir, 0000)
 		assert.NoError(t, err, "failed to create no access dir")
 		defer func() {
@@ -50,7 +50,7 @@ func TestNewFSSandbox(t *testing.T) {
 	})
 
 	t.Run("OutputDir no write access", func(t *testing.T) {
-		noWriteOutputDir := filepath.Join(tmpDir, "nowrite_output")
+		noWriteOutputDir := filepath.Join(tmpDir, "no_write_output")
 		err := os.Mkdir(noWriteOutputDir, 0555)
 		assert.NoError(t, err, "failed to create no write output dir")
 		defer func() {

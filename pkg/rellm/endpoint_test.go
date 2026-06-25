@@ -64,13 +64,13 @@ func assertHTTPStatusError(t *testing.T, err error, statusCode int, body string)
 func postWithValidResponse(t *testing.T) (*rellm.ResponsesApiResp, error) {
 	t.Helper()
 
-	return newTestEndpoint(t, http.StatusOK, `{"id":"resp_test"}`).Post(nil, tnopInspectReq, tnopInspectResp, nil)
+	return newTestEndpoint(t, http.StatusOK, `{"id":"resp_test"}`).Post(nil, tNopInspectReq, tNopInspectResp, nil)
 }
 
 func postWithResponse(t *testing.T, statusCode int, body string) error {
 	t.Helper()
 
-	_, err := newTestEndpoint(t, statusCode, body).Post(nil, tnopInspectReq, tnopInspectResp, nil)
+	_, err := newTestEndpoint(t, statusCode, body).Post(nil, tNopInspectReq, tNopInspectResp, nil)
 	return err
 }
 
@@ -117,5 +117,5 @@ func (c testEndpointClient) Do(req *http.Request) (*http.Response, error) {
 	return &http.Response{StatusCode: c.statusCode, Header: header, Body: io.NopCloser(strings.NewReader(c.body))}, nil
 }
 
-func tnopInspectReq(r *rellm.ResponsesApiReq)   {}
-func tnopInspectResp(r *rellm.ResponsesApiResp) {}
+func tNopInspectReq(*rellm.ResponsesApiReq)   {}
+func tNopInspectResp(*rellm.ResponsesApiResp) {}
