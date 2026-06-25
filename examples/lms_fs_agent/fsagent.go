@@ -40,6 +40,7 @@ func buildFSAgent(workspace string) (*rellm.Agent, error) {
 		WithContinueConversation(true).
 		WithToolset(fsToolset).
 		WithSystemMessage(fsAgentSysPrompt).
+		WithWorkspaceLogger().
 		Build()
 }
 

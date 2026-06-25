@@ -1,6 +1,7 @@
 package rellm
 
 import (
+	"io"
 	"os"
 
 	"github.com/rs/zerolog"
@@ -28,4 +29,8 @@ func NewBaseStdOutLogger() zerolog.Logger {
 	multi := zerolog.MultiLevelWriter(os.Stdout)
 	l := zerolog.New(multi).With().Timestamp().Logger()
 	return l
+}
+
+func NewNoOpLogger() zerolog.Logger {
+	return zerolog.New(io.Discard)
 }

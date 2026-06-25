@@ -36,6 +36,7 @@ func buildLBaseAgent(workspace string) (*rellm.Agent, error) {
 		WithMaxToolsIterationWithoutReturnMessage(20).
 		WithContinueConversation(false).
 		WithSystemMessage(baseAgentSysPrompt).
+		WithWorkspaceLogger().
 		Build()
 }
 

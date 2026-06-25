@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"os"
 	"rellm/pkg/agentsutils"
 	"rellm/pkg/rellm"
 	"strings"
@@ -382,11 +381,11 @@ func TestFuncResultToFunctionCallRespSerializesOutputAsString(t *testing.T) {
 	assert.JSONEq(t, `{"type":"function_call_output","call_id":"call_123","output":"42"}`, string(jsonResp))
 }
 
-func buildTestAgent(t *testing.T) (*rellm.Agent, *HttpDo) {
+func buildTestAgent(t *testing.T) (*rellm.Agent, *HttpDoMock) {
 
 	agentName := "TestAgent"
-	workspace := inMemoryWorkspace(t)
-	mockHttp := new(HttpDo)
+	workspace := t.TempDir()
+	mockHttp := new(HttpDoMock)
 
 	lmsEndpoint := rellm.NewUniversalResponsesEndpoint(testBaseUrl, testPort, testResponsesApiEndpoint, nil)
 	ep, err := rellm.NewEndpointBuilder().
@@ -403,17 +402,18 @@ func buildTestAgent(t *testing.T) (*rellm.Agent, *HttpDo) {
 		WithMaxToolsIterationWithoutReturnMessage(20).
 		WithContinueConversation(false).
 		WithSystemMessage("You are a helpful assistant with deep weather knowledge.").
+		WithNoOpLogger().
 		Build()
 
 	assert.NoError(t, err, "failed to create agent")
 	return ta, mockHttp
 }
 
-func buildTestProToolAgent(t *testing.T, maxToolsIterationWithoutReturnMessage uint64) (*rellm.Agent, *HttpDo) {
+func buildTestProToolAgent(t *testing.T, maxToolsIterationWithoutReturnMessage uint64) (*rellm.Agent, *HttpDoMock) {
 
 	agentName := "TestProAgent"
-	workspace := inMemoryWorkspace(t)
-	mockHttp := new(HttpDo)
+	workspace := t.TempDir()
+	mockHttp := new(HttpDoMock)
 
 	lmsEndpoint := rellm.NewUniversalResponsesEndpoint(testBaseUrl, testPort, testResponsesApiEndpoint, nil)
 	ep, err := rellm.NewEndpointBuilder().
@@ -431,16 +431,11 @@ func buildTestProToolAgent(t *testing.T, maxToolsIterationWithoutReturnMessage u
 		WithContinueConversation(false).
 		WithSystemMessage("You are a helpful assistant.").
 		WithToolset(&agentsutils.DataSrcToolset{}).
+		WithNoOpLogger().
 		Build()
 
 	assert.NoError(t, err, "failed to create agent")
 	return ta, mockHttp
-}
-
-func inMemoryWorkspace(t *testing.T) string {
-	tempDir, err := os.MkdirTemp("", "rellm-test-*")
-	assert.NoError(t, err, "failed to create temp dir")
-	return tempDir
 }
 
 func baseRequestMatch(req *http.Request) bool {
@@ -453,11 +448,11 @@ func setTestReasoningAndTemperature(req *rellm.ResponsesApiReq) {
 	req.Temperature = testTemperature
 }
 
-type HttpDo struct {
+type HttpDoMock struct {
 	mock.Mock
 }
 
-func (h *HttpDo) Do(req *http.Request) (*http.Response, error) {
+func (h *HttpDoMock) Do(req *http.Request) (*http.Response, error) {
 	args := h.Called(req)
 	return args.Get(0).(*http.Response), args.Error(1)
 }
