@@ -2,7 +2,7 @@ package rellm
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"net/http"
 	"path/filepath"
 	"rellm/pkg/rellm/conversation_storage"
@@ -11,7 +11,9 @@ import (
 )
 
 type EndpointBuilder struct {
-	endpoint Endpoint
+	endpoint             Endpoint
+	useDefaultHttpClient bool
+	useClientHttpDo      bool
 }
 
 func NewEndpointBuilder() *EndpointBuilder {
@@ -19,7 +21,14 @@ func NewEndpointBuilder() *EndpointBuilder {
 }
 
 func (b *EndpointBuilder) WithClientHttpDo(c ClientHttpDo) *EndpointBuilder {
+	b.useClientHttpDo = true
 	b.endpoint.client = c
+	return b
+}
+
+func (b *EndpointBuilder) WithDefaultHttpClient() *EndpointBuilder {
+	b.useDefaultHttpClient = true
+	b.endpoint.client = &http.Client{}
 	return b
 }
 
@@ -35,16 +44,16 @@ func (b *EndpointBuilder) WithResponsesApiEndpoint(endpoint ResponsesApiEndpoint
 
 func (b *EndpointBuilder) Build() (*Endpoint, error) {
 
-	if b.endpoint.client == nil {
-		b.endpoint.client = &http.Client{}
+	if !exactlyOneIsSet(b.useDefaultHttpClient, b.useClientHttpDo) {
+		return nil, ErrBuildNoHttpClient
 	}
 
 	if b.endpoint.model == "" {
-		return nil, fmt.Errorf("missing model for endpoint")
+		return nil, ErrBuildNoModelName
 
 	}
 	if b.endpoint.rae == nil {
-		return nil, fmt.Errorf("missing response api endpoint for endpoint")
+		return nil, ErrBuildNoResponsesApiEndpoint
 	}
 
 	return &b.endpoint, nil
@@ -129,15 +138,15 @@ func (b *AgentBuilder) WithNoOpLogger() *AgentBuilder {
 func (b *AgentBuilder) Build() (*Agent, error) {
 
 	if b.agent.workspaceDir == "" {
-		return nil, fmt.Errorf("missing workspaceDir")
+		return nil, ErrBuildNoWorkspaceDir
 	}
 
 	if b.agent.endpoint == nil {
-		return nil, fmt.Errorf("missing endpoint")
+		return nil, ErrBuildNoEndpoint
 	}
 
 	if b.agent.agentName == "" {
-		b.agent.agentName = "UnnamedAgent"
+		return nil, ErrBuildNoAgentName
 	}
 
 	l, err := b.buildLogger()
@@ -162,7 +171,7 @@ func (b *AgentBuilder) Build() (*Agent, error) {
 func (b *AgentBuilder) buildLogger() (*zerolog.Logger, error) {
 	multipleLoggerConfig := !exactlyOneIsSet(b.useStdoutLogger, b.useWorkspaceLogger, b.useNoOpLogger, b.agent.logger != nil)
 	if multipleLoggerConfig {
-		return nil, fmt.Errorf("exactly one logger must be configured")
+		return nil, ErrBuildExactlyOneLogger
 	}
 
 	if b.useStdoutLogger {
@@ -184,13 +193,13 @@ func (b *AgentBuilder) buildLogger() (*zerolog.Logger, error) {
 
 func (b *AgentBuilder) buildWorkspaceLogger() (*zerolog.Logger, error) {
 	if b.agent.workspaceDir == "" {
-		return nil, fmt.Errorf("missing workspaceDir")
+		return nil, ErrBuildNoWorkspaceDir
 	}
 
 	fp := filepath.Join(b.agent.workspaceDir, b.agent.agentName+".log")
 	fl, err := NewBaseFileLogger(fp)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create logger: %s", err.Error())
+		return nil, errors.Join(ErrBuildLogger, err)
 	}
 	l := NewComponentLogger(fl, b.agent.agentName)
 	return &l, nil

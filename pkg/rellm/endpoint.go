@@ -77,6 +77,10 @@ func (e *Endpoint) Post(conversation []json.RawMessage, inspectReq InspectEachRe
 		return nil, err
 	}
 
+	if resp == nil {
+		return nil, errors.New("nil response")
+	}
+
 	if resp.Body == nil {
 		return nil, errors.New("empty response body")
 	}

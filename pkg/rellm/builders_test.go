@@ -6,7 +6,6 @@ import (
 	"rellm/pkg/rellm"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestEndpointBuilder_Build(t *testing.T) {
@@ -21,7 +20,7 @@ func TestEndpointBuilder_Build(t *testing.T) {
 			WithClientHttpDo(mockHttp)
 
 		endpoint, err := builder.Build()
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		assert.NotNil(t, endpoint)
 	})
 
@@ -30,9 +29,10 @@ func TestEndpointBuilder_Build(t *testing.T) {
 			WithResponsesApiEndpoint(lmsEndpoint).
 			WithClientHttpDo(mockHttp)
 
-		_, err := builder.Build()
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "missing model")
+		agent, err := builder.Build()
+		assert.Nil(t, agent)
+		assert.Error(t, err)
+		assert.Equal(t, rellm.ErrBuildNoModelName, err)
 	})
 
 	t.Run("Missing response api endpoint", func(t *testing.T) {
@@ -41,8 +41,8 @@ func TestEndpointBuilder_Build(t *testing.T) {
 			WithClientHttpDo(mockHttp)
 
 		_, err := builder.Build()
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "missing response api endpoint")
+		assert.Error(t, err)
+		assert.Equal(t, err, rellm.ErrBuildNoResponsesApiEndpoint)
 	})
 }
 
@@ -51,10 +51,12 @@ func TestAgentBuilder_Build(t *testing.T) {
 	defer mockHttp.AssertExpectations(t)
 	lmsEndpoint := rellm.NewUniversalResponsesEndpoint(testBaseUrl, testPort, testResponsesApiEndpoint, nil)
 	// Setup a valid endpoint for AgentBuilder tests
-	endpoint, _ := rellm.NewEndpointBuilder().
+	endpoint, err := rellm.NewEndpointBuilder().
 		WithModel(rellm.Model_LMS_Google_Gemma_4_26B_A4B).
 		WithResponsesApiEndpoint(lmsEndpoint).
+		WithClientHttpDo(mockHttp).
 		Build()
+	assert.NoError(t, err)
 
 	tmpDir := t.TempDir()
 
@@ -66,7 +68,7 @@ func TestAgentBuilder_Build(t *testing.T) {
 			WithStdoutLogger()
 
 		agent, err := builder.Build()
-		require.NoError(t, err)
+		assert.NoError(t, err)
 		assert.NotNil(t, agent)
 	})
 
@@ -76,8 +78,8 @@ func TestAgentBuilder_Build(t *testing.T) {
 			WithStdoutLogger()
 
 		_, err := builder.Build()
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "missing workspaceDir")
+		assert.Error(t, err)
+		assert.Equal(t, err, rellm.ErrBuildNoWorkspaceDir)
 	})
 
 	t.Run("Missing endpoint", func(t *testing.T) {
@@ -86,7 +88,7 @@ func TestAgentBuilder_Build(t *testing.T) {
 			WithStdoutLogger()
 
 		_, err := builder.Build()
-		require.Error(t, err)
-		assert.Contains(t, err.Error(), "missing endpoint")
+		assert.Error(t, err)
+		assert.Equal(t, err, rellm.ErrBuildNoEndpoint)
 	})
 }
