@@ -44,6 +44,16 @@ func TestEndpointBuilder_Build(t *testing.T) {
 		assert.Error(t, err)
 		assert.Equal(t, err, rellm.ErrBuildNoResponsesApiEndpoint)
 	})
+
+	t.Run("Missing http client", func(t *testing.T) {
+		builder := rellm.NewEndpointBuilder().
+			WithModel(rellm.Model_LMS_Google_Gemma_4_26B_A4B).
+			WithResponsesApiEndpoint(lmsEndpoint)
+
+		_, err := builder.Build()
+		assert.Error(t, err)
+		assert.Equal(t, err, rellm.ErrBuildNoHttpClient)
+	})
 }
 
 func TestAgentBuilder_Build(t *testing.T) {
@@ -74,6 +84,8 @@ func TestAgentBuilder_Build(t *testing.T) {
 
 	t.Run("Missing workspaceDir", func(t *testing.T) {
 		builder := rellm.NewAgentBuilder().
+			WithAgentName("TestAgent").
+			WithNoOpLogger().
 			WithEndpoint(endpoint).
 			WithStdoutLogger()
 
@@ -85,10 +97,46 @@ func TestAgentBuilder_Build(t *testing.T) {
 	t.Run("Missing endpoint", func(t *testing.T) {
 		builder := rellm.NewAgentBuilder().
 			WithWorkspaceDir(tmpDir).
-			WithStdoutLogger()
+			WithStdoutLogger().
+			WithAgentName("TestAgent")
 
 		_, err := builder.Build()
 		assert.Error(t, err)
 		assert.Equal(t, err, rellm.ErrBuildNoEndpoint)
+	})
+
+	t.Run("Missing agent name", func(t *testing.T) {
+		builder := rellm.NewAgentBuilder().
+			WithEndpoint(endpoint).
+			WithWorkspaceDir(tmpDir).
+			WithStdoutLogger()
+
+		_, err := builder.Build()
+		assert.Error(t, err)
+		assert.Equal(t, err, rellm.ErrBuildNoAgentName)
+	})
+
+	t.Run("Multiple loggers configured", func(t *testing.T) {
+		builder := rellm.NewAgentBuilder().
+			WithAgentName("TestAgent").
+			WithEndpoint(endpoint).
+			WithWorkspaceDir(tmpDir).
+			WithStdoutLogger().
+			WithNoOpLogger()
+
+		_, err := builder.Build()
+		assert.Error(t, err)
+		assert.Equal(t, err, rellm.ErrBuildExactlyOneLogger)
+	})
+
+	t.Run("No loggers configured", func(t *testing.T) {
+		builder := rellm.NewAgentBuilder().
+			WithEndpoint(endpoint).
+			WithWorkspaceDir(tmpDir).
+			WithAgentName("TestAgent")
+
+		_, err := builder.Build()
+		assert.Error(t, err)
+		assert.Equal(t, err, rellm.ErrBuildExactlyOneLogger)
 	})
 }
