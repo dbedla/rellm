@@ -7,7 +7,7 @@
     },
     {
       "role": "user",
-      "content": "call one tool, check output, then call second tool, check output, provide conclusion"
+      "content": "call function GetSpecialData"
     }
   ],
   "temperature": 0.5,
@@ -39,6 +39,6 @@
     }
   ],
   "reasoning": {
-    "effort": "low"
+    "effort": "medium"
   }
 }

@@ -68,12 +68,14 @@ func (a *Agent) AskLikeAPro(question string, inspectReq InspectEachRequest, insp
 
 	newConversation, msg, rawResp, err := a.Process(conversation, inspectReq, inspectResp)
 
+	if len(newConversation) > 0 {
+		a.inMemoryConversation = newConversation
+	}
+
 	if err != nil {
 		a.logger.Error().Err(err).Msgf("unable to process conversation %s", err.Error())
 		return "", rawResp, err
 	}
-
-	a.inMemoryConversation = newConversation
 
 	a.logger.Info().Msgf("message: %s", msg)
 
