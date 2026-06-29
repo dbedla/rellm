@@ -319,7 +319,7 @@ func TestAgentAskLikeAProToolsCall_UnknownFnCall(t *testing.T) {
 	assert.NotNil(t, respMsg, "response message should not be nil")
 	assert.Equal(t, "", respMsg, "response message should match")
 
-	//since we get err ErrUnknownToolCall we simulate user ask to continue
+	//since we get err ErrUnknownToolCallsErrorsWillBePassedToModelInNextReq we simulate user ask to continue
 	q = "continue"
 	respMsg, _, err = agent.AskLikeAPro(q, SetParametersWithReqLog, nil)
 	assert.NoError(t, err, "failed to ask")
