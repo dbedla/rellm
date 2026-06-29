@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/fatih/color"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -310,12 +311,22 @@ func TestAgentAskLikeAProToolsCall_UnknownFnCall(t *testing.T) {
 			Body:       io.NopCloser(strings.NewReader(goldenProRespB2_UnknownFnCAll)),
 		}, nil)
 
-	q := "call one tool, check output, then call second tool, check output, provide conclusion"
-	respMsg, resp, err := agent.AskLikeAPro(q, setTestReasoningAndTemperature, nil)
+	q := "call function GetSpecialData"
+	respMsg, resp, err := agent.AskLikeAPro(q, SetParametersWithReqLog, SniffResp)
+	assert.Error(t, err, "failed to ask")
+	//assert.Equal(t, err, rellm.ErrUnknownToolCall)
+	assert.ErrorIs(t, err, rellm.ErrUnknownToolCallsErrorsWillBePassedToModelInNextReq)
+
+	assert.NotNil(t, respMsg, "response message should not be nil")
+	assert.Equal(t, "", respMsg, "response message should match")
+
+	//since we get err ErrUnknownToolCall we simulate user ask to continue
+	q = "continue"
+	respMsg, resp, err = agent.AskLikeAPro(q, SetParametersWithReqLog, SniffResp)
 	assert.NoError(t, err, "failed to ask")
 
 	assert.NotNil(t, respMsg, "response message should not be nil")
-	assert.Equal(t, "unknown function call has place, agent has no ida what to do", respMsg, "response message should match")
+	assert.Equal(t, "It appears that the attempt to call `GetSpecialData` resulted in an error indicating the function was not found. \n\nHow would you like to proceed? I can try calling one of the other available functions, such as `GetStaticData` or `GetDataFor`, if you provide a specific input.", respMsg, "response message should match")
 
 	assert.NotNil(t, resp, "response should not be nil")
 	jsonResp, err := json.Marshal(resp)
@@ -455,4 +466,25 @@ type HttpDoMock struct {
 func (h *HttpDoMock) Do(req *http.Request) (*http.Response, error) {
 	args := h.Called(req)
 	return args.Get(0).(*http.Response), args.Error(1)
+}
+
+func SetParametersWithReqLog(req *rellm.ResponsesApiReq) {
+	req.Reasoning = &rellm.ReasoningConfig{Effort: "medium"}
+	req.Temperature = 0.5
+
+	color.White(" === REQ ===")
+	b, err := json.Marshal(req)
+	if err != nil {
+		panic(err)
+	}
+	color.White(string(b))
+}
+
+func SniffResp(req *rellm.ResponsesApiResp) {
+	color.White(" === RESP ===")
+	b, err := json.Marshal(req)
+	if err != nil {
+		panic(err)
+	}
+	color.White(string(b))
 }

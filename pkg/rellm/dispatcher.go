@@ -2,6 +2,7 @@ package rellm
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 )
 
@@ -35,14 +36,14 @@ func (a *Agent) Process(conversation []json.RawMessage, inspectReq InspectEachRe
 		}
 
 		functionResultAsConversation, msgRespFromLLM, err := a.dispatchFunctionOutput(conversationResponse.Output)
-		if err != nil {
-			return nil, "", conversationResponse, err
-		}
 		conversation = append(conversation, functionResultAsConversation...)
+		if err != nil {
+			return conversation, msgRespFromLLM, conversationResponse, err
+		}
 
 		// only msg
 		if msgRespFromLLM != "" {
-			return conversation, msgRespFromLLM, conversationResponse, nil
+			return conversation, msgRespFromLLM, conversationResponse, err
 		}
 	}
 
@@ -54,23 +55,27 @@ func (a *Agent) dispatchFunctionOutput(output []json.RawMessage) ([]json.RawMess
 	var conversationElements []json.RawMessage
 	var msgRespFromLLM string
 
+	var outputErr error
 	for _, o := range output {
 		var item OutputItem
 		if err := json.Unmarshal(o, &item); err != nil {
-			return nil, "", err
+			outputErr = errors.Join(outputErr, fmt.Errorf("error unmarshaling output: %w", err))
+			continue
+			//return nil, "", err
 		}
 
 		elements, msg, err := a.processOutputItem(item, o)
 		if err != nil {
-			return nil, "", err
+			outputErr = errors.Join(outputErr, fmt.Errorf("error processing output: %w", err))
 		}
+
 		conversationElements = append(conversationElements, elements...)
 		if msg != "" {
 			msgRespFromLLM = msg
 		}
 	}
 
-	return conversationElements, msgRespFromLLM, nil
+	return conversationElements, msgRespFromLLM, outputErr
 }
 
 func (a *Agent) processOutputItem(item OutputItem, raw json.RawMessage) ([]json.RawMessage, string, error) {
@@ -78,7 +83,7 @@ func (a *Agent) processOutputItem(item OutputItem, raw json.RawMessage) ([]json.
 	case "function_call":
 		fResp, err := a.handleFunctionCall(item, raw)
 		if err != nil {
-			return nil, "", err
+			return fResp, "", err
 		}
 		return fResp, "", nil
 	case "message":
@@ -93,14 +98,18 @@ func (a *Agent) processOutputItem(item OutputItem, raw json.RawMessage) ([]json.
 
 func (a *Agent) handleFunctionCall(fn OutputItem, raw json.RawMessage) ([]json.RawMessage, error) {
 	if a.toolset == nil {
-		a.logger.Warn().Msgf("tool call (%s) but no tools provider)", fn.Name)
-		return nil, fmt.Errorf("tool call (%s) but no tools provider)", fn.Name)
+		a.logger.Warn().Msgf("tool call (%s) but no tools provided)", fn.Name)
+		return nil, ErrNoToolsetBuToolCall
 	}
 
 	a.logger.Debug().Msgf("tool call %s with id %s with args: %s", fn.Name, fn.CallId, string(fn.Arguments))
 	funcCallResp, ok := a.toolset.DispatchTools(fn.Name, fn.CallId, fn.Arguments)
 	if !ok {
 		funcCallResp = invalidFunctionCallResp(fn)
+		a.logger.Warn().Msgf("tool call (%s) not supported)", fn.Name)
+		conversation, err := functionCallConversationElements(raw, funcCallResp)
+
+		return conversation, errors.Join(ErrUnknownToolCallsErrorsWillBePassedToModelInNextReq, fmt.Errorf("unknown tool name (%s))", fn.Name), err)
 	}
 
 	a.logger.Debug().Msgf("tool returned call id: %s, value: %s", funcCallResp.CallId, funcCallResp.Output)
@@ -111,7 +120,7 @@ func invalidFunctionCallResp(fn OutputItem) FunctionCallResp {
 	return FunctionCallResp{
 		Type:   "function_call_output",
 		CallId: fn.CallId,
-		Output: "invalid function call " + fn.Name,
+		Output: "invalid function call (function not found)" + fn.Name,
 	}
 
 }

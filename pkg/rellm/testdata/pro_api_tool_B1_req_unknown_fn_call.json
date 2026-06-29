@@ -7,7 +7,7 @@
     },
     {
       "role": "user",
-      "content": "call one tool, check output, then call second tool, check output, provide conclusion"
+      "content": "call function GetSpecialData"
     }
   ],
   "temperature": 0.5,
@@ -36,9 +36,18 @@
         "properties": {},
         "type": "object"
       }
+    },
+    {
+      "type": "function",
+      "name": "GetSpecialData",
+      "description": "Get static data",
+      "parameters": {
+        "properties": {},
+        "type": "object"
+      }
     }
   ],
   "reasoning": {
-    "effort": "low"
+    "effort": "medium"
   }
 }

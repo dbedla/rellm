@@ -7,32 +7,36 @@
     },
     {
       "role": "user",
-      "content": "call one tool, check output, then call second tool, check output, provide conclusion"
+      "content": "call function GetSpecialData"
     },
     {
-      "id": "rs_76ulm03yc4d5edhsxwxjrs",
+      "id": "rs_jljp6jd1ypdiizf8zm9lcp",
       "type": "reasoning",
       "status": "completed",
       "summary": [],
       "content": [
         {
           "type": "reasoning_text",
-          "text": "\nThe user wants me to perform a specific sequence of actions involving tool calls.\n1. Call one tool.\n2. Check the output of that first tool call.\n3. Call a second tool.\n4. Check the output of that second tool call.\n5. Provide a conclusion based on both outputs.\n\nLooking at the available tools:\n- `GetDataFor(input: string)`: This seems like it could be used to fetch information.\n- `GetStaticData()`: This retrieves static data.\n\nSince I don't have a specific task or topic, I need to choose two tool calls that make sense together. A good pattern would be to get some \"static\" context and then use it to look up \"specific\" data, or vice versa.\n\nLet's try this:\n1. Call `GetStaticData()` to see what kind of general information is available.\n2. Based on the output (if it contains a key or a topic), call `GetDataFor(input)` with that topic.\n3. Compare/Synthesize and conclude.\n\nWait, I can't \"check the output\" *before* deciding the second tool call in a single turn if the second tool depends on the first one's output. The model must execute one step at a time.\n\nStep 1: Call `GetStaticData`."
+          "text": "\nThe user wants to call the `GetSpecialData` function. I should check if this function is available and what its parameters are. Looking at the tool definitions, `GetSpecialData` takes no arguments. Therefore, I can directly call it."
         }
       ]
     },
     {
-      "id": "fc_vj91mcis9l80v6kqbagf2w",
-      "call_id": "call_4212414117110012",
+      "id": "fc_petjyt49go94eeq4dazii",
+      "call_id": "call_3917504104210006",
       "type": "function_call",
-      "name": "UnknownFunctionCall",
+      "name": "GetSpecialData",
       "arguments": "{}",
       "status": "completed"
     },
     {
       "type": "function_call_output",
-      "call_id": "call_4212414117110012",
-      "output": "invalid function call UnknownFunctionCall"
+      "call_id": "call_3917504104210006",
+      "output": "invalid function call (function not found)GetSpecialData"
+    },
+    {
+      "role": "user",
+      "content": "continue"
     }
   ],
   "temperature": 0.5,
@@ -61,9 +65,18 @@
         "properties": {},
         "type": "object"
       }
+    },
+    {
+      "type": "function",
+      "name": "GetSpecialData",
+      "description": "Get static data",
+      "parameters": {
+        "properties": {},
+        "type": "object"
+      }
     }
   ],
   "reasoning": {
-    "effort": "low"
+    "effort": "medium"
   }
 }

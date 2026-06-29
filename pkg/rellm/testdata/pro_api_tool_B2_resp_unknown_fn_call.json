@@ -1,23 +1,32 @@
 {
-  "id": "resp_12115c1802d73c3110c538d05aee813ca6a2b825ed92128d",
+  "id": "resp_39a523efd7165b73e5bfea08a2fe83891ca8e0ba2741698a",
   "object": "response",
-  "created_at": 1781962256,
-  "completed_at": 1781962261,
-  "status": "completed",
-  "incomplete_details": null,
+  "created_at": 1782730198,
   "model": "google/gemma-4-26b-a4b",
-  "previous_response_id": null,
-  "instructions": null,
+  "status": "completed",
+  "completed_at": 1782730219,
   "output": [
     {
-      "id": "msg_zfd1xxjcyapnkdwjx1xfm",
+      "id": "rs_g4ov7tlitb2wlf4sp7kk2",
+      "type": "reasoning",
+      "status": "completed",
+      "summary": [],
+      "content": [
+        {
+          "type": "reasoning_text",
+          "text": "\nThe user said \"continue\". This is a follow-up to the previous interaction where I attempted to call `GetSpecialData` and received an error message indicating that the function was not found.\n\nSince there's no clear instruction in \"continue\", I need to determine what the user wants me to continue with. They might want me to try another approach, or they might be waiting for a response to the failure. However, without context, it's ambiguous.\n\nLooking at the history:\n1. User: \"call function GetSpecialData\"\n2. Model: calls `GetSpecialData`\n3. Result: Error message `invalid function call (function not found)GetSpecialData`\n4. User: \"continue\"\n\nThe user might be prompting me to try something else or perhaps they think I can fix the error. But as an AI, if a tool returns a \"not found\" error, I can't magically make it exist unless there's another way to access that data.\n\nWait, looking at the available tools:\n- `GetDataFor(input: STRING)`\n- `GetStaticData()`\n- `GetSpecialData()`\n\nThe user specifically asked for `GetSpecialData`. The tool returned an error saying it doesn't exist (even though it's listed in my definitions). This is a bit of a paradox in the simulation, but I must respond to the user.\n\n\"Continue\" could mean:\n1. \"Try calling another function.\"\n2. \"Keep going with your task/reasoning.\"\n3. \"What do you do now?\"\n\nSince there was no task provided other than calling a specific function, I don't have a \"task\" to continue.\n\nMaybe the user wants me to try `GetStaticData` or `GetDataFor`? Or maybe they want me to explain why it failed?\n\nActually, looking at the error: `invalid function call (function not found)GetSpecialData`. This is an error from the tool execution environment.\n\nIf I cannot call `GetSpecialData`, I should probably inform the user that the function call failed and ask how they would like to proceed or if there's another function they want me to try.\n\nHowever, sometimes \"continue\" in these prompts implies \"try again\" or \"move to the next step\". Since there is no next step defined by the user, I will acknowledge the error and ask for further instructions or suggest trying one of the other available functions.\n\nWait, looking at the tool definitions provided in the system prompt:\n`GetSpecialData` *is* listed as a function. The fact that it returned \"not found\" is an error within the tool's logic/environment.\n\nI'll respond by acknowledging the failure and asking for clarification or suggesting alternatives."
+        }
+      ]
+    },
+    {
+      "id": "msg_u8x2n3mkypkr04ezcy83u",
       "type": "message",
       "role": "assistant",
       "status": "completed",
       "content": [
         {
           "type": "output_text",
-          "text": "unknown function call has place, agent has no ida what to do",
+          "text": "It appears that the attempt to call `GetSpecialData` resulted in an error indicating the function was not found. \n\nHow would you like to proceed? I can try calling one of the other available functions, such as `GetStaticData` or `GetDataFor`, if you provide a specific input.",
           "annotations": [],
           "logprobs": []
         }
@@ -25,12 +34,13 @@
     }
   ],
   "error": null,
+  "incomplete_details": null,
   "tools": [
     {
       "type": "function",
       "name": "GetDataFor",
+      "description": "Get data for a specific input",
       "parameters": {
-        "type": "object",
         "properties": {
           "input": {
             "type": "string"
@@ -38,56 +48,68 @@
         },
         "required": [
           "input"
-        ]
+        ],
+        "type": "object"
       },
-      "strict": false,
-      "description": "Get data for a specific input"
+      "strict": false
     },
     {
       "type": "function",
       "name": "GetStaticData",
+      "description": "Get static data",
       "parameters": {
-        "type": "object",
-        "properties": {}
+        "properties": {},
+        "type": "object"
       },
-      "strict": false,
-      "description": "Get static data"
+      "strict": false
+    },
+    {
+      "type": "function",
+      "name": "GetSpecialData",
+      "description": "Get static data",
+      "parameters": {
+        "properties": {},
+        "type": "object"
+      },
+      "strict": false
     }
   ],
   "tool_choice": "auto",
-  "truncation": "auto",
   "parallel_tool_calls": true,
+  "max_output_tokens": null,
+  "temperature": 0.5,
+  "top_p": 0.95,
+  "presence_penalty": 0,
+  "frequency_penalty": 1.1,
+  "top_logprobs": 0,
+  "max_tool_calls": null,
+  "metadata": {},
+  "background": false,
+  "previous_response_id": null,
+  "service_tier": "default",
+  "truncation": "auto",
+  "store": true,
+  "instructions": null,
   "text": {
     "format": {
       "type": "text"
     }
   },
-  "top_p": 0.95,
-  "presence_penalty": 0,
-  "frequency_penalty": 1.1,
-  "top_logprobs": 0,
-  "temperature": 0.5,
   "reasoning": {
-    "summary": null,
-    "effort": "low"
+    "effort": "medium",
+    "summary": null
   },
-  "usage": {
-    "input_tokens": 126,
-    "output_tokens": 99,
-    "total_tokens": 225,
-    "input_tokens_details": {
-      "cached_tokens": 100
-    },
-    "output_tokens_details": {
-      "reasoning_tokens": 99
-    }
-  },
-  "max_output_tokens": null,
-  "max_tool_calls": null,
-  "store": true,
-  "background": false,
-  "service_tier": "default",
-  "metadata": {},
   "safety_identifier": null,
-  "prompt_cache_key": null
+  "prompt_cache_key": null,
+  "usage": {
+    "input_tokens": 158,
+    "input_tokens_details": {
+      "cached_tokens": 112
+    },
+    "output_tokens": 644,
+    "output_tokens_details": {
+      "reasoning_tokens": 582
+    },
+    "total_tokens": 802
+  }
 }

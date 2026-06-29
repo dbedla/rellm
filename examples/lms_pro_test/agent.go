@@ -20,6 +20,7 @@ func buildTestProToolAgent(workspace string) (*rellm.Agent, error) {
 	ep, err := rellm.NewEndpointBuilder().
 		WithResponsesApiEndpoint(lmsEndpoint).
 		WithModel(rellm.Model_LMS_Google_Gemma_4_26B_A4B).
+		WithDefaultHttpClient().
 		Build()
 	if err != nil {
 		return nil, err
