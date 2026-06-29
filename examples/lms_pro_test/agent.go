@@ -1,11 +1,8 @@
 package main
 
 import (
-	"encoding/json"
 	"rellm/pkg/agentsutils"
 	"rellm/pkg/rellm"
-
-	"github.com/fatih/color"
 )
 
 const (
@@ -42,19 +39,5 @@ func SetParametersWithReqLog(req *rellm.ResponsesApiReq) {
 	req.Reasoning = &rellm.ReasoningConfig{Effort: "medium"}
 	req.Temperature = 0.5
 
-	color.White(" === REQ ===")
-	b, err := json.Marshal(req)
-	if err != nil {
-		panic(err)
-	}
-	color.White(string(b))
-}
-
-func SniffResp(req *rellm.ResponsesApiResp) {
-	color.White(" === RESP ===")
-	b, err := json.Marshal(req)
-	if err != nil {
-		panic(err)
-	}
-	color.White(string(b))
+	agentsutils.InspectWithReqLog(req)
 }

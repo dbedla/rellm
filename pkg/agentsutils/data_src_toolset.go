@@ -34,15 +34,6 @@ func (d *DataSrcToolset) BuildTools() []rellm.Tool {
 				"properties": map[string]interface{}{},
 			},
 		},
-		{
-			Type:        "function",
-			Name:        "GetSpecialData",
-			Description: "Get static data",
-			Parameters: map[string]interface{}{
-				"type":       "object",
-				"properties": map[string]interface{}{},
-			},
-		},
 	}
 }
 

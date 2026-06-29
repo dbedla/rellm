@@ -56,16 +56,6 @@
         "type": "object"
       },
       "strict": false
-    },
-    {
-      "type": "function",
-      "name": "GetSpecialData",
-      "description": "Get static data",
-      "parameters": {
-        "properties": {},
-        "type": "object"
-      },
-      "strict": false
     }
   ],
   "tool_choice": "auto",

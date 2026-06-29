@@ -36,15 +36,6 @@
         "properties": {},
         "type": "object"
       }
-    },
-    {
-      "type": "function",
-      "name": "GetSpecialData",
-      "description": "Get static data",
-      "parameters": {
-        "properties": {},
-        "type": "object"
-      }
     }
   ],
   "reasoning": {

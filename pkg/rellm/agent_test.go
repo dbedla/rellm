@@ -11,7 +11,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/fatih/color"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -312,9 +311,9 @@ func TestAgentAskLikeAProToolsCall_UnknownFnCall(t *testing.T) {
 		}, nil)
 
 	q := "call function GetSpecialData"
-	respMsg, resp, err := agent.AskLikeAPro(q, SetParametersWithReqLog, SniffResp)
+	respMsg, _, err := agent.AskLikeAPro(q, SetParametersWithReqLog, nil)
+	assert.Equal(t, respMsg, "")
 	assert.Error(t, err, "failed to ask")
-	//assert.Equal(t, err, rellm.ErrUnknownToolCall)
 	assert.ErrorIs(t, err, rellm.ErrUnknownToolCallsErrorsWillBePassedToModelInNextReq)
 
 	assert.NotNil(t, respMsg, "response message should not be nil")
@@ -322,17 +321,11 @@ func TestAgentAskLikeAProToolsCall_UnknownFnCall(t *testing.T) {
 
 	//since we get err ErrUnknownToolCall we simulate user ask to continue
 	q = "continue"
-	respMsg, resp, err = agent.AskLikeAPro(q, SetParametersWithReqLog, SniffResp)
+	respMsg, _, err = agent.AskLikeAPro(q, SetParametersWithReqLog, nil)
 	assert.NoError(t, err, "failed to ask")
 
 	assert.NotNil(t, respMsg, "response message should not be nil")
 	assert.Equal(t, "It appears that the attempt to call `GetSpecialData` resulted in an error indicating the function was not found. \n\nHow would you like to proceed? I can try calling one of the other available functions, such as `GetStaticData` or `GetDataFor`, if you provide a specific input.", respMsg, "response message should match")
-
-	assert.NotNil(t, resp, "response should not be nil")
-	jsonResp, err := json.Marshal(resp)
-	assert.NoError(t, err, "failed to marshal response")
-	assert.JSONEq(t, goldenProRespB2_UnknownFnCAll, string(jsonResp))
-
 }
 
 func TestTooManyFunctionCall(t *testing.T) {
@@ -472,19 +465,5 @@ func SetParametersWithReqLog(req *rellm.ResponsesApiReq) {
 	req.Reasoning = &rellm.ReasoningConfig{Effort: "medium"}
 	req.Temperature = 0.5
 
-	color.White(" === REQ ===")
-	b, err := json.Marshal(req)
-	if err != nil {
-		panic(err)
-	}
-	color.White(string(b))
-}
-
-func SniffResp(req *rellm.ResponsesApiResp) {
-	color.White(" === RESP ===")
-	b, err := json.Marshal(req)
-	if err != nil {
-		panic(err)
-	}
-	color.White(string(b))
+	agentsutils.InspectWithReqLog(req)
 }

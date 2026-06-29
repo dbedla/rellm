@@ -1,6 +1,6 @@
 module rellm
 
-go 1.25.6
+go 1.26.4
 
 require (
 	github.com/fatih/color v1.19.0
