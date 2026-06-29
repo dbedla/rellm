@@ -32,7 +32,7 @@ func (a *Agent) Process(conversation []json.RawMessage, inspectReq InspectEachRe
 
 		if conversationResponse.Error != nil {
 			a.logger.Error().Msgf("error in conversation response: %v", conversationResponse.Error.Message)
-			return nil, "", conversationResponse, fmt.Errorf("error in conversation response: %v", conversationResponse.Error.Message)
+			return nil, "", conversationResponse, errors.Join(ErrInConversationResponse, fmt.Errorf("err msg: %v", conversationResponse.Error.Message))
 		}
 
 		functionResultAsConversation, msgRespFromLLM, err := a.dispatchFunctionOutput(conversationResponse.Output)
@@ -47,6 +47,7 @@ func (a *Agent) Process(conversation []json.RawMessage, inspectReq InspectEachRe
 		}
 	}
 
+	//todo: too many function call should be error
 	a.logger.Warn().Msg("too many function call iterations without return message")
 	return conversation, "Warn too many function call iterations without return message", nil, nil
 }
@@ -136,7 +137,7 @@ func functionCallConversationElements(raw json.RawMessage, resp FunctionCallResp
 
 func handleMessage(msg OutputItem) ([]json.RawMessage, string, error) {
 	if len(msg.Content) > 1 {
-		return nil, "", fmt.Errorf("too many messages in response")
+		return nil, "", ErrTooManyMessagesInResponse
 	}
 
 	var conversationElements []json.RawMessage
