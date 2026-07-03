@@ -6,17 +6,24 @@ import (
 	"fmt"
 )
 
+type ImageURL struct {
+	URL string `json:"url"`
+}
+
+type MessagePart struct {
+	Type        string        `json:"type"`
+	Text        string        `json:"text,omitempty"`
+	ImageURL    *ImageURL     `json:"image_url,omitempty"`
+	Annotations []interface{} `json:"annotations,omitempty"`
+	Logprobs    []interface{} `json:"logprobs,omitempty"`
+}
+
 type OutputItem struct {
 	Type   string `json:"type"`
 	Status string `json:"status"`
 	// Message fields
-	Role    string `json:"role,omitempty"`
-	Content []struct {
-		Type        string        `json:"type"`
-		Text        string        `json:"text"`
-		Annotations []interface{} `json:"annotations"`
-		Logprobs    []interface{} `json:"logprobs"`
-	} `json:"content,omitempty"`
+	Role    string        `json:"role,omitempty"`
+	Content []MessagePart `json:"content,omitempty"`
 	// Function call fields
 	Name      string          `json:"name,omitempty"`
 	Arguments json.RawMessage `json:"arguments,omitempty"`
@@ -136,21 +143,26 @@ func functionCallConversationElements(raw json.RawMessage, resp FunctionCallResp
 }
 
 func handleMessage(msg OutputItem) ([]json.RawMessage, string, error) {
-	if len(msg.Content) > 1 {
-		return nil, "", ErrTooManyMessagesInResponse
-	}
-
 	var conversationElements []json.RawMessage
 	var msgRespFromLLM string
-	for _, content := range msg.Content {
-		assistantMsg := UserMessage{Role: "assistant", Content: content.Text}
-		rawAssistantMsg, err := json.Marshal(assistantMsg)
-		if err != nil {
-			return nil, "", err
+	var allParts []MessagePart
+
+	for _, part := range msg.Content {
+		allParts = append(allParts, part)
+		if part.Text != "" {
+			if msgRespFromLLM != "" {
+				msgRespFromLLM += " "
+			}
+			msgRespFromLLM += part.Text
 		}
-		conversationElements = append(conversationElements, rawAssistantMsg)
-		msgRespFromLLM = assistantMsg.Content
 	}
+
+	assistantMsg := UserMessage{Role: "assistant", Content: allParts}
+	rawAssistantMsg, err := json.Marshal(assistantMsg)
+	if err != nil {
+		return nil, "", err
+	}
+	conversationElements = append(conversationElements, rawAssistantMsg)
 
 	return conversationElements, msgRespFromLLM, nil
 }
@@ -160,6 +172,6 @@ func handleReasoning(raw json.RawMessage) ([]json.RawMessage, string, error) {
 }
 
 type UserMessage struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
+	Role    string        `json:"role"`
+	Content []MessagePart `json:"content"`
 }

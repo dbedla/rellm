@@ -1,21 +1,33 @@
 {
-  "model": "google/gemma-4-26b-a4b",
   "input": [
     {
       "role": "system",
-      "content": "You are a helpful assistant."
+      "content": [
+        {
+          "type": "input_text",
+          "text": "You are a helpful assistant."
+        }
+      ]
     },
     {
       "role": "user",
-      "content": "call one tool, check output, then call second tool, check output, provide conclusion"
+      "content": [
+        {
+          "type": "input_text",
+          "text": "call one tool, check output, then call second tool, check output, provide conclusion"
+        }
+      ]
     }
   ],
+  "model": "google/gemma-4-26b-a4b",
+  "reasoning": {
+    "effort": "low"
+  },
   "temperature": 0.5,
   "tools": [
     {
-      "type": "function",
-      "name": "GetDataFor",
       "description": "Get data for a specific input",
+      "name": "GetDataFor",
       "parameters": {
         "properties": {
           "input": {
@@ -26,19 +38,17 @@
           "input"
         ],
         "type": "object"
-      }
+      },
+      "type": "function"
     },
     {
-      "type": "function",
-      "name": "GetStaticData",
       "description": "Get static data",
+      "name": "GetStaticData",
       "parameters": {
         "properties": {},
         "type": "object"
-      }
+      },
+      "type": "function"
     }
-  ],
-  "reasoning": {
-    "effort": "low"
-  }
+  ]
 }

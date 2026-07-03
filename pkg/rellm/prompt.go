@@ -7,8 +7,10 @@ import (
 
 func PromptMessageToConversation(prompt, role string) (json.RawMessage, error) {
 	input := UserMessage{
-		Role:    role,
-		Content: prompt,
+		Role: role,
+		Content: []MessagePart{
+			{Type: "input_text", Text: prompt},
+		},
 	}
 
 	jsonInput, err := json.Marshal(input)
