@@ -19,15 +19,21 @@ type MessagePart struct {
 }
 
 type OutputItem struct {
+	Id     string `json:"id,omitempty"`
 	Type   string `json:"type"`
 	Status string `json:"status"`
+
 	// Message fields
 	Role    string        `json:"role,omitempty"`
 	Content []MessagePart `json:"content,omitempty"`
+
 	// Function call fields
 	Name      string          `json:"name,omitempty"`
 	Arguments json.RawMessage `json:"arguments,omitempty"`
 	CallId    string          `json:"call_id,omitempty"`
+
+	//image_generation_call
+	Result string `json:"result,omitempty"`
 }
 
 func (a *Agent) Process(conversation []json.RawMessage, inspectReq InspectEachRequest, inspectResp InspectEachResponse) ([]json.RawMessage, string, *ResponsesApiResp, error) {
@@ -42,8 +48,8 @@ func (a *Agent) Process(conversation []json.RawMessage, inspectReq InspectEachRe
 			return nil, "", conversationResponse, errors.Join(ErrInConversationResponse, fmt.Errorf("err msg: %v", conversationResponse.Error.Message))
 		}
 
-		functionResultAsConversation, msgRespFromLLM, err := a.dispatchFunctionOutput(conversationResponse.Output)
-		conversation = append(conversation, functionResultAsConversation...)
+		outputAsConversation, msgRespFromLLM, err := a.processOutput(conversationResponse.Output)
+		conversation = append(conversation, outputAsConversation...)
 		if err != nil {
 			return conversation, msgRespFromLLM, conversationResponse, err
 		}
@@ -59,7 +65,7 @@ func (a *Agent) Process(conversation []json.RawMessage, inspectReq InspectEachRe
 	return conversation, "Warn too many function call iterations without return message", nil, nil
 }
 
-func (a *Agent) dispatchFunctionOutput(output []json.RawMessage) ([]json.RawMessage, string, error) {
+func (a *Agent) processOutput(output []json.RawMessage) ([]json.RawMessage, string, error) {
 	var conversationElements []json.RawMessage
 	var msgRespFromLLM string
 
@@ -72,7 +78,7 @@ func (a *Agent) dispatchFunctionOutput(output []json.RawMessage) ([]json.RawMess
 			//return nil, "", err
 		}
 
-		elements, msg, err := a.processOutputItem(item, o)
+		elements, msg, err := a.dispatchOutputItem(item, o)
 		if err != nil {
 			outputErr = errors.Join(outputErr, fmt.Errorf("error processing output: %w", err))
 		}
@@ -86,7 +92,7 @@ func (a *Agent) dispatchFunctionOutput(output []json.RawMessage) ([]json.RawMess
 	return conversationElements, msgRespFromLLM, outputErr
 }
 
-func (a *Agent) processOutputItem(item OutputItem, raw json.RawMessage) ([]json.RawMessage, string, error) {
+func (a *Agent) dispatchOutputItem(item OutputItem, raw json.RawMessage) ([]json.RawMessage, string, error) {
 	switch item.Type {
 	case "function_call":
 		fResp, err := a.handleFunctionCall(item, raw)
@@ -98,10 +104,32 @@ func (a *Agent) processOutputItem(item OutputItem, raw json.RawMessage) ([]json.
 		return handleMessage(item)
 	case "reasoning":
 		return handleReasoning(raw)
+	case "image_generation_call":
+		return a.handleImageGenerationCall(item, raw)
 	default:
 		a.logger.Warn().Msgf("unknown output type: %s", item.Type)
+		//todo: return some kind of error
+		//todo: add custom output function
 		return nil, "", nil
 	}
+}
+
+func (a *Agent) handleImageGenerationCall(image OutputItem, raw json.RawMessage) ([]json.RawMessage, string, error) {
+
+	imgResp := ImageGenerationResp{
+		Id:   image.Id,
+		Type: image.Type,
+		//Result: image.Result,
+		Status: image.Status,
+	}
+	//todo: custom handler
+
+	rawResp, err := json.Marshal(imgResp)
+	if err != nil {
+		return nil, "", errors.Join(ErrImageGenerationResp, err)
+	}
+
+	return []json.RawMessage{rawResp}, "image generated - cheat message", nil
 }
 
 func (a *Agent) handleFunctionCall(fn OutputItem, raw json.RawMessage) ([]json.RawMessage, error) {

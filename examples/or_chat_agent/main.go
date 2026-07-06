@@ -36,7 +36,7 @@ func main() {
 			return
 		}
 
-		llmResp, rawResp, err := agent.AskLikeAPro(msg, nil, nil)
+		llmResp, rawResp, err := agent.AskLikeAPro(msg, agentsutils.InspectWithReqLog, agentsutils.InspectWithRespLog)
 		if err != nil {
 			color.Red("unable to ask question: %s", err.Error())
 			continue

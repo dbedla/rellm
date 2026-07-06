@@ -1,0 +1,61 @@
+{
+  "id": "gen-1783073327-H6V6HvI7sXGaWlECjnAm",
+  "object": "response",
+  "created_at": 1783073327,
+  "model": "x-ai/grok-imagine-image-quality-20260512",
+  "status": "completed",
+  "completed_at": 1783073332,
+  "output": [
+    {
+      "id": "ig_tmp_vqotwoa5eg",
+      "type": "image_generation_call",
+      "status": "completed",
+      "result": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA"
+    }
+  ],
+  "error": null,
+  "incomplete_details": null,
+  "tools": [],
+  "tool_choice": "auto",
+  "parallel_tool_calls": true,
+  "max_output_tokens": null,
+  "temperature": 1,
+  "top_p": 1,
+  "presence_penalty": 0,
+  "frequency_penalty": 0,
+  "top_logprobs": 0,
+  "max_tool_calls": null,
+  "metadata": {},
+  "background": false,
+  "previous_response_id": null,
+  "service_tier": "auto",
+  "truncation": "disabled",
+  "store": false,
+  "instructions": null,
+  "text": {
+    "format": {
+      "type": "text"
+    }
+  },
+  "reasoning": null,
+  "safety_identifier": null,
+  "prompt_cache_key": null,
+  "usage": {
+    "input_tokens": 77,
+    "input_tokens_details": {
+      "cached_tokens": 0
+    },
+    "output_tokens": 4175,
+    "output_tokens_details": {
+      "reasoning_tokens": 0
+    },
+    "total_tokens": 4252,
+    "cost": 0.05,
+    "is_byok": false,
+    "cost_details": {
+      "upstream_inference_cost": 0.05,
+      "upstream_inference_input_cost": 0,
+      "upstream_inference_output_cost": 0.05
+    }
+  }
+}

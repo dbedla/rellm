@@ -385,6 +385,47 @@ func TestFuncResultToFunctionCallRespSerializesOutputAsString(t *testing.T) {
 	assert.JSONEq(t, `{"type":"function_call_output","call_id":"call_123","output":"42"}`, string(jsonResp))
 }
 
+//go:embed testdata/image_req.json
+var goldenImageReq string
+
+//go:embed testdata/image_resp.json
+var goldenImageResp string
+
+func TestAgentAskLikeAProImage(t *testing.T) {
+	agent, httpDo := buildTestImageAgent(t, TestDefaultMaxToolsIterationWithoutReturnMessage)
+	defer httpDo.AssertExpectations(t)
+
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Run(func(args mock.Arguments) {
+			req := args.Get(0).(*http.Request)
+
+			b, err := io.ReadAll(req.Body)
+			assert.NoError(t, err, "failed to read request body")
+
+			req.Body = io.NopCloser(bytes.NewBuffer(b))
+
+			assert.JSONEq(t, goldenImageReq, string(b))
+		}).
+		Return(&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(goldenImageResp)),
+		}, nil)
+
+	q := "A clean, minimalist flat vector illustration of a tic-tac-toe board. White background, bold black grid lines. Three bright blue \"O\" symbols are aligned horizontally in the middle row, indicating a win. Minimalist aesthetic, high contrast, simple and modern graphic design."
+	respMsg, resp, err := agent.AskLikeAPro(q, nil, nil)
+	assert.NoError(t, err, "failed to ask")
+
+	assert.NotNil(t, respMsg, "response message should not be nil")
+	assert.Equal(t, "image generated - cheat message", respMsg, "response message should match")
+
+	assert.NotNil(t, resp, "response should not be nil")
+
+	jsonResp, err := json.Marshal(resp)
+	assert.NoError(t, err, "failed to marshal response")
+	assert.JSONEq(t, goldenImageResp, string(jsonResp))
+}
+
 func buildTestAgent(t *testing.T) (*rellm.Agent, *HttpDoMock) {
 
 	agentName := "TestAgent"
@@ -435,6 +476,34 @@ func buildTestProToolAgent(t *testing.T, maxToolsIterationWithoutReturnMessage u
 		WithContinueConversation(false).
 		WithSystemMessage("You are a helpful assistant.").
 		WithToolset(&agentsutils.DataSrcToolset{}).
+		WithNoOpLogger().
+		Build()
+
+	assert.NoError(t, err, "failed to create agent")
+	return ta, mockHttp
+}
+
+func buildTestImageAgent(t *testing.T, maxToolsIterationWithoutReturnMessage uint64) (*rellm.Agent, *HttpDoMock) {
+
+	agentName := "TestImageAgent"
+	workspace := t.TempDir()
+	mockHttp := new(HttpDoMock)
+
+	lmsEndpoint := rellm.NewUniversalResponsesEndpoint(testBaseUrl, testPort, testResponsesApiEndpoint, nil)
+	ep, err := rellm.NewEndpointBuilder().
+		WithResponsesApiEndpoint(lmsEndpoint).
+		WithModel(rellm.Model("x-ai/grok-imagine-image-quality")).
+		WithClientHttpDo(mockHttp).
+		Build()
+	assert.NoError(t, err, "failed to create endpoint")
+
+	ta, err := rellm.NewAgentBuilder().
+		WithEndpoint(ep).
+		WithAgentName(agentName).
+		WithWorkspaceDir(workspace).
+		WithMaxToolsIterationWithoutReturnMessage(maxToolsIterationWithoutReturnMessage).
+		WithContinueConversation(false).
+		WithSystemMessage("You are a helpful assistant.").
 		WithNoOpLogger().
 		Build()
 
