@@ -391,7 +391,7 @@ var goldenImageReq string
 //go:embed testdata/image_resp.json
 var goldenImageResp string
 
-func TestAgentAskLikeAProImage(t *testing.T) {
+func TestAgentPromptToGetImage(t *testing.T) {
 	agent, httpDo := buildTestImageAgent(t, TestDefaultMaxToolsIterationWithoutReturnMessage)
 	defer httpDo.AssertExpectations(t)
 
@@ -413,7 +413,10 @@ func TestAgentAskLikeAProImage(t *testing.T) {
 		}, nil)
 
 	q := "A clean, minimalist flat vector illustration of a tic-tac-toe board. White background, bold black grid lines. Three bright blue \"O\" symbols are aligned horizontally in the middle row, indicating a win. Minimalist aesthetic, high contrast, simple and modern graphic design."
-	respMsg, resp, err := agent.AskLikeAPro(q, nil, nil)
+
+	respMsg, resp, err := agent.Prompt(q).
+		WithHandleImage(testImageHandler).
+		Execute()
 	assert.NoError(t, err, "failed to ask")
 
 	assert.NotNil(t, respMsg, "response message should not be nil")
@@ -424,6 +427,10 @@ func TestAgentAskLikeAProImage(t *testing.T) {
 	jsonResp, err := json.Marshal(resp)
 	assert.NoError(t, err, "failed to marshal response")
 	assert.JSONEq(t, goldenImageResp, string(jsonResp))
+}
+
+func testImageHandler(image rellm.OutputItem) (string, error) {
+	return "", nil
 }
 
 func buildTestAgent(t *testing.T) (*rellm.Agent, *HttpDoMock) {

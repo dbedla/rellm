@@ -103,7 +103,9 @@ func parseResponsesApiResponse(resp *http.Response, rawBody []byte, apiURL strin
 		return nil, errors.Join(err, fmt.Errorf("%s", string(rawBody)))
 	}
 
-	inspectResp(&conversationResponse)
+	if inspectResp != nil {
+		inspectResp(&conversationResponse)
+	}
 
 	return &conversationResponse, nil
 }
@@ -141,7 +143,9 @@ func (e *Endpoint) buildRequestBody(conversation []json.RawMessage, inspectReq I
 		respBody.Tools = toolset.BuildTools()
 	}
 
-	inspectReq(&respBody)
+	if inspectReq != nil {
+		inspectReq(&respBody)
+	}
 
 	marshaled, err := json.Marshal(respBody)
 	if err != nil {

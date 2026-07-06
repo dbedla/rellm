@@ -45,13 +45,9 @@ func (a *Agent) Ask(question string) (string, error) {
 	return msg, err
 }
 
+type HandleImage func(image OutputItem) (string, error)
 type InspectEachRequest func(*ResponsesApiReq)
-
-func nopInspectReq(*ResponsesApiReq) {}
-
 type InspectEachResponse func(resp *ResponsesApiResp)
-
-func nopInspectResp(*ResponsesApiResp) {}
 
 func (a *Agent) AskLikeAPro(question string, inspectReq InspectEachRequest, inspectResp InspectEachResponse) (string, *ResponsesApiResp, error) {
 	a.logger.Info().Msgf("question to agent: %s", question)
@@ -66,14 +62,11 @@ func (a *Agent) AskLikeAPro(question string, inspectReq InspectEachRequest, insp
 	}
 	conversation = append(conversation, userMsg)
 
-	if inspectReq == nil {
-		inspectReq = nopInspectReq
-	}
-	if inspectResp == nil {
-		inspectResp = nopInspectResp
-	}
+	interactions := requestedInteractions{}
+	interactions.inspectReq = inspectReq
+	interactions.inspectResp = inspectResp
 
-	newConversation, msg, rawResp, err := a.Process(conversation, inspectReq, inspectResp)
+	newConversation, msg, rawResp, err := a.process(conversation, interactions)
 
 	if len(newConversation) > 0 {
 		a.inMemoryConversation = newConversation
@@ -130,4 +123,69 @@ func FuncResultToFunctionCallResp(callId string, funcResult any) FunctionCallRes
 	}
 
 	return FunctionCallResp{Type: "function_call_output", CallId: callId, Output: string(b)}
+}
+
+func (a *Agent) Prompt(question string) *Prompt {
+	return newPrompt(question, a)
+}
+
+func (a *Agent) promptWithInteractions(question string, interactions requestedInteractions) (string, *ResponsesApiResp, error) {
+	a.logger.Info().Msgf("question to agent: %s", question)
+	defer a.logger.Info().Msg("question answered")
+
+	conversation := a.CurrentConversation()
+
+	userMsg, err := PromptMessageToConversation(question, "user")
+	if err != nil {
+		a.logger.Error().Err(err).Msgf("unable to build conversation %s", err.Error())
+		return "", nil, err
+	}
+	conversation = append(conversation, userMsg)
+
+	newConversation, msg, rawResp, err := a.process(conversation, interactions)
+
+	if len(newConversation) > 0 {
+		a.inMemoryConversation = newConversation
+	}
+
+	if err != nil {
+		a.logger.Error().Err(err).Msgf("unable to process conversation %s", err.Error())
+		return "", rawResp, err
+	}
+
+	a.logger.Info().Msgf("message: %s", msg)
+
+	return msg, rawResp, nil
+}
+
+type requestedInteractions struct {
+	inspectReq  InspectEachRequest
+	inspectResp InspectEachResponse
+	handleImage HandleImage
+}
+type Prompt struct {
+	msg   string
+	agent *Agent
+
+	interactions requestedInteractions
+}
+
+func newPrompt(msg string, agent *Agent) *Prompt {
+	return &Prompt{msg: msg, agent: agent}
+}
+func (p *Prompt) WithInspectReq(inspectReq InspectEachRequest) *Prompt {
+	p.interactions.inspectReq = inspectReq
+	return p
+}
+func (p *Prompt) WithInspectResp(inspectResp InspectEachResponse) *Prompt {
+	p.interactions.inspectResp = inspectResp
+	return p
+}
+func (p *Prompt) WithHandleImage(handleImage HandleImage) *Prompt {
+	p.interactions.handleImage = handleImage
+	return p
+}
+
+func (p *Prompt) Execute() (string, *ResponsesApiResp, error) {
+	return p.agent.promptWithInteractions(p.msg, p.interactions)
 }
