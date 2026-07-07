@@ -23,8 +23,7 @@ func buildLBaseAgent(workspace string) (*rellm.Agent, error) {
 	}
 	ep, err := rellm.NewEndpointBuilder().
 		WithResponsesApiEndpoint(orEndpoint).
-		//WithModel(rellm.Model_OpenRouter_Google_Gemini_3_1_Flash_Lite).
-		WithModel(rellm.Model("x-ai/grok-imagine-image-quality")).
+		WithModel(rellm.Model_OpenRouter_Google_Gemini_3_1_Flash_Lite).
 		WithDefaultHttpClient().
 		Build()
 	if err != nil {

@@ -311,7 +311,7 @@ func TestAgentAskLikeAProToolsCall_UnknownFnCall(t *testing.T) {
 		}, nil)
 
 	q := "call function GetSpecialData"
-	respMsg, _, err := agent.AskLikeAPro(q, SetParametersWithReqLog, nil)
+	respMsg, _, err := agent.AskLikeAPro(q, SetParametersForTest, nil)
 	assert.Equal(t, respMsg, "")
 	assert.Error(t, err, "failed to ask")
 	assert.ErrorIs(t, err, rellm.ErrUnknownToolCallsErrorsWillBePassedToModelInNextReq)
@@ -321,7 +321,7 @@ func TestAgentAskLikeAProToolsCall_UnknownFnCall(t *testing.T) {
 
 	//since we get err ErrUnknownToolCallsErrorsWillBePassedToModelInNextReq we simulate user ask to continue
 	q = "continue"
-	respMsg, _, err = agent.AskLikeAPro(q, SetParametersWithReqLog, nil)
+	respMsg, _, err = agent.AskLikeAPro(q, SetParametersForTest, nil)
 	assert.NoError(t, err, "failed to ask")
 
 	assert.NotNil(t, respMsg, "response message should not be nil")
@@ -535,4 +535,9 @@ func SetParametersWithReqLog(req *rellm.ResponsesApiReq) {
 	req.Temperature = 0.5
 
 	agentsutils.InspectWithReqLog(req)
+}
+
+func SetParametersForTest(req *rellm.ResponsesApiReq) {
+	req.Reasoning = &rellm.ReasoningConfig{Effort: "medium"}
+	req.Temperature = 0.5
 }
