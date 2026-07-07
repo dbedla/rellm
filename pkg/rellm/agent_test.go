@@ -414,19 +414,13 @@ func TestAgentPromptToGetImage(t *testing.T) {
 
 	q := "A clean, minimalist flat vector illustration of a tic-tac-toe board. White background, bold black grid lines. Three bright blue \"O\" symbols are aligned horizontally in the middle row, indicating a win. Minimalist aesthetic, high contrast, simple and modern graphic design."
 
-	respMsg, resp, err := agent.Prompt(q).
+	respMsg, err := agent.Prompt(q).
 		WithHandleImage(testImageHandler).
 		Execute()
 	assert.NoError(t, err, "failed to ask")
 
 	assert.NotNil(t, respMsg, "response message should not be nil")
 	assert.Equal(t, "image generated - cheat message", respMsg, "response message should match")
-
-	assert.NotNil(t, resp, "response should not be nil")
-
-	jsonResp, err := json.Marshal(resp)
-	assert.NoError(t, err, "failed to marshal response")
-	assert.JSONEq(t, goldenImageResp, string(jsonResp))
 }
 
 func testImageHandler(image rellm.OutputItem) (string, error) {

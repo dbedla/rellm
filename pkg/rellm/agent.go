@@ -45,6 +45,8 @@ func (a *Agent) Ask(question string) (string, error) {
 	return msg, err
 }
 
+// HandleImage used as a callback for image generation
+// returned string will be used as image identifier in conversation
 type HandleImage func(image OutputItem) (string, error)
 type InspectEachRequest func(*ResponsesApiReq)
 type InspectEachResponse func(resp *ResponsesApiResp)
@@ -125,11 +127,11 @@ func FuncResultToFunctionCallResp(callId string, funcResult any) FunctionCallRes
 	return FunctionCallResp{Type: "function_call_output", CallId: callId, Output: string(b)}
 }
 
-func (a *Agent) Prompt(question string) *Prompt {
+func (a *Agent) Prompt(question string) *prompt {
 	return newPrompt(question, a)
 }
 
-func (a *Agent) promptWithInteractions(question string, interactions requestedInteractions) (string, *ResponsesApiResp, error) {
+func (a *Agent) promptWithInteractions(question string, interactions requestedInteractions) (string, error) {
 	a.logger.Info().Msgf("question to agent: %s", question)
 	defer a.logger.Info().Msg("question answered")
 
@@ -138,11 +140,12 @@ func (a *Agent) promptWithInteractions(question string, interactions requestedIn
 	userMsg, err := PromptMessageToConversation(question, "user")
 	if err != nil {
 		a.logger.Error().Err(err).Msgf("unable to build conversation %s", err.Error())
-		return "", nil, err
+		return "", err
 	}
 	conversation = append(conversation, userMsg)
 
-	newConversation, msg, rawResp, err := a.process(conversation, interactions)
+	// todo: remove returning raw resp down in call hierarchy
+	newConversation, msg, _, err := a.process(conversation, interactions)
 
 	if len(newConversation) > 0 {
 		a.inMemoryConversation = newConversation
@@ -150,12 +153,12 @@ func (a *Agent) promptWithInteractions(question string, interactions requestedIn
 
 	if err != nil {
 		a.logger.Error().Err(err).Msgf("unable to process conversation %s", err.Error())
-		return "", rawResp, err
+		return "", err
 	}
 
 	a.logger.Info().Msgf("message: %s", msg)
 
-	return msg, rawResp, nil
+	return msg, nil
 }
 
 type requestedInteractions struct {
@@ -163,29 +166,57 @@ type requestedInteractions struct {
 	inspectResp InspectEachResponse
 	handleImage HandleImage
 }
-type Prompt struct {
+type prompt struct {
 	msg   string
 	agent *Agent
 
 	interactions requestedInteractions
 }
 
-func newPrompt(msg string, agent *Agent) *Prompt {
-	return &Prompt{msg: msg, agent: agent}
+func newPrompt(msg string, agent *Agent) *prompt {
+	return &prompt{msg: msg, agent: agent}
 }
-func (p *Prompt) WithInspectReq(inspectReq InspectEachRequest) *Prompt {
+func (p *prompt) WithInspectReq(inspectReq InspectEachRequest) *prompt {
 	p.interactions.inspectReq = inspectReq
 	return p
 }
-func (p *Prompt) WithInspectResp(inspectResp InspectEachResponse) *Prompt {
+func (p *prompt) WithInspectResp(inspectResp InspectEachResponse) *prompt {
 	p.interactions.inspectResp = inspectResp
 	return p
 }
-func (p *Prompt) WithHandleImage(handleImage HandleImage) *Prompt {
+func (p *prompt) WithHandleImage(handleImage HandleImage) *prompt {
 	p.interactions.handleImage = handleImage
 	return p
 }
 
-func (p *Prompt) Execute() (string, *ResponsesApiResp, error) {
+//func (p *Prompt) WithTemperature(t float32) *Prompt {
+//	p.agent.temperature = t
+//	return p
+//}
+//
+//func (p *Prompt) WithReasoningEffort(effort string) *Prompt {
+//	p.agent.reasoningEffort = effort
+//	return p
+//}
+//
+//func (p *Prompt) WithMaxOutputTokens(n int) *Prompt {
+//	p.agent.maxOutputTokens = n
+//	return p
+//}
+
+func (p *prompt) Execute() (string, error) {
+	defer p.expire()
+	if p.isExpired() {
+		return "", ErrPromptIsExpired
+	}
 	return p.agent.promptWithInteractions(p.msg, p.interactions)
+}
+
+func (p *prompt) expire() {
+	p.agent = nil
+	p.msg = ""
+}
+
+func (p *prompt) isExpired() bool {
+	return p.agent == nil || len(p.msg) == 0
 }
