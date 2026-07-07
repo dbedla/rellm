@@ -414,9 +414,7 @@ func TestAgentPromptToGetImage(t *testing.T) {
 
 	q := "A clean, minimalist flat vector illustration of a tic-tac-toe board. White background, bold black grid lines. Three bright blue \"O\" symbols are aligned horizontally in the middle row, indicating a win. Minimalist aesthetic, high contrast, simple and modern graphic design."
 
-	respMsg, err := agent.Prompt(q).
-		WithHandleImage(testImageHandler).
-		Execute()
+	respMsg, err := agent.Prompt(q).Execute()
 	assert.NoError(t, err, "failed to ask")
 
 	assert.NotNil(t, respMsg, "response message should not be nil")
@@ -505,6 +503,7 @@ func buildTestImageAgent(t *testing.T, maxToolsIterationWithoutReturnMessage uin
 		WithMaxToolsIterationWithoutReturnMessage(maxToolsIterationWithoutReturnMessage).
 		WithContinueConversation(false).
 		WithSystemMessage("You are a helpful assistant.").
+		WithHandleImage(testImageHandler).
 		WithNoOpLogger().
 		Build()
 
