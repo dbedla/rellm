@@ -89,17 +89,6 @@ func (a *Agent) run(userMsg json.RawMessage, params promptParams) (string, error
 	return msgRespFromLLM, nil
 }
 
-// askLikeAPro is the original (now internal) entry point. It delegates to run()
-// with an empty promptParams — no inference params were configured via fluent API.
-func (a *Agent) askLikeAPro(question string) (string, error) {
-	userMsg, err := PromptMessageToConversation(question, "user")
-	if err != nil {
-		a.logger.Error().Err(err).Msgf("unable to build conversation %s", err.Error())
-		return "", err
-	}
-	return a.run(userMsg, promptParams{})
-}
-
 func (a *Agent) CurrentConversation() []json.RawMessage {
 	conversation := a.inMemoryConversation
 
