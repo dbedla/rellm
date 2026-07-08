@@ -129,7 +129,7 @@ func (a *Agent) handleImageGenerationCall(image OutputItem, handleImage HandleIm
 		return nil, "", errors.Join(ErrCustomImageHandlerFailed, err)
 	}
 
-	imgResp := ImageGenerationResp{
+	imgResp := ImageGenerationConversationPlaceholder{
 		Id:     image.Id,
 		Type:   image.Type,
 		Result: resultNote,

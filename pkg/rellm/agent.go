@@ -18,7 +18,7 @@ type FunctionCallResp struct {
 	Output string `json:"output"`
 }
 
-type ImageGenerationResp struct {
+type ImageGenerationConversationPlaceholder struct {
 	Type   string `json:"type"`
 	Id     string `json:"id"`
 	Status string `json:"status"`
