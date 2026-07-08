@@ -42,6 +42,8 @@ func buildFSAgent(workspace string) (*rellm.Agent, error) {
 		WithToolset(fsToolset).
 		WithSystemMessage(fsAgentSysPrompt).
 		WithWorkspaceLogger().
+		WithInspectEachRequest(agentsutils.InspectWithReqLog).
+		WithInspectEachResponse(agentsutils.InspectWithRespLog).
 		Build()
 }
 

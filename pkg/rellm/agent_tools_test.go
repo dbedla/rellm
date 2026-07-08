@@ -61,19 +61,19 @@ func TestAgentAskLikeAPro(t *testing.T) {
 			Body:       io.NopCloser(strings.NewReader(goldenProRespHi)),
 		}, nil)
 
-	respMsg, resp, err := agent.AskLikeAPro("Hi", setTestReasoningAndTemperature, nil)
+	respMsg, err := agent.Prompt("Hi").
+		WithReasoning(testReasoningEffort).
+		WithTemperature(testTemperature).
+		Execute()
 	assert.NoError(t, err, "failed to ask")
 
 	assert.NotNil(t, respMsg, "response message should not be nil")
 	assert.Equal(t, "Hello! How can I help you today?", respMsg, "response message should match")
 
-	assert.NotNil(t, resp, "response should not be nil")
-
-	jsonResp, err := json.Marshal(resp)
-	assert.NoError(t, err, "failed to marshal response")
-	assert.JSONEq(t, goldenProRespHi, string(jsonResp))
-
-	_, _, err = agent.AskLikeAPro("What did you reason about?", setTestReasoningAndTemperature, nil)
+	_, err = agent.Prompt("What did you reason about?").
+		WithReasoning(testReasoningEffort).
+		WithTemperature(testTemperature).
+		Execute()
 	assert.NoError(t, err, "failed to ask with reasoning in conversation")
 }
 
@@ -151,18 +151,14 @@ func TestAgentAskLikeAProToolsCall(t *testing.T) {
 		}, nil)
 
 	q := "call one tool, check output, then call second tool, check output, provide conclusion"
-	respMsg, resp, err := agent.AskLikeAPro(q, setTestReasoningAndTemperature, nil)
+	respMsg, err := agent.Prompt(q).
+		WithReasoning(testReasoningEffort).
+		WithTemperature(testTemperature).
+		Execute()
 	assert.NoError(t, err, "failed to ask")
 
 	assert.NotNil(t, respMsg, "response message should not be nil")
 	assert.Equal(t, "The first tool call to `GetStaticData` returned the value `42`. The second tool call to `GetDataFor` with the input \"the meaning of 42\" returned a list containing `[\"abc\", \"def\"]`. Therefore, based on these specific tool outputs, the data associated with the value 42 is \"abc\" and \"def\".", respMsg, "response message should match")
-
-	assert.NotNil(t, resp, "response should not be nil")
-
-	jsonResp, err := json.Marshal(resp)
-	assert.NoError(t, err, "failed to marshal response")
-	assert.JSONEq(t, goldenProRespA3, string(jsonResp))
-
 }
 
 //go:embed testdata/pro_api_tool_B1_req_unknown_fn_call.json
@@ -216,7 +212,10 @@ func TestAgentAskLikeAProToolsCall_UnknownFnCall(t *testing.T) {
 		}, nil)
 
 	q := "call function GetSpecialData"
-	respMsg, _, err := agent.AskLikeAPro(q, SetParametersForTest, nil)
+	respMsg, err := agent.Prompt(q).
+		WithReasoning("medium").
+		WithTemperature(testTemperature).
+		Execute()
 	assert.Equal(t, respMsg, "")
 	assert.Error(t, err, "failed to ask")
 	assert.ErrorIs(t, err, rellm.ErrUnknownToolCallsErrorsWillBePassedToModelInNextReq)
@@ -226,7 +225,10 @@ func TestAgentAskLikeAProToolsCall_UnknownFnCall(t *testing.T) {
 
 	//since we get err ErrUnknownToolCallsErrorsWillBePassedToModelInNextReq we simulate user ask to continue
 	q = "continue"
-	respMsg, _, err = agent.AskLikeAPro(q, SetParametersForTest, nil)
+	respMsg, err = agent.Prompt(q).
+		WithReasoning("medium").
+		WithTemperature(testTemperature).
+		Execute()
 	assert.NoError(t, err, "failed to ask")
 
 	assert.NotNil(t, respMsg, "response message should not be nil")
@@ -273,13 +275,14 @@ func TestTooManyFunctionCall(t *testing.T) {
 		}, nil)
 
 	q := "call one tool, check output, then call second tool, check output, provide conclusion"
-	respMsg, resp, err := agent.AskLikeAPro(q, setTestReasoningAndTemperature, nil)
+	respMsg, err := agent.Prompt(q).
+		WithReasoning(testReasoningEffort).
+		WithTemperature(testTemperature).
+		Execute()
 	assert.NoError(t, err, "failed to ask")
 
 	assert.NotNil(t, respMsg, "response message should not be nil")
 	assert.Equal(t, "Warn too many function call iterations without return message", respMsg, "response message should match")
-
-	assert.Nil(t, resp, "response should not be nil")
 }
 
 func TestFuncResultToFunctionCallRespSerializesOutputAsString(t *testing.T) {
@@ -314,6 +317,11 @@ func buildTestProToolAgent(t *testing.T, maxToolsIterationWithoutReturnMessage u
 		WithToolset(&agentsutils.DataSrcToolset{}).
 		WithNoOpLogger().
 		Build()
+
+	/*
+		req.Reasoning = &rellm.ReasoningConfig{Effort: testReasoningEffort}
+			req.Temperature = testTemperature
+	*/
 
 	assert.NoError(t, err, "failed to create agent")
 	return ta, mockHttp

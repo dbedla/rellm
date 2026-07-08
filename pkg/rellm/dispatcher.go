@@ -39,9 +39,9 @@ type OutputItem struct {
 // process runs the conversation loop: sends req to API, processes output,
 // updates req.Input with each iteration's response, and repeats until a final
 // message or max iterations. Same request pointer throughout — only Input mutates.
-func (a *Agent) process(req *ResponsesApiReq, interactions requestedInteractions) ([]json.RawMessage, string, *ResponsesApiResp, error) {
+func (a *Agent) process(req *ResponsesApiReq) ([]json.RawMessage, string, *ResponsesApiResp, error) {
 	for range a.maxToolsIterationWithoutReturnMessage {
-		conversationResponse, err := a.endpoint.Post(req, interactions.inspectReq, interactions.inspectResp)
+		conversationResponse, err := a.endpoint.Post(req, a.inspectReq, a.inspectResp)
 		if err != nil {
 			return nil, "", conversationResponse, err
 		}
@@ -51,7 +51,7 @@ func (a *Agent) process(req *ResponsesApiReq, interactions requestedInteractions
 			return nil, "", conversationResponse, errors.Join(ErrInConversationResponse, fmt.Errorf("err msg: %v", conversationResponse.Error.Message))
 		}
 
-		outputAsConversation, msgRespFromLLM, err := a.processOutput(conversationResponse.Output, interactions)
+		outputAsConversation, msgRespFromLLM, err := a.processOutput(conversationResponse.Output)
 		req.Input = append(req.Input, outputAsConversation...)
 		if err != nil {
 			return req.Input, msgRespFromLLM, conversationResponse, err
@@ -68,7 +68,7 @@ func (a *Agent) process(req *ResponsesApiReq, interactions requestedInteractions
 	return req.Input, "Warn too many function call iterations without return message", nil, nil
 }
 
-func (a *Agent) processOutput(output []json.RawMessage, interactions requestedInteractions) ([]json.RawMessage, string, error) {
+func (a *Agent) processOutput(output []json.RawMessage) ([]json.RawMessage, string, error) {
 	var conversationElements []json.RawMessage
 	var msgRespFromLLM string
 
@@ -81,7 +81,7 @@ func (a *Agent) processOutput(output []json.RawMessage, interactions requestedIn
 			//return nil, "", err
 		}
 
-		elements, msg, err := a.dispatchOutputItem(item, o, interactions)
+		elements, msg, err := a.dispatchOutputItem(item, o)
 		if err != nil {
 			outputErr = errors.Join(outputErr, fmt.Errorf("error processing output: %w", err))
 		}
@@ -95,7 +95,7 @@ func (a *Agent) processOutput(output []json.RawMessage, interactions requestedIn
 	return conversationElements, msgRespFromLLM, outputErr
 }
 
-func (a *Agent) dispatchOutputItem(item OutputItem, raw json.RawMessage, interactions requestedInteractions) ([]json.RawMessage, string, error) {
+func (a *Agent) dispatchOutputItem(item OutputItem, raw json.RawMessage) ([]json.RawMessage, string, error) {
 	switch item.Type {
 	case "function_call":
 		fResp, err := a.handleFunctionCall(item, raw)
@@ -108,7 +108,7 @@ func (a *Agent) dispatchOutputItem(item OutputItem, raw json.RawMessage, interac
 	case "reasoning":
 		return handleReasoning(raw)
 	case "image_generation_call":
-		return a.handleImageGenerationCall(item, interactions.handleImage)
+		return a.handleImageGenerationCall(item)
 	default:
 		a.logger.Warn().Msgf("unknown output type: %s", item.Type)
 		//todo: return some kind of error
@@ -117,14 +117,14 @@ func (a *Agent) dispatchOutputItem(item OutputItem, raw json.RawMessage, interac
 	}
 }
 
-func (a *Agent) handleImageGenerationCall(image OutputItem, handleImage HandleImage) ([]json.RawMessage, string, error) {
+func (a *Agent) handleImageGenerationCall(image OutputItem) ([]json.RawMessage, string, error) {
 
 	//todo: return image as message or something?
-	if handleImage == nil {
+	if a.handleImage == nil {
 		return nil, "", ErrNoImageHandler
 	}
 
-	resultNote, err := handleImage(image)
+	resultNote, err := a.handleImage(image)
 	if err != nil {
 		return nil, "", errors.Join(ErrCustomImageHandlerFailed, err)
 	}

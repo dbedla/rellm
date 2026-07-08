@@ -32,6 +32,8 @@ func buildTestProToolAgent(workspace string) (*rellm.Agent, error) {
 		WithSystemMessage(sysprompt).
 		WithToolset(&agentsutils.DataSrcToolset{}).
 		WithWorkspaceLogger().
+		WithInspectEachRequest(agentsutils.InspectWithReqLog).
+		WithInspectEachResponse(agentsutils.InspectWithRespLog).
 		Build()
 }
 

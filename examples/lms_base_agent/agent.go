@@ -1,6 +1,7 @@
 package main
 
 import (
+	"rellm/pkg/agentsutils"
 	"rellm/pkg/rellm"
 )
 
@@ -30,5 +31,7 @@ func buildLBaseAgent(workspace string) (*rellm.Agent, error) {
 		WithContinueConversation(false).
 		WithSystemMessage(baseAgentSysPrompt).
 		WithWorkspaceLogger().
+		WithInspectEachRequest(agentsutils.InspectWithReqLog).
+		WithInspectEachResponse(agentsutils.InspectWithRespLog).
 		Build()
 }

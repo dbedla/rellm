@@ -36,14 +36,10 @@ type Agent struct {
 	inMemoryConversation                  []json.RawMessage
 	continueConversation                  bool
 	maxToolsIterationWithoutReturnMessage uint64
-	handleImage                           HandleImage
-}
 
-func (a *Agent) Ask(question string) (string, error) {
-
-	msg, _, err := a.AskLikeAPro(question, nil, nil)
-
-	return msg, err
+	handleImage HandleImage
+	inspectReq  InspectEachRequest
+	inspectResp InspectEachResponse
 }
 
 // HandleImage used as a callback for image generation
@@ -52,7 +48,7 @@ type HandleImage func(image OutputItem) (string, error)
 type InspectEachRequest func(*ResponsesApiReq)
 type InspectEachResponse func(resp *ResponsesApiResp)
 
-func (a *Agent) AskLikeAPro(question string, inspectReq InspectEachRequest, inspectResp InspectEachResponse) (string, *ResponsesApiResp, error) {
+func (a *Agent) askLikeAPro(question string) (string, *ResponsesApiResp, error) {
 	a.logger.Info().Msgf("question to agent: %s", question)
 	defer a.logger.Info().Msg("question answered")
 
@@ -73,11 +69,7 @@ func (a *Agent) AskLikeAPro(question string, inspectReq InspectEachRequest, insp
 		req.Tools = a.toolset.BuildTools()
 	}
 
-	interactions := requestedInteractions{}
-	interactions.inspectReq = inspectReq
-	interactions.inspectResp = inspectResp
-
-	newConversation, msg, rawResp, err := a.process(req, interactions)
+	newConversation, msg, rawResp, err := a.process(req)
 
 	if len(newConversation) > 0 {
 		a.inMemoryConversation = newConversation
@@ -140,12 +132,6 @@ func FuncResultToFunctionCallResp(callId string, funcResult any) FunctionCallRes
 // inference params, then call Execute() to run the full conversation loop.
 func (a *Agent) Prompt(question string) *prompt {
 	return newPrompt(question, a)
-}
-
-type requestedInteractions struct {
-	inspectReq  InspectEachRequest
-	inspectResp InspectEachResponse
-	handleImage HandleImage
 }
 
 // prompt is the private handle for building and executing a single logical
@@ -254,11 +240,7 @@ func (p *prompt) Execute() (string, error) {
 	// passed through the entire loop — only Input mutates between iterations.
 	p.req.Input = conversation
 
-	interactions := requestedInteractions{
-		handleImage: p.agent.handleImage,
-	}
-
-	newConversation, msg, _, err := p.agent.process(p.req, interactions)
+	newConversation, msg, _, err := p.agent.process(p.req)
 
 	if len(newConversation) > 0 {
 		p.agent.inMemoryConversation = newConversation
