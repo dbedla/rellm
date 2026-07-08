@@ -23,3 +23,5 @@ var ErrPromptIsExpired = fmt.Errorf("prompt is expired")
 var ErrImageGenerationResp = fmt.Errorf("error in image generation response")
 var ErrNoImageHandler = fmt.Errorf("image handler not provided")
 var ErrCustomImageHandlerFailed = fmt.Errorf("custom image handler failed")
+
+var ErrUserMsgConversionFailed = fmt.Errorf("user message conversion failed")

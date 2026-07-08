@@ -2,6 +2,7 @@ package rellm
 
 import (
 	"encoding/json"
+	"errors"
 	"rellm/pkg/rellm/conversation_storage"
 
 	"github.com/rs/zerolog"
@@ -48,27 +49,20 @@ type HandleImage func(image OutputItem) (string, error)
 type InspectEachRequest func(*ResponsesApiReq)
 type InspectEachResponse func(resp *ResponsesApiResp)
 
-func (a *Agent) run(userMsg json.RawMessage, params promptParams) (string, error) {
-	a.logger.Info().Msgf("question to agent: %s", string(userMsg))
+func (a *Agent) run(msg string, params promptParams) (string, error) {
+	a.logger.Info().Msgf("question to agent: %s", string(msg))
 	defer a.logger.Info().Msg("question answered")
 
 	conversation := a.CurrentConversation()
 
+	userMsg, err := PromptMessageToConversation(msg, "user")
+	if err != nil {
+		return "", errors.Join(ErrUserMsgConversionFailed, err)
+	}
+
 	conversation = append(conversation, userMsg)
 
-	req := &ResponsesApiReq{
-		Model:            string(a.endpoint.model),
-		Input:            conversation,
-		Temperature:      params.Temperature,
-		Reasoning:        params.Reasoning,
-		MaxOutputTokens:  params.MaxOutputTokens,
-		TopP:             params.TopP,
-		PresencePenalty:  params.PresencePenalty,
-		FrequencyPenalty: params.FrequencyPenalty,
-		Seed:             params.Seed,
-		Logprobs:         params.Logprobs,
-		TopLogprobs:      params.TopLogprobs,
-	}
+	req := toBaseResponsesApiReq(params, a.endpoint.model, conversation)
 
 	if a.toolset != nil {
 		req.Tools = a.toolset.BuildTools()
@@ -213,13 +207,7 @@ func (p *prompt) Execute() (string, error) {
 		return "", ErrPromptIsExpired
 	}
 
-	userMsg, err := PromptMessageToConversation(p.msg, "user")
-	if err != nil {
-		p.agent.logger.Error().Err(err).Msgf("unable to build conversation %s", err.Error())
-		return "", err
-	}
-
-	return p.agent.run(userMsg, p.params)
+	return p.agent.run(p.msg, p.params)
 }
 
 func (p *prompt) expire() {
@@ -229,4 +217,20 @@ func (p *prompt) expire() {
 
 func (p *prompt) isExpired() bool {
 	return p.agent == nil || len(p.msg) == 0
+}
+
+func toBaseResponsesApiReq(params promptParams, model Model, conversation []json.RawMessage) *ResponsesApiReq {
+	return &ResponsesApiReq{
+		Model:            string(model),
+		Input:            conversation,
+		Temperature:      params.Temperature,
+		Reasoning:        params.Reasoning,
+		MaxOutputTokens:  params.MaxOutputTokens,
+		TopP:             params.TopP,
+		PresencePenalty:  params.PresencePenalty,
+		FrequencyPenalty: params.FrequencyPenalty,
+		Seed:             params.Seed,
+		Logprobs:         params.Logprobs,
+		TopLogprobs:      params.TopLogprobs,
+	}
 }
