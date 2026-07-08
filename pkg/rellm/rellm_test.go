@@ -22,11 +22,6 @@ func baseRequestMatch(req *http.Request) bool {
 		req.Method == "POST"
 }
 
-func setTestReasoningAndTemperature(req *rellm.ResponsesApiReq) {
-	req.Reasoning = &rellm.ReasoningConfig{Effort: testReasoningEffort}
-	req.Temperature = testTemperature
-}
-
 type HttpDoMock struct {
 	mock.Mock
 }

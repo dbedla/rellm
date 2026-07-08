@@ -36,17 +36,18 @@ func main() {
 			return
 		}
 
-		llmResp, rawResp, err := agent.AskLikeAPro(msg, agentsutils.InspectWithReqLog, agentsutils.InspectWithRespLog)
+		//llmResp, rawResp, err := agent.AskLikeAPro(msg, agentsutils.InspectWithReqLog, agentsutils.InspectWithRespLog)
+		llmResp, err := agent.Prompt(msg).Execute()
 		if err != nil {
 			color.Red("unable to ask question: %s", err.Error())
 			continue
 		}
-		if rawResp != nil {
-			color.Yellow("This conversation total cost in tokens: %d\n", rawResp.Usage.TotalTokens)
-			if rawResp.Usage.Cost != nil {
-				color.Yellow("This conversation total cost in USD: %f\n", *rawResp.Usage.Cost)
-			}
-		}
+		//if rawResp != nil {
+		//	color.Yellow("This conversation total cost in tokens: %d\n", rawResp.Usage.TotalTokens)
+		//	if rawResp.Usage.Cost != nil {
+		//		color.Yellow("This conversation total cost in USD: %f\n", *rawResp.Usage.Cost)
+		//	}
+		//}
 		color.Blue(llmResp)
 	}
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"rellm/pkg/agentsutils"
 	"rellm/pkg/rellm"
 
 	"github.com/joho/godotenv"
@@ -38,6 +39,8 @@ func buildLBaseAgent(workspace string) (*rellm.Agent, error) {
 		WithContinueConversation(false).
 		WithSystemMessage(baseAgentSysPrompt).
 		WithWorkspaceLogger().
+		WithInspectEachRequest(agentsutils.InspectWithReqLog).
+		WithInspectEachResponse(agentsutils.InspectWithRespLog).
 		Build()
 }
 

@@ -5,6 +5,20 @@ import (
 	"fmt"
 )
 
+// promptParams holds inference parameters configured via WithXxx methods.
+// It is the only data passed from prompt.Execute() to agent.run().
+type promptParams struct {
+	Temperature      float32
+	Reasoning        *ReasoningConfig
+	MaxOutputTokens  int
+	TopP             float32
+	PresencePenalty  float32
+	FrequencyPenalty float32
+	Seed             *int64
+	Logprobs         bool
+	TopLogprobs      int
+}
+
 func PromptMessageToConversation(prompt, role string) (json.RawMessage, error) {
 	input := UserMessage{
 		Role: role,

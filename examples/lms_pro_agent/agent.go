@@ -1,6 +1,7 @@
 package main
 
 import (
+	"rellm/pkg/agentsutils"
 	"rellm/pkg/rellm"
 )
 
@@ -31,6 +32,8 @@ func buildProAgent(workspace string) (*rellm.Agent, error) {
 		WithSystemMessage(proAgentSysPrompt).
 		WithToolset(&WeatherToolset{}).
 		WithWorkspaceLogger().
+		WithInspectEachRequest(agentsutils.InspectWithReqLog).
+		WithInspectEachResponse(agentsutils.InspectWithRespLog).
 		Build()
 }
 

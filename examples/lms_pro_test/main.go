@@ -36,16 +36,19 @@ func main() {
 		if msg == "EXIT" {
 			return
 		}
-		llmResp, rawRsp, err := agent.AskLikeAPro(msg, SetParametersWithReqLog, agentsutils.InspectWithRespLog)
+		llmResp, err := agent.Prompt(msg).
+			WithReasoning("medium").
+			WithTemperature(0.5).
+			Execute()
 		if err != nil {
 			color.Red("unable to ask question: %s", err.Error())
 			continue
 		}
 		color.Blue(llmResp)
-		if rawRsp != nil {
-			color.Yellow("This conversation total cost in tokens: %d\n", rawRsp.Usage.TotalTokens)
-			color.Yellow("input tokens: %d\n", rawRsp.Usage.InputTokens)
-			color.Yellow("output tokens: %d\n", rawRsp.Usage.OutputTokens)
-		}
+		//if rawRsp != nil {
+		//	color.Yellow("This conversation total cost in tokens: %d\n", rawRsp.Usage.TotalTokens)
+		//	color.Yellow("input tokens: %d\n", rawRsp.Usage.InputTokens)
+		//	color.Yellow("output tokens: %d\n", rawRsp.Usage.OutputTokens)
+		//}
 	}
 }

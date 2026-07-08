@@ -41,7 +41,7 @@ func TestAgentAsk(t *testing.T) {
 			Body:       io.NopCloser(strings.NewReader(goldenRespHi)),
 		}, nil)
 
-	respMsg, err := agent.Ask("Hi")
+	respMsg, err := agent.Prompt("Hi").Execute()
 	assert.NoError(t, err, "failed to ask")
 	assert.NotNil(t, respMsg, "response message should not be nil")
 	assert.Equal(t, "Hello! How can I help you today? \n\nIf you have any questions about the weather, meteorology, climate patterns, or even how certain atmospheric phenomena work, feel free to ask!", respMsg, "response message should match")
@@ -67,7 +67,7 @@ func TestAgentAskBodyIsNil(t *testing.T) {
 			StatusCode: http.StatusOK,
 		}, nil)
 
-	respMsg, err := agent.Ask("Hi")
+	respMsg, err := agent.Prompt("Hi").Execute()
 	assert.Error(t, err)
 	assert.NotNil(t, respMsg, "response message should not be nil")
 	assert.Equal(t, "", respMsg, "response message should match")
@@ -94,7 +94,7 @@ func TestAgentAskStatusInternalServerError(t *testing.T) {
 			Body:       io.NopCloser(strings.NewReader(goldenRespHi)),
 		}, nil)
 
-	respMsg, err := agent.Ask("Hi")
+	respMsg, err := agent.Prompt("Hi").Execute()
 	assert.Error(t, err)
 	assert.NotNil(t, respMsg, "response message should not be nil")
 	assert.Equal(t, "", respMsg, "response message should match")

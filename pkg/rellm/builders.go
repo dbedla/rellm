@@ -64,6 +64,8 @@ type AgentBuilder struct {
 	useWorkspaceLogger bool
 	useStdoutLogger    bool
 	useNoOpLogger      bool
+	inspectReq         InspectEachRequest
+	inspectResp        InspectEachResponse
 }
 
 func NewAgentBuilder() *AgentBuilder {
@@ -140,6 +142,16 @@ func (b *AgentBuilder) WithNoOpLogger() *AgentBuilder {
 	return b
 }
 
+func (b *AgentBuilder) WithInspectEachRequest(inspect InspectEachRequest) *AgentBuilder {
+	b.inspectReq = inspect
+	return b
+}
+
+func (b *AgentBuilder) WithInspectEachResponse(inspect InspectEachResponse) *AgentBuilder {
+	b.inspectResp = inspect
+	return b
+}
+
 func (b *AgentBuilder) Build() (*Agent, error) {
 
 	if b.agent.workspaceDir == "" {
@@ -166,6 +178,14 @@ func (b *AgentBuilder) Build() (*Agent, error) {
 
 	if b.agent.conversationStorage == nil {
 		b.agent.conversationStorage = conversation_storage.NewForAgent(b.agent.workspaceDir, b.agent.agentName)
+	}
+
+	if b.inspectReq != nil {
+		b.agent.inspectReq = b.inspectReq
+	}
+
+	if b.inspectResp != nil {
+		b.agent.inspectResp = b.inspectResp
 	}
 
 	b.agent.logger.Info().Msgf("===== New agent %s ready to action =====", b.agent.agentName)
