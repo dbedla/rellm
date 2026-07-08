@@ -1,13 +1,23 @@
 {
-  "model": "google/gemma-4-26b-a4b",
   "input": [
     {
       "role": "system",
-      "content": "You are a helpful assistant with deep weather knowledge."
+      "content": [
+        {
+          "type": "input_text",
+          "text": "You are a helpful assistant with deep weather knowledge."
+        }
+      ]
     },
     {
       "role": "user",
-      "content": "Hi"
+      "content": [
+        {
+          "type": "input_text",
+          "text": "Hi"
+        }
+      ]
     }
-  ]
+  ],
+  "model": "google/gemma-4-26b-a4b"
 }

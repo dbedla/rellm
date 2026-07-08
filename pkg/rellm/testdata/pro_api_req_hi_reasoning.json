@@ -1,60 +1,80 @@
 {
-	"model": "google/gemma-4-26b-a4b",
-	"input": [
-		{
-			"role": "system",
-			"content": "You are a helpful assistant."
-		},
-		{
-			"role": "user",
-			"content": "Hi"
-		},
-		{
-			"id": "rs_tmp_4hndaklxn8m",
-			"type": "reasoning",
-			"status": "completed",
-			"summary": [],
-			"encrypted_content": "ENCRYPTED_CONTENT_HERE",
-			"format": "google-gemini-v1"
-		},
-		{
-			"role": "assistant",
-			"content": "Hello! How can I help you today?"
-		},
-		{
-			"role": "user",
-			"content": "What did you reason about?"
-		}
-	],
-	"temperature": 0.5,
-	"tools": [
-		{
-			"type": "function",
-			"name": "GetDataFor",
-			"description": "Get data for a specific input",
-			"parameters": {
-				"properties": {
-					"input": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"input"
-				],
-				"type": "object"
-			}
-		},
-		{
-			"type": "function",
-			"name": "GetStaticData",
-			"description": "Get static data",
-			"parameters": {
-				"properties": {},
-				"type": "object"
-			}
-		}
-	],
-	"reasoning": {
-		"effort": "low"
-	}
+  "model": "google/gemma-4-26b-a4b",
+  "input": [
+    {
+      "role": "system",
+      "content": [
+        {
+          "type": "input_text",
+          "text": "You are a helpful assistant."
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "input_text",
+          "text": "Hi"
+        }
+      ]
+    },
+    {
+      "id": "rs_tmp_4hndaklxn8m",
+      "type": "reasoning",
+      "status": "completed",
+      "summary": [],
+      "encrypted_content": "ENCRYPTED_CONTENT_HERE",
+      "format": "google-gemini-v1"
+    },
+    {
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "Hello! How can I help you today?"
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "input_text",
+          "text": "What did you reason about?"
+        }
+      ]
+    }
+  ],
+  "temperature": 0.5,
+  "tools": [
+    {
+      "type": "function",
+      "name": "GetDataFor",
+      "description": "Get data for a specific input",
+      "parameters": {
+        "properties": {
+          "input": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "type": "function",
+      "name": "GetStaticData",
+      "description": "Get static data",
+      "parameters": {
+        "properties": {},
+        "type": "object"
+      }
+    }
+  ],
+  "reasoning": {
+    "effort": "low"
+  }
 }

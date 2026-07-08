@@ -4,6 +4,7 @@ import (
 	"bytes"
 	_ "embed"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"rellm/pkg/agentsutils"
@@ -311,7 +312,7 @@ func TestAgentAskLikeAProToolsCall_UnknownFnCall(t *testing.T) {
 		}, nil)
 
 	q := "call function GetSpecialData"
-	respMsg, _, err := agent.AskLikeAPro(q, SetParametersWithReqLog, nil)
+	respMsg, _, err := agent.AskLikeAPro(q, SetParametersForTest, nil)
 	assert.Equal(t, respMsg, "")
 	assert.Error(t, err, "failed to ask")
 	assert.ErrorIs(t, err, rellm.ErrUnknownToolCallsErrorsWillBePassedToModelInNextReq)
@@ -321,7 +322,7 @@ func TestAgentAskLikeAProToolsCall_UnknownFnCall(t *testing.T) {
 
 	//since we get err ErrUnknownToolCallsErrorsWillBePassedToModelInNextReq we simulate user ask to continue
 	q = "continue"
-	respMsg, _, err = agent.AskLikeAPro(q, SetParametersWithReqLog, nil)
+	respMsg, _, err = agent.AskLikeAPro(q, SetParametersForTest, nil)
 	assert.NoError(t, err, "failed to ask")
 
 	assert.NotNil(t, respMsg, "response message should not be nil")
@@ -385,6 +386,92 @@ func TestFuncResultToFunctionCallRespSerializesOutputAsString(t *testing.T) {
 	assert.JSONEq(t, `{"type":"function_call_output","call_id":"call_123","output":"42"}`, string(jsonResp))
 }
 
+//go:embed testdata/image_req.json
+var goldenImageReq string
+
+//go:embed testdata/image_resp.json
+var goldenImageResp string
+
+func TestAgentPromptToGetImage(t *testing.T) {
+	agent, httpDo := buildTestImageAgent(t, TestDefaultMaxToolsIterationWithoutReturnMessage, testImageHandler)
+	defer httpDo.AssertExpectations(t)
+
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Run(func(args mock.Arguments) {
+			req := args.Get(0).(*http.Request)
+
+			b, err := io.ReadAll(req.Body)
+			assert.NoError(t, err, "failed to read request body")
+
+			req.Body = io.NopCloser(bytes.NewBuffer(b))
+
+			assert.JSONEq(t, goldenImageReq, string(b))
+		}).
+		Return(&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(goldenImageResp)),
+		}, nil)
+
+	q := "A clean, minimalist flat vector illustration of a tic-tac-toe board. White background, bold black grid lines. Three bright blue \"O\" symbols are aligned horizontally in the middle row, indicating a win. Minimalist aesthetic, high contrast, simple and modern graphic design."
+
+	respMsg, err := agent.Prompt(q).Execute()
+	assert.NoError(t, err, "failed to ask")
+
+	assert.NotNil(t, respMsg, "response message should not be nil")
+	assert.Equal(t, "image generated - cheat message", respMsg, "response message should match")
+
+	conversation := agent.CurrentConversation()
+	lastMsg := conversation[len(conversation)-1]
+	var imageConversationRepresentation rellm.ImageGenerationConversationPlaceholder
+	err = json.Unmarshal(lastMsg, &imageConversationRepresentation)
+	assert.NoError(t, err, "failed to unmarshal last message")
+
+	assert.Equal(t, "image-stored-under-this-id", imageConversationRepresentation.Result)
+	assert.Equal(t, "image_generation_call", imageConversationRepresentation.Type)
+	assert.Equal(t, "completed", imageConversationRepresentation.Status)
+	assert.Equal(t, "ig_tmp_vqotwoa5eg", imageConversationRepresentation.Id)
+}
+
+func TestAgentPromptToGetImage_handlerErr(t *testing.T) {
+	agent, httpDo := buildTestImageAgent(t, TestDefaultMaxToolsIterationWithoutReturnMessage, testImageHandlerAlwaysErr)
+	defer httpDo.AssertExpectations(t)
+
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Run(func(args mock.Arguments) {
+			req := args.Get(0).(*http.Request)
+
+			b, err := io.ReadAll(req.Body)
+			assert.NoError(t, err, "failed to read request body")
+
+			req.Body = io.NopCloser(bytes.NewBuffer(b))
+
+			assert.JSONEq(t, goldenImageReq, string(b))
+		}).
+		Return(&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(goldenImageResp)),
+		}, nil)
+
+	q := "A clean, minimalist flat vector illustration of a tic-tac-toe board. White background, bold black grid lines. Three bright blue \"O\" symbols are aligned horizontally in the middle row, indicating a win. Minimalist aesthetic, high contrast, simple and modern graphic design."
+
+	respMsg, err := agent.Prompt(q).Execute()
+	assert.Error(t, err)
+	assert.ErrorIs(t, err, rellm.ErrCustomImageHandlerFailed)
+
+	assert.NotNil(t, respMsg, "response message should not be nil")
+	assert.Equal(t, "", respMsg, "response message should match")
+}
+
+func testImageHandler(image rellm.OutputItem) (string, error) {
+	return "image-stored-under-this-id", nil
+}
+
+func testImageHandlerAlwaysErr(image rellm.OutputItem) (string, error) {
+	return "", errors.New("test err in image handling error")
+}
+
 func buildTestAgent(t *testing.T) (*rellm.Agent, *HttpDoMock) {
 
 	agentName := "TestAgent"
@@ -442,6 +529,35 @@ func buildTestProToolAgent(t *testing.T, maxToolsIterationWithoutReturnMessage u
 	return ta, mockHttp
 }
 
+func buildTestImageAgent(t *testing.T, maxToolsIterationWithoutReturnMessage uint64, imageH rellm.HandleImage) (*rellm.Agent, *HttpDoMock) {
+
+	agentName := "TestImageAgent"
+	workspace := t.TempDir()
+	mockHttp := new(HttpDoMock)
+
+	lmsEndpoint := rellm.NewUniversalResponsesEndpoint(testBaseUrl, testPort, testResponsesApiEndpoint, nil)
+	ep, err := rellm.NewEndpointBuilder().
+		WithResponsesApiEndpoint(lmsEndpoint).
+		WithModel(rellm.Model("x-ai/grok-imagine-image-quality")).
+		WithClientHttpDo(mockHttp).
+		Build()
+	assert.NoError(t, err, "failed to create endpoint")
+
+	ta, err := rellm.NewAgentBuilder().
+		WithEndpoint(ep).
+		WithAgentName(agentName).
+		WithWorkspaceDir(workspace).
+		WithMaxToolsIterationWithoutReturnMessage(maxToolsIterationWithoutReturnMessage).
+		WithContinueConversation(false).
+		WithSystemMessage("You are a helpful assistant.").
+		WithHandleImage(imageH).
+		WithNoOpLogger().
+		Build()
+
+	assert.NoError(t, err, "failed to create agent")
+	return ta, mockHttp
+}
+
 func baseRequestMatch(req *http.Request) bool {
 	return req.URL.String() == testBaseUrl+":"+testPort+testResponsesApiEndpoint &&
 		req.Method == "POST"
@@ -466,4 +582,9 @@ func SetParametersWithReqLog(req *rellm.ResponsesApiReq) {
 	req.Temperature = 0.5
 
 	agentsutils.InspectWithReqLog(req)
+}
+
+func SetParametersForTest(req *rellm.ResponsesApiReq) {
+	req.Reasoning = &rellm.ReasoningConfig{Effort: "medium"}
+	req.Temperature = 0.5
 }

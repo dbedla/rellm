@@ -54,25 +54,32 @@ const (
 	ReasoningEffort_Medium ReasoningEffort = "medium"
 )
 
-func (e *Endpoint) Post(conversation []json.RawMessage, inspectReq InspectEachRequest, inspectResp InspectEachResponse, toolset Toolset) (*ResponsesApiResp, error) {
+// Post sends a fully-built ResponsesApiReq over HTTP. The caller is responsible
+// for constructing the request (model, input, inference params). The endpoint
+// marshals it to JSON and handles transport.
+func (e *Endpoint) Post(req *ResponsesApiReq, inspectReq InspectEachRequest, inspectResp InspectEachResponse) (*ResponsesApiResp, error) {
 	apiUrl, err := url.Parse(e.rae.GetUrl())
 	if err != nil {
 		return nil, err
 	}
 
-	body, err := e.buildRequestBody(conversation, inspectReq, toolset)
-	if err != nil {
-		return nil, err
+	if inspectReq != nil {
+		inspectReq(req)
 	}
 
-	req := http.Request{
+	body, err := json.Marshal(req)
+	if err != nil {
+		return nil, fmt.Errorf("marshal request: %w", err)
+	}
+
+	httpReq := &http.Request{
 		Method: "POST",
 		Header: e.rae.GetHttpHeader(),
 		URL:    apiUrl,
-		Body:   io.NopCloser(bytes.NewBuffer(body)),
+		Body:   io.NopCloser(bytes.NewReader(body)),
 	}
 
-	resp, err := e.client.Do(&req)
+	resp, err := e.client.Do(httpReq)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +110,9 @@ func parseResponsesApiResponse(resp *http.Response, rawBody []byte, apiURL strin
 		return nil, errors.Join(err, fmt.Errorf("%s", string(rawBody)))
 	}
 
-	inspectResp(&conversationResponse)
+	if inspectResp != nil {
+		inspectResp(&conversationResponse)
+	}
 
 	return &conversationResponse, nil
 }
@@ -130,26 +139,7 @@ func bodySnippet(rawBody []byte) string {
 	return body[:maxBodySnippetLength] + "..."
 }
 
-func (e *Endpoint) buildRequestBody(conversation []json.RawMessage, inspectReq InspectEachRequest, toolset Toolset) ([]byte, error) {
 
-	respBody := ResponsesApiReq{
-		Model: string(e.model),
-		Input: conversation,
-	}
-
-	if toolset != nil {
-		respBody.Tools = toolset.BuildTools()
-	}
-
-	inspectReq(&respBody)
-
-	marshaled, err := json.Marshal(respBody)
-	if err != nil {
-		return nil, err
-	}
-
-	return marshaled, nil
-}
 
 type UniversalResponsesEndpoint struct {
 	baseUrl              string

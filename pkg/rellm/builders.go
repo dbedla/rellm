@@ -115,6 +115,11 @@ func (b *AgentBuilder) WithMaxToolsIterationWithoutReturnMessage(max uint64) *Ag
 	return b
 }
 
+func (b *AgentBuilder) WithHandleImage(handleImage HandleImage) *AgentBuilder {
+	b.agent.handleImage = handleImage
+	return b
+}
+
 func (b *AgentBuilder) WithCustomLogger(logger *zerolog.Logger) *AgentBuilder {
 	b.agent.logger = logger
 	return b

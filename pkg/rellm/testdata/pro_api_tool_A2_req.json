@@ -3,11 +3,21 @@
   "input": [
     {
       "role": "system",
-      "content": "You are a helpful assistant."
+      "content": [
+        {
+          "type": "input_text",
+          "text": "You are a helpful assistant."
+        }
+      ]
     },
     {
       "role": "user",
-      "content": "call one tool, check output, then call second tool, check output, provide conclusion"
+      "content": [
+        {
+          "type": "input_text",
+          "text": "call one tool, check output, then call second tool, check output, provide conclusion"
+        }
+      ]
     },
     {
       "id": "rs_76ulm03yc4d5edhsxwxjrs",

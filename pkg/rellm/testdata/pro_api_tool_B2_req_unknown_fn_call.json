@@ -3,11 +3,21 @@
   "input": [
     {
       "role": "system",
-      "content": "You are a helpful assistant."
+      "content": [
+        {
+          "type": "input_text",
+          "text": "You are a helpful assistant."
+        }
+      ]
     },
     {
       "role": "user",
-      "content": "call function GetSpecialData"
+      "content": [
+        {
+          "type": "input_text",
+          "text": "call function GetSpecialData"
+        }
+      ]
     },
     {
       "id": "rs_jljp6jd1ypdiizf8zm9lcp",
@@ -36,7 +46,12 @@
     },
     {
       "role": "user",
-      "content": "continue"
+      "content": [
+        {
+          "type": "input_text",
+          "text": "continue"
+        }
+      ]
     }
   ],
   "temperature": 0.5,

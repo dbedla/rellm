@@ -17,3 +17,9 @@ var ErrNoToolsetBuToolCall = fmt.Errorf("request to call unknown tool")
 var ErrUnknownToolCallsErrorsWillBePassedToModelInNextReq = fmt.Errorf("request to call unknown tool")
 var ErrInConversationResponse = fmt.Errorf("error in conversation response")
 var ErrTooManyMessagesInResponse = fmt.Errorf("too many messages in response")
+
+var ErrPromptIsExpired = fmt.Errorf("prompt is expired")
+
+var ErrImageGenerationResp = fmt.Errorf("error in image generation response")
+var ErrNoImageHandler = fmt.Errorf("image handler not provided")
+var ErrCustomImageHandlerFailed = fmt.Errorf("custom image handler failed")

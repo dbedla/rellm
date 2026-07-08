@@ -1,6 +1,7 @@
 package rellm_test
 
 import (
+	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
@@ -64,13 +65,15 @@ func assertHTTPStatusError(t *testing.T, err error, statusCode int, body string)
 func postWithValidResponse(t *testing.T) (*rellm.ResponsesApiResp, error) {
 	t.Helper()
 
-	return newTestEndpoint(t, http.StatusOK, `{"id":"resp_test"}`).Post(nil, tNopInspectReq, tNopInspectResp, nil)
+	req := &rellm.ResponsesApiReq{Model: "test-model", Input: []json.RawMessage{}}
+	return newTestEndpoint(t, http.StatusOK, `{"id":"resp_test"}`).Post(req, tNopInspectReq, tNopInspectResp)
 }
 
 func postWithResponse(t *testing.T, statusCode int, body string) error {
 	t.Helper()
 
-	_, err := newTestEndpoint(t, statusCode, body).Post(nil, tNopInspectReq, tNopInspectResp, nil)
+	req := &rellm.ResponsesApiReq{Model: "test-model", Input: []json.RawMessage{}}
+	_, err := newTestEndpoint(t, statusCode, body).Post(req, tNopInspectReq, tNopInspectResp)
 	return err
 }
 
