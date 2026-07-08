@@ -36,9 +36,6 @@ type OutputItem struct {
 	Result string `json:"result,omitempty"`
 }
 
-// process runs the conversation loop: sends req to API, processes output,
-// updates req.Input with each iteration's response, and repeats until a final
-// message or max iterations. Same request pointer throughout — only Input mutates.
 func (a *Agent) process(req *ResponsesApiReq) ([]json.RawMessage, string, *ResponsesApiResp, error) {
 	for range a.maxToolsIterationWithoutReturnMessage {
 		conversationResponse, err := a.endpoint.Post(req, a.inspectReq, a.inspectResp)
@@ -57,7 +54,6 @@ func (a *Agent) process(req *ResponsesApiReq) ([]json.RawMessage, string, *Respo
 			return req.Input, msgRespFromLLM, conversationResponse, err
 		}
 
-		// only msg — break out of loop when model returns a final text response
 		if msgRespFromLLM != "" {
 			return req.Input, msgRespFromLLM, conversationResponse, err
 		}
