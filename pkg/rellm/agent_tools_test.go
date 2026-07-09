@@ -4,6 +4,7 @@ import (
 	"bytes"
 	_ "embed"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"rellm/pkg/agentsutils"
@@ -275,14 +276,13 @@ func TestTooManyFunctionCall(t *testing.T) {
 		}, nil)
 
 	q := "call one tool, check output, then call second tool, check output, provide conclusion"
-	respMsg, err := agent.Prompt(q).
+	_, err := agent.Prompt(q).
 		WithReasoning(testReasoningEffort).
 		WithTemperature(testTemperature).
 		Execute()
-	assert.NoError(t, err, "failed to ask")
-
-	assert.NotNil(t, respMsg, "response message should not be nil")
-	assert.Equal(t, "Warn too many function call iterations without return message", respMsg, "response message should match")
+	// Budget exhausted — the model kept calling functions without producing text.
+	assert.Error(t, err, "expected error when tool iteration budget is exceeded")
+	assert.True(t, errors.Is(err, rellm.ErrMaxToolIterationsReached), "error should wrap ErrMaxToolIterationsReached")
 }
 
 func TestFuncResultToFunctionCallRespSerializesOutputAsString(t *testing.T) {
@@ -317,11 +317,6 @@ func buildTestProToolAgent(t *testing.T, maxToolsIterationWithoutReturnMessage u
 		WithToolset(&agentsutils.DataSrcToolset{}).
 		WithNoOpLogger().
 		Build()
-
-	/*
-		req.Reasoning = &rellm.ReasoningConfig{Effort: testReasoningEffort}
-			req.Temperature = testTemperature
-	*/
 
 	assert.NoError(t, err, "failed to create agent")
 	return ta, mockHttp

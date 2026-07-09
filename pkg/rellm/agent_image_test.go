@@ -7,7 +7,7 @@ import (
 	"io"
 	"net/http"
 	"rellm/pkg/rellm"
-	"strings"
+	"strings" 
 	"testing"
 
 	_ "embed"
@@ -49,7 +49,7 @@ func TestAgentPromptToGetImage(t *testing.T) {
 	assert.NoError(t, err, "failed to ask")
 
 	assert.NotNil(t, respMsg, "response message should not be nil")
-	assert.Equal(t, "image generated - cheat message", respMsg, "response message should match")
+	assert.Equal(t, "[system <for user visibility only>] image generated, handler returned: image-stored-under-this-id", respMsg, "response message should match")
 
 	conversation := agent.CurrentConversation()
 	lastMsg := conversation[len(conversation)-1]
