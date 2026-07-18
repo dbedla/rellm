@@ -241,5 +241,6 @@ func exactlyOneIsSet(flags ...bool) bool {
 }
 
 const (
+	//todo: max steps rename
 	defaultMaxToolsIterationWithoutReturnMessage = 5
 )
