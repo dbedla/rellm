@@ -48,7 +48,7 @@ func TestAgentAsk(t *testing.T) {
 	assert.Equal(t, "Hello! How can I help you today? \n\nIf you have any questions about the weather, meteorology, climate patterns, or even how certain atmospheric phenomena work, feel free to ask!", respMsg, "response message should match")
 }
 
-func TestAgentAskBodyIsNil(t *testing.T) {
+func TestAgentAsk_HTTP200EmptyBody(t *testing.T) {
 	agent, httpDo := buildTestAgent(t)
 	defer httpDo.AssertExpectations(t)
 
