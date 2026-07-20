@@ -2,6 +2,7 @@ package main
 
 import (
 	"rellm/pkg/agentsutils"
+	"rellm/pkg/rellm"
 
 	"github.com/fatih/color"
 )
@@ -37,10 +38,12 @@ func main() {
 			return
 		}
 
-		llmResp, err := agent.Prompt(msg).
+		prompt := rellm.NewPromptBuilder().
 			WithReasoning("low").
 			WithTemperature(0.5).
-			Execute()
+			Build()
+
+		llmResp, err := agent.Execute(prompt)
 		if err != nil {
 			color.Red("unable to ask question: %s", err.Error())
 			continue

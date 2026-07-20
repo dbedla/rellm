@@ -41,44 +41,10 @@ func TestAgentAsk(t *testing.T) {
 			Body:       io.NopCloser(strings.NewReader(goldenRespHi)),
 		}, nil)
 
-	respMsg, err := agent.Prompt("Hi").Execute()
+	respMsg, err := agent.Ask("Hi")
 	assert.NoError(t, err, "failed to ask")
 	assert.NotNil(t, respMsg, "response message should not be nil")
 	assert.Equal(t, "Hello! How can I help you today? \n\nIf you have any questions about the weather, meteorology, climate patterns, or even how certain atmospheric phenomena work, feel free to ask!", respMsg, "response message should match")
-}
-
-func TestAgentDoubleAsk(t *testing.T) {
-	agent, httpDo := buildTestAgent(t)
-	defer httpDo.AssertExpectations(t)
-
-	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
-		Once().
-		Run(func(args mock.Arguments) {
-			req := args.Get(0).(*http.Request)
-
-			b, err := io.ReadAll(req.Body)
-			assert.NoError(t, err, "failed to read request body")
-
-			req.Body = io.NopCloser(bytes.NewBuffer(b))
-
-			assert.JSONEq(t, goldenReqHi, string(b))
-		}).
-		Return(&http.Response{
-			StatusCode: http.StatusOK,
-			Body:       io.NopCloser(strings.NewReader(goldenRespHi)),
-		}, nil)
-
-	prompt := agent.Prompt("Hi")
-
-	respMsg, err := prompt.Execute()
-	assert.NoError(t, err, "failed to ask")
-	assert.NotNil(t, respMsg, "response message should not be nil")
-	assert.Equal(t, "Hello! How can I help you today? \n\nIf you have any questions about the weather, meteorology, climate patterns, or even how certain atmospheric phenomena work, feel free to ask!", respMsg, "response message should match")
-
-	secondResp, err := prompt.Execute()
-	assert.Error(t, err)
-	assert.ErrorIs(t, err, rellm.ErrPromptIsExpired)
-	assert.Empty(t, secondResp)
 }
 
 func TestAgentAskBodyIsNil(t *testing.T) {
@@ -101,7 +67,7 @@ func TestAgentAskBodyIsNil(t *testing.T) {
 			StatusCode: http.StatusOK,
 		}, nil)
 
-	respMsg, err := agent.Prompt("Hi").Execute()
+	respMsg, err := agent.Ask("Hi")
 	assert.Error(t, err)
 	assert.NotNil(t, respMsg, "response message should not be nil")
 	assert.Equal(t, "", respMsg, "response message should match")
@@ -128,7 +94,7 @@ func TestAgentAskStatusInternalServerError(t *testing.T) {
 			Body:       io.NopCloser(strings.NewReader(goldenRespHi)),
 		}, nil)
 
-	respMsg, err := agent.Prompt("Hi").Execute()
+	respMsg, err := agent.Ask("Hi")
 	assert.Error(t, err)
 	assert.NotNil(t, respMsg, "response message should not be nil")
 	assert.Equal(t, "", respMsg, "response message should match")
