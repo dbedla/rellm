@@ -6,67 +6,9 @@ import (
 )
 
 // Prompt holds the instruction and parameters for a single LLM interaction.
-// It is unexported — users can only obtain it via Agent.Prompt(), so the agent reference stays internal.
 type Prompt struct {
 	msg    string
 	params promptParams
-}
-
-// WithTemperature sets sampling temperature for all calls in this prompt's loop.
-func (p *Prompt) WithTemperature(t float32) *Prompt {
-	p.params.Temperature = t
-	return p
-}
-
-// WithReasoning sets reasoning effort level ("low", "medium", "high") for the entire loop.
-func (p *Prompt) WithReasoning(effort string) *Prompt {
-	if effort != "" {
-		p.params.Reasoning = &ReasoningConfig{Effort: effort}
-	}
-	return p
-}
-
-// WithMaxOutputTokens sets max tokens for every call in this prompt's loop.
-func (p *Prompt) WithMaxOutputTokens(n int) *Prompt {
-	p.params.MaxOutputTokens = n
-	return p
-}
-
-// WithTopP sets nucleus sampling parameter.
-func (p *Prompt) WithTopP(t float32) *Prompt {
-	p.params.TopP = t
-	return p
-}
-
-// WithPresencePenalty sets presence penalty for every call in this prompt's loop.
-func (p *Prompt) WithPresencePenalty(penalty float32) *Prompt {
-	p.params.PresencePenalty = penalty
-	return p
-}
-
-// WithFrequencyPenalty sets frequency penalty for every call in this prompt's loop.
-func (p *Prompt) WithFrequencyPenalty(f float32) *Prompt {
-	p.params.FrequencyPenalty = f
-	return p
-}
-
-// WithSeed sets deterministic seed applied to every call in the loop.
-func (p *Prompt) WithSeed(seed int64) *Prompt {
-	s := seed
-	p.params.Seed = &s
-	return p
-}
-
-// WithLogprobs enables log probabilities output on every call in this prompt's loop.
-func (p *Prompt) WithLogprobs(enabled bool) *Prompt {
-	p.params.Logprobs = enabled
-	return p
-}
-
-// WithTopLogprobs sets number of top log probabilities to return per call.
-func (p *Prompt) WithTopLogprobs(n int) *Prompt {
-	p.params.TopLogprobs = n
-	return p
 }
 
 // promptParams holds inference parameters configured via WithXxx methods.
@@ -90,7 +32,7 @@ type PromptBuilder struct {
 
 func NewPromptBuilder() *PromptBuilder {
 	return &PromptBuilder{
-		params: defaultParams,
+		params: promptParams{},
 	}
 }
 
@@ -153,9 +95,6 @@ func (b *PromptBuilder) Build() *Prompt {
 		params: b.params,
 	}
 }
-
-// defaultParams is used as the baseline for all new builders/prompts.
-var defaultParams = promptParams{}
 
 func PromptMessageToConversation(prompt, role string) (json.RawMessage, error) {
 	input := UserMessage{

@@ -17,7 +17,6 @@ var ErrInConversationResponse = fmt.Errorf("error in conversation response")
 var ErrMaxToolIterationsReached = fmt.Errorf("max tool iterations reached without a text response")
 var ErrModelReturnedUnproductiveOutput = fmt.Errorf("model returned output but no function call and no text message")
 
-var ErrPromptIsExpired = fmt.Errorf("prompt is expired")
 var ErrEmptyPrompt = fmt.Errorf("prompt message is empty")
 
 var ErrImageGenerationResp = fmt.Errorf("error in image generation response")
