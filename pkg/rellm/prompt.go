@@ -74,8 +74,7 @@ func (b *PromptBuilder) WithFrequencyPenalty(f float32) *PromptBuilder {
 }
 
 func (b *PromptBuilder) WithSeed(seed int64) *PromptBuilder {
-	s := seed
-	b.params.Seed = &s
+	b.params.Seed = &seed
 	return b
 }
 

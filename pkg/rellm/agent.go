@@ -129,7 +129,7 @@ func FuncResultToFunctionCallResp(callId string, funcResult any) FunctionCallRes
 // Execute builds the user message, packages inference params, and hands both to
 // agent.run() which owns conversation history, HTTP req assembly, and tool-loop.
 func (a *Agent) Execute(p *Prompt) (string, error) {
-	if p == nil || p.msg == "" {
+	if p == nil {
 		return "", ErrEmptyPrompt
 	}
 	return a.run(p.msg, p.params)
@@ -137,7 +137,11 @@ func (a *Agent) Execute(p *Prompt) (string, error) {
 
 // Ask is the simple entry point for quick questions — no builder needed.
 func (a *Agent) Ask(question string) (string, error) {
-	prompt := &Prompt{msg: question, params: promptParams{}}
+	prompt, err := NewPromptBuilder().WithMessage(question).Build()
+	if err != nil {
+		return "", err
+	}
+
 	return a.Execute(prompt)
 }
 
