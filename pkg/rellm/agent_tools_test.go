@@ -223,8 +223,8 @@ func TestAgentAskLikeAProToolsCall_UnknownFnCall(t *testing.T) {
 	q := "call function GetSpecialData"
 	prompt := rellm.NewPromptBuilder().
 		WithMessage(q).
-		// WithReasoning(testReasoningEffort).
-		// WithTemperature(testTemperature).
+		WithReasoning(testReasoningEffort).
+		WithTemperature(testTemperature).
 		Build()
 
 	respMsg, err := agent.Execute(prompt)
@@ -239,8 +239,8 @@ func TestAgentAskLikeAProToolsCall_UnknownFnCall(t *testing.T) {
 	q = "continue"
 	promptContinue := rellm.NewPromptBuilder().
 		WithMessage(q).
-		// WithReasoning(testReasoningEffort).
-		// WithTemperature(testTemperature).
+		WithReasoning(testReasoningEffort).
+		WithTemperature(testTemperature).
 		Build()
 	respMsg, err = agent.Execute(promptContinue)
 	assert.NoError(t, err, "failed to ask")
