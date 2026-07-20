@@ -32,12 +32,12 @@ type OutputItem struct {
 	Arguments json.RawMessage `json:"arguments,omitempty"`
 	CallId    string          `json:"call_id,omitempty"`
 
-	//image_generation_call
+	// image_generation_call
 	Result string `json:"result,omitempty"`
 }
 
 func (a *Agent) process(req *ResponsesApiReq) ([]json.RawMessage, string, *ResponsesApiResp, error) {
-	for range a.maxToolsIterationWithoutReturnMessage {
+	for i := uint64(0); i < a.maxToolsIterationWithoutReturnMessage; i++ {
 		conversationResponse, err := a.endpoint.Post(req, a.inspectReq, a.inspectResp)
 		if err != nil {
 			return nil, "", conversationResponse, err
@@ -48,25 +48,33 @@ func (a *Agent) process(req *ResponsesApiReq) ([]json.RawMessage, string, *Respo
 			return nil, "", conversationResponse, errors.Join(ErrInConversationResponse, fmt.Errorf("err msg: %v", conversationResponse.Error.Message))
 		}
 
-		outputAsConversation, msgRespFromLLM, err := a.processOutput(conversationResponse.Output)
+		outputAsConversation, msgRespFromLLM, hasFunctionCall, err := a.processOutput(conversationResponse.Output)
 		req.Input = append(req.Input, outputAsConversation...)
 		if err != nil {
 			return req.Input, msgRespFromLLM, conversationResponse, err
 		}
 
 		if msgRespFromLLM != "" {
-			return req.Input, msgRespFromLLM, conversationResponse, err
+			return req.Input, msgRespFromLLM, conversationResponse, nil
+		}
+
+		if !hasFunctionCall {
+			a.logger.Error().Msg("model returned output without a function call or text message")
+			return req.Input, msgRespFromLLM, conversationResponse,
+				errors.Join(ErrModelReturnedUnproductiveOutput, fmt.Errorf("response id: %s", conversationResponse.Id))
 		}
 	}
 
-	//todo: too many function call should be error
-	a.logger.Warn().Msg("too many function call iterations without return message")
-	return req.Input, "Warn too many function call iterations without return message", nil, nil
+	a.logger.Error().Msgf("max tool iterations (%d) reached without a return message", a.maxToolsIterationWithoutReturnMessage)
+	return req.Input, "", nil,
+		errors.Join(ErrMaxToolIterationsReached,
+			fmt.Errorf("exceeded %d iterations", a.maxToolsIterationWithoutReturnMessage))
 }
 
-func (a *Agent) processOutput(output []json.RawMessage) ([]json.RawMessage, string, error) {
+func (a *Agent) processOutput(output []json.RawMessage) ([]json.RawMessage, string, bool, error) {
 	var conversationElements []json.RawMessage
 	var msgRespFromLLM string
+	hasFunctionCall := false
 
 	var outputErr error
 	for _, o := range output {
@@ -74,12 +82,13 @@ func (a *Agent) processOutput(output []json.RawMessage) ([]json.RawMessage, stri
 		if err := json.Unmarshal(o, &item); err != nil {
 			outputErr = errors.Join(outputErr, fmt.Errorf("error unmarshaling output: %w", err))
 			continue
-			//return nil, "", err
 		}
 
-		elements, msg, err := a.dispatchOutputItem(item, o)
+		elements, msg, isFuncCall, err := a.dispatchOutputItem(item, o)
 		if err != nil {
 			outputErr = errors.Join(outputErr, fmt.Errorf("error processing output: %w", err))
+		} else if isFuncCall {
+			hasFunctionCall = true
 		}
 
 		conversationElements = append(conversationElements, elements...)
@@ -88,34 +97,37 @@ func (a *Agent) processOutput(output []json.RawMessage) ([]json.RawMessage, stri
 		}
 	}
 
-	return conversationElements, msgRespFromLLM, outputErr
+	return conversationElements, msgRespFromLLM, hasFunctionCall, outputErr
 }
 
-func (a *Agent) dispatchOutputItem(item OutputItem, raw json.RawMessage) ([]json.RawMessage, string, error) {
+func (a *Agent) dispatchOutputItem(item OutputItem, raw json.RawMessage) ([]json.RawMessage, string, bool, error) {
 	switch item.Type {
 	case "function_call":
 		fResp, err := a.handleFunctionCall(item, raw)
 		if err != nil {
-			return fResp, "", err
+			return fResp, "", false, err
 		}
-		return fResp, "", nil
+		return fResp, "", true, nil
 	case "message":
-		return handleMessage(item)
+		result, msg, err := handleMessage(item)
+		return result, msg, false, err
 	case "reasoning":
-		return handleReasoning(raw)
+		elems, msg, err := handleReasoning(raw)
+		return elems, msg, false, err
 	case "image_generation_call":
-		return a.handleImageGenerationCall(item)
+		result, msg, err := a.handleImageGenerationCall(item)
+		return result, msg, false, err
 	default:
 		a.logger.Warn().Msgf("unknown output type: %s", item.Type)
-		//todo: return some kind of error
-		//todo: add custom output function
-		return nil, "", nil
+		// todo: return some kind of error
+		// todo: add custom output function
+		return nil, "", false, nil
 	}
 }
 
 func (a *Agent) handleImageGenerationCall(image OutputItem) ([]json.RawMessage, string, error) {
 
-	//todo: return image as message or something?
+	// todo: return image as message or something?
 	if a.handleImage == nil {
 		return nil, "", ErrNoImageHandler
 	}
@@ -137,13 +149,13 @@ func (a *Agent) handleImageGenerationCall(image OutputItem) ([]json.RawMessage, 
 		return nil, "", errors.Join(ErrImageGenerationResp, err)
 	}
 
-	return []json.RawMessage{rawResp}, "image generated - cheat message", nil
+	return []json.RawMessage{rawResp}, "[system <for user visibility only>] image generated, handler returned: " + resultNote, nil
 }
 
 func (a *Agent) handleFunctionCall(fn OutputItem, raw json.RawMessage) ([]json.RawMessage, error) {
 	if a.toolset == nil {
 		a.logger.Warn().Msgf("tool call (%s) but no tools provided)", fn.Name)
-		return nil, ErrNoToolsetBuToolCall
+		return nil, ErrNoToolsetButToolCall
 	}
 
 	a.logger.Debug().Msgf("tool call %s with id %s with args: %s", fn.Name, fn.CallId, string(fn.Arguments))
@@ -153,7 +165,7 @@ func (a *Agent) handleFunctionCall(fn OutputItem, raw json.RawMessage) ([]json.R
 		a.logger.Warn().Msgf("tool call (%s) not supported)", fn.Name)
 		conversation, err := functionCallConversationElements(raw, funcCallResp)
 
-		return conversation, errors.Join(ErrUnknownToolCallsErrorsWillBePassedToModelInNextReq, fmt.Errorf("unknown tool name (%s))", fn.Name), err)
+		return conversation, errors.Join(ErrUnknownToolCall, fmt.Errorf("unknown tool name (%s)", fn.Name), err)
 	}
 
 	a.logger.Debug().Msgf("tool returned call id: %s, value: %s", funcCallResp.CallId, funcCallResp.Output)
