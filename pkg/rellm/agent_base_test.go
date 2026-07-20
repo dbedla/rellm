@@ -2,6 +2,7 @@ package rellm_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"io"
 	"net/http"
 	"rellm/pkg/rellm"
@@ -71,6 +72,72 @@ func TestAgentAskBodyIsNil(t *testing.T) {
 	assert.Error(t, err)
 	assert.NotNil(t, respMsg, "response message should not be nil")
 	assert.Equal(t, "", respMsg, "response message should match")
+}
+
+func TestAgentAsk_EmptyString(t *testing.T) {
+	agent, httpDo := buildTestAgent(t)
+	defer httpDo.AssertExpectations(t)
+
+	_, err := agent.Ask("")
+	assert.Error(t, err)
+	assert.ErrorIs(t, err, rellm.ErrEmptyPrompt)
+}
+
+func TestAgentExecute_NilPrompt(t *testing.T) {
+	agent, httpDo := buildTestAgent(t)
+	defer httpDo.AssertExpectations(t)
+
+	_, err := agent.Execute(nil)
+	assert.Error(t, err)
+	assert.ErrorIs(t, err, rellm.ErrEmptyPrompt)
+}
+
+func TestPromptBuilder_AllFields(t *testing.T) {
+	agent, httpDo := buildTestAgent(t)
+	defer httpDo.AssertExpectations(t)
+
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Run(func(args mock.Arguments) {
+			b, err := io.ReadAll(args.Get(0).(*http.Request).Body)
+			assert.NoError(t, err)
+
+			var req rellm.ResponsesApiReq
+			err = json.Unmarshal(b, &req)
+			assert.NoError(t, err)
+
+			assert.Equal(t, float32(0.7), req.Temperature)
+			assert.Equal(t, "high", req.Reasoning.Effort)
+			assert.Equal(t, 512, req.MaxOutputTokens)
+			assert.InDelta(t, 0.9, req.TopP, 0.001)
+			assert.InDelta(t, 1.0, req.PresencePenalty, 0.001)
+			assert.InDelta(t, 0.5, req.FrequencyPenalty, 0.001)
+			assert.NotNil(t, req.Seed)
+			assert.Equal(t, int64(42), *req.Seed)
+			assert.True(t, req.Logprobs)
+			assert.Equal(t, 3, req.TopLogprobs)
+		}).
+		Return(&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(goldenRespHi)),
+		}, nil)
+
+	prompt, err := rellm.NewPromptBuilder().
+		WithMessage("hi").
+		WithTemperature(0.7).
+		WithReasoning("high").
+		WithMaxOutputTokens(512).
+		WithTopP(0.9).
+		WithPresencePenalty(1.0).
+		WithFrequencyPenalty(0.5).
+		WithSeed(42).
+		WithLogprobs(true).
+		WithTopLogprobs(3).
+		Build()
+	assert.NoError(t, err)
+
+	_, err = agent.Execute(prompt)
+	assert.NoError(t, err)
 }
 
 func TestAgentAskStatusInternalServerError(t *testing.T) {
