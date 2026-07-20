@@ -89,11 +89,16 @@ func (b *PromptBuilder) WithTopLogprobs(n int) *PromptBuilder {
 	return b
 }
 
-func (b *PromptBuilder) Build() *Prompt {
+// Build returns the constructed prompt. It validates that a message was set;
+// callers receive ErrEmptyPrompt if they try to execute an unconfigured builder.
+func (b *PromptBuilder) Build() (*Prompt, error) {
+	if b.msg == "" {
+		return nil, ErrEmptyPrompt
+	}
 	return &Prompt{
 		msg:    b.msg,
 		params: b.params,
-	}
+	}, nil
 }
 
 func PromptMessageToConversation(prompt, role string) (json.RawMessage, error) {

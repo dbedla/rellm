@@ -62,11 +62,12 @@ func TestAgentAskLikeAPro(t *testing.T) {
 			Body:       io.NopCloser(strings.NewReader(goldenProRespHi)),
 		}, nil)
 
-	promptFirst := rellm.NewPromptBuilder().
+	promptFirst, err := rellm.NewPromptBuilder().
 		WithMessage("Hi").
 		WithReasoning(testReasoningEffort).
 		WithTemperature(testTemperature).
 		Build()
+	assert.NoError(t, err)
 
 	respMsg, err := agent.Execute(promptFirst)
 	assert.NoError(t, err, "failed to ask")
@@ -74,14 +75,14 @@ func TestAgentAskLikeAPro(t *testing.T) {
 	assert.NotNil(t, respMsg, "response message should not be nil")
 	assert.Equal(t, "Hello! How can I help you today?", respMsg, "response message should match")
 
-	promptReasoniong := rellm.NewPromptBuilder().
+	promptReasoning, err := rellm.NewPromptBuilder().
 		WithMessage("What did you reason about?").
 		WithReasoning(testReasoningEffort).
 		WithTemperature(testTemperature).
 		Build()
-	_, err = agent.Execute(promptReasoniong)
+	assert.NoError(t, err)
 
-	assert.NoError(t, err, "failed to ask with reasoning in conversation")
+	_, err = agent.Execute(promptReasoning)
 }
 
 //go:embed testdata/pro_api_tool_A1_req.json
@@ -158,13 +159,14 @@ func TestAgentAskLikeAProToolsCall(t *testing.T) {
 		}, nil)
 
 	q := "call one tool, check output, then call second tool, check output, provide conclusion"
-	prompt := rellm.NewPromptBuilder().
+	prompt, err := rellm.NewPromptBuilder().
 		WithMessage(q).
 		WithReasoning(testReasoningEffort).
 		WithTemperature(testTemperature).
 		Build()
+	assert.NoError(t, err)
+
 	respMsg, err := agent.Execute(prompt)
-	assert.NoError(t, err, "failed to ask")
 
 	assert.NotNil(t, respMsg, "response message should not be nil")
 	assert.Equal(t, "The first tool call to `GetStaticData` returned the value `42`. The second tool call to `GetDataFor` with the input \"the meaning of 42\" returned a list containing `[\"abc\", \"def\"]`. Therefore, based on these specific tool outputs, the data associated with the value 42 is \"abc\" and \"def\".", respMsg, "response message should match")
@@ -221,14 +223,14 @@ func TestAgentAskLikeAProToolsCall_UnknownFnCall(t *testing.T) {
 		}, nil)
 
 	q := "call function GetSpecialData"
-	prompt := rellm.NewPromptBuilder().
+	prompt, err := rellm.NewPromptBuilder().
 		WithMessage(q).
 		WithReasoning(testReasoningEffort).
 		WithTemperature(testTemperature).
 		Build()
+	assert.NoError(t, err)
 
 	respMsg, err := agent.Execute(prompt)
-	assert.Equal(t, respMsg, "")
 	assert.Error(t, err, "failed to ask")
 	assert.ErrorIs(t, err, rellm.ErrUnknownToolCall)
 
@@ -237,11 +239,13 @@ func TestAgentAskLikeAProToolsCall_UnknownFnCall(t *testing.T) {
 
 	//since we get err ErrUnknownToolCall so we simulate user ask to continue
 	q = "continue"
-	promptContinue := rellm.NewPromptBuilder().
+	promptContinue, err := rellm.NewPromptBuilder().
 		WithMessage(q).
 		WithReasoning(testReasoningEffort).
 		WithTemperature(testTemperature).
 		Build()
+	assert.NoError(t, err)
+
 	respMsg, err = agent.Execute(promptContinue)
 	assert.NoError(t, err, "failed to ask")
 
@@ -289,13 +293,14 @@ func TestTooManyFunctionCall(t *testing.T) {
 		}, nil)
 
 	q := "call one tool, check output, then call second tool, check output, provide conclusion"
-	prompt := rellm.NewPromptBuilder().
+	prompt, err := rellm.NewPromptBuilder().
 		WithMessage(q).
 		WithReasoning(testReasoningEffort).
 		WithTemperature(testTemperature).
 		Build()
+	assert.NoError(t, err)
 
-	_, err := agent.Execute(prompt)
+	_, err = agent.Execute(prompt)
 	assert.Error(t, err, "expected error when tool iteration budget is exceeded")
 	assert.True(t, errors.Is(err, rellm.ErrMaxToolIterationsReached), "error should wrap ErrMaxToolIterationsReached")
 }

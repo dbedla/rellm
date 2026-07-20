@@ -39,10 +39,15 @@ func main() {
 			return
 		}
 
-		prompt := rellm.NewPromptBuilder().
+		prompt, err := rellm.NewPromptBuilder().
+			WithMessage(msg).
 			WithReasoning("low").
 			WithTemperature(0.5).
 			Build()
+		if err != nil {
+			color.Red("unable to build prompt: %s", err.Error())
+			continue
+		}
 
 		llmResp, err := agent.Execute(prompt)
 		if err != nil {

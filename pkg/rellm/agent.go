@@ -137,7 +137,7 @@ func (a *Agent) Execute(p *Prompt) (string, error) {
 
 // Ask is the simple entry point for quick questions — no builder needed.
 func (a *Agent) Ask(question string) (string, error) {
-	prompt := NewPromptBuilder().WithMessage(question).Build()
+	prompt := &Prompt{msg: question, params: promptParams{}}
 	return a.Execute(prompt)
 }
 
