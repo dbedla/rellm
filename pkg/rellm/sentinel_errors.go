@@ -18,6 +18,7 @@ var ErrMaxToolIterationsReached = fmt.Errorf("max tool iterations reached withou
 var ErrModelReturnedUnproductiveOutput = fmt.Errorf("model returned output but no function call and no text message")
 
 var ErrEmptyPrompt = fmt.Errorf("prompt message is empty")
+var ErrEmptyReasoningEffort = fmt.Errorf("reasoning effort cannot be empty")
 
 var ErrImageGenerationResp = fmt.Errorf("error in image generation response")
 var ErrNoImageHandler = fmt.Errorf("image handler not provided")

@@ -2,7 +2,9 @@ package rellm
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"strings"
 )
 
 // Prompt holds the instruction and parameters for a single LLM interaction.
@@ -28,6 +30,7 @@ type promptParams struct {
 type PromptBuilder struct {
 	msg    string
 	params promptParams
+	errs   []error // accumulated validation errors from WithXxx calls; surfaced in Build()
 }
 
 func NewPromptBuilder() *PromptBuilder {
@@ -37,6 +40,10 @@ func NewPromptBuilder() *PromptBuilder {
 }
 
 func (b *PromptBuilder) WithMessage(msg string) *PromptBuilder {
+	if strings.TrimSpace(msg) == "" {
+		b.errs = append(b.errs, ErrEmptyPrompt)
+		return b
+	}
 	b.msg = msg
 	return b
 }
@@ -47,9 +54,11 @@ func (b *PromptBuilder) WithTemperature(t float32) *PromptBuilder {
 }
 
 func (b *PromptBuilder) WithReasoning(effort string) *PromptBuilder {
-	if effort != "" {
-		b.params.Reasoning = &ReasoningConfig{Effort: effort}
+	if effort == "" {
+		b.errs = append(b.errs, ErrEmptyReasoningEffort)
+		return b
 	}
+	b.params.Reasoning = &ReasoningConfig{Effort: effort}
 	return b
 }
 
@@ -88,10 +97,13 @@ func (b *PromptBuilder) WithTopLogprobs(n int) *PromptBuilder {
 	return b
 }
 
-// Build returns the constructed prompt. It validates that a message was set;
-// callers receive ErrEmptyPrompt if they try to execute an unconfigured builder.
+// Build returns the constructed prompt. It validates accumulated WithXxx calls;
+// all validation errors are joined into a single error so callers see every problem at once.
 func (b *PromptBuilder) Build() (*Prompt, error) {
-	if b.msg == "" {
+	if len(b.errs) > 0 {
+		return nil, errors.Join(b.errs...)
+	}
+	if strings.TrimSpace(b.msg) == "" {
 		return nil, ErrEmptyPrompt
 	}
 	return &Prompt{
