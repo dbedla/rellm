@@ -83,6 +83,7 @@ func TestAgentAskLikeAPro(t *testing.T) {
 	assert.NoError(t, err)
 
 	_, err = agent.Execute(promptReasoning)
+	assert.NoError(t, err, "failed to ask with reasoning in conversation")
 }
 
 //go:embed testdata/pro_api_tool_A1_req.json
@@ -167,6 +168,7 @@ func TestAgentAskLikeAProToolsCall(t *testing.T) {
 	assert.NoError(t, err)
 
 	respMsg, err := agent.Execute(prompt)
+	assert.NoError(t, err, "failed to ask")
 
 	assert.NotNil(t, respMsg, "response message should not be nil")
 	assert.Equal(t, "The first tool call to `GetStaticData` returned the value `42`. The second tool call to `GetDataFor` with the input \"the meaning of 42\" returned a list containing `[\"abc\", \"def\"]`. Therefore, based on these specific tool outputs, the data associated with the value 42 is \"abc\" and \"def\".", respMsg, "response message should match")
