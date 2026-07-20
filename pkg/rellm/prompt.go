@@ -53,7 +53,7 @@ func (b *PromptBuilder) WithTemperature(t float32) *PromptBuilder {
 	return b
 }
 
-func (b *PromptBuilder) WithReasoning(effort string) *PromptBuilder {
+func (b *PromptBuilder) WithReasoning(effort ReasoningEffort) *PromptBuilder {
 	if effort == "" {
 		b.errs = append(b.errs, ErrEmptyReasoningEffort)
 		return b

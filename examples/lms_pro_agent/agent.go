@@ -36,8 +36,3 @@ func buildProAgent(workspace string) (*rellm.Agent, error) {
 		WithInspectEachResponse(agentsutils.InspectWithRespLog).
 		Build()
 }
-
-func SetParameters(req *rellm.ResponsesApiReq) {
-	req.Reasoning = &rellm.ReasoningConfig{Effort: "low"}
-	req.Temperature = 0.5
-}

@@ -40,7 +40,7 @@ func main() {
 
 		prompt, err := rellm.NewPromptBuilder().
 			WithMessage(msg).
-			WithReasoning("low").
+			WithReasoning(rellm.ReasoningEffort_Low).
 			WithTemperature(0.5).
 			Build()
 		if err != nil {
