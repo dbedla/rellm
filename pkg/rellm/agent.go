@@ -129,7 +129,7 @@ func FuncResultToFunctionCallResp(callId string, funcResult any) FunctionCallRes
 // Execute builds the user message, packages inference params, and hands both to
 // agent.run() which owns conversation history, HTTP req assembly, and tool-loop.
 func (a *Agent) Execute(p *Prompt) (string, error) {
-	if p == nil {
+	if p == nil || p.msg == "" {
 		return "", ErrEmptyPrompt
 	}
 	return a.run(p.msg, p.params)
