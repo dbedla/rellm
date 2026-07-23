@@ -159,6 +159,71 @@ func TestAgentAskLikeOpenRouterSkipsSignatureOnlyReasoningReplay(t *testing.T) {
 	assert.Equal(t, "I am doing well.", respMsg)
 }
 
+//go:embed testdata/or_api_req_hi.json
+var goldenOpenRouterReqHi string
+
+//go:embed testdata/or_api_req_hi_no_reasoning.json
+var goldenOpenRouterReqAfterReasoning string
+
+//go:embed testdata/or_api_resp_hi.json
+var goldenOpenRouterRespHi string
+
+//go:embed testdata/or_api_resp_hi_2.json
+var goldenOpenRouterRespHi2 string
+
+func TestAgentAskLikeOpenRouterSkipsSignatureOnlyReasoningReplay(t *testing.T) {
+	agent, httpDo := buildTestOpenRouterToolAgent(t, TestDefaultMaxToolsIterationWithoutReturnMessage)
+	defer httpDo.AssertExpectations(t)
+
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Run(func(args mock.Arguments) {
+			req := args.Get(0).(*http.Request)
+
+			b, err := io.ReadAll(req.Body)
+			assert.NoError(t, err, "failed to read request body")
+
+			req.Body = io.NopCloser(bytes.NewBuffer(b))
+
+			assert.JSONEq(t, goldenOpenRouterReqHi, string(b))
+		}).
+		Return(&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(goldenOpenRouterRespHi)),
+		}, nil)
+
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Run(func(args mock.Arguments) {
+			req := args.Get(0).(*http.Request)
+
+			b, err := io.ReadAll(req.Body)
+			assert.NoError(t, err, "failed to read request body")
+
+			req.Body = io.NopCloser(bytes.NewBuffer(b))
+
+			assert.JSONEq(t, goldenOpenRouterReqAfterReasoning, string(b))
+		}).
+		Return(&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(goldenOpenRouterRespHi2)),
+		}, nil)
+
+	respMsg, err := agent.Prompt("Hi").
+		WithReasoning(testReasoningEffort).
+		WithTemperature(testTemperature).
+		Execute()
+	assert.NoError(t, err, "failed to ask")
+	assert.Equal(t, "Hello! How can I help you today?", respMsg)
+
+	respMsg, err = agent.Prompt("how are you").
+		WithReasoning(testReasoningEffort).
+		WithTemperature(testTemperature).
+		Execute()
+	assert.NoError(t, err, "failed to ask with reasoning in conversation")
+	assert.Equal(t, "I am doing well.", respMsg)
+}
+
 //go:embed testdata/pro_api_tool_A1_req.json
 var goldenProReqA1 string
 
