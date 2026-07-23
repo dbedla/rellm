@@ -136,17 +136,25 @@ func TestAgentAskLikeOpenRouterSkipsSignatureOnlyReasoningReplay(t *testing.T) {
 			Body:       io.NopCloser(strings.NewReader(goldenOpenRouterRespHi2)),
 		}, nil)
 
-	respMsg, err := agent.Prompt("Hi").
+	prompt, err := rellm.NewPromptBuilder().
+		WithMessage("Hi").
 		WithReasoning(testReasoningEffort).
 		WithTemperature(testTemperature).
-		Execute()
+		Build()
+	assert.NoError(t, err, "failed to build prompt")
+
+	respMsg, err := agent.Execute(prompt)
 	assert.NoError(t, err, "failed to ask")
 	assert.Equal(t, "Hello! How can I help you today?", respMsg)
 
-	respMsg, err = agent.Prompt("how are you").
+	secondPrompt, err := rellm.NewPromptBuilder().
+		WithMessage("how are you").
 		WithReasoning(testReasoningEffort).
 		WithTemperature(testTemperature).
-		Execute()
+		Build()
+	assert.NoError(t, err, "failed to build prompt")
+
+	respMsg, err = agent.Execute(secondPrompt)
 	assert.NoError(t, err, "failed to ask with reasoning in conversation")
 	assert.Equal(t, "I am doing well.", respMsg)
 }
