@@ -2,6 +2,7 @@ package main
 
 import (
 	"rellm/pkg/agentsutils"
+	"rellm/pkg/rellm"
 
 	"github.com/fatih/color"
 )
@@ -36,8 +37,17 @@ func main() {
 			return
 		}
 
-		//llmResp, rawResp, err := agent.AskLikeAPro(msg, agentsutils.InspectWithReqLog, agentsutils.InspectWithRespLog)
-		llmResp, err := agent.Prompt(msg).Execute()
+		prompt, err := rellm.NewPromptBuilder().
+			WithMessage(msg).
+			WithReasoning(rellm.ReasoningEffort_Medium).
+			Build()
+
+		if err != nil {
+			color.Red("unable to build prompt: %s", err.Error())
+			continue
+		}
+
+		llmResp, err := agent.Execute(prompt)
 		if err != nil {
 			color.Red("unable to ask question: %s", err.Error())
 			continue

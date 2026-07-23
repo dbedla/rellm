@@ -1,6 +1,8 @@
 package rellm_test
 
 import (
+
+	"errors"
 	"testing"
 
 	"rellm/pkg/rellm"
@@ -55,6 +57,43 @@ func TestEndpointBuilder_Build(t *testing.T) {
 		assert.Error(t, err)
 		assert.Equal(t, err, rellm.ErrBuildNoHttpClient)
 	})
+}
+
+func TestPromptBuilder_Validation_RejectsEmptyReasoning(t *testing.T) {
+	_, err := rellm.NewPromptBuilder().
+		WithMessage("Hi").
+		WithReasoning("").
+		Build()
+
+	assert.Error(t, err)
+	assert.True(t, errors.Is(err, rellm.ErrEmptyReasoningEffort), "ErrEmptyReasoningEffort should be present in joined error")
+}
+
+func TestPromptBuilder_Validation_RejectsEmptyMessage(t *testing.T) {
+	_, err := rellm.NewPromptBuilder().
+		WithMessage("   ").
+		Build()
+
+	assert.Error(t, err)
+	assert.ErrorIs(t, err, rellm.ErrEmptyPrompt)
+}
+
+func TestPromptBuilder_Validation_AccumulatesMultipleErrors(t *testing.T) {
+	_, err := rellm.NewPromptBuilder().
+		WithMessage("").
+		WithReasoning("").
+		Build()
+
+	assert.Error(t, err)
+	assert.True(t, errors.Is(err, rellm.ErrEmptyPrompt), "ErrEmptyPrompt should be present in joined error")
+	assert.True(t, errors.Is(err, rellm.ErrEmptyReasoningEffort), "ErrEmptyReasoningEffort should be present in joined error")
+
+}
+
+func TestPromptBuilder_Build_EmptyMessage(t *testing.T) {
+	_, err := rellm.NewPromptBuilder().Build()
+	assert.Error(t, err)
+	assert.ErrorIs(t, err, rellm.ErrEmptyPrompt)
 }
 
 func TestAgentBuilder_Build(t *testing.T) {

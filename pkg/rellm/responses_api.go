@@ -118,8 +118,7 @@ type ToolChoiceFunctionTarget struct {
 
 // ReasoningConfig controls behavior for reasoning-capable models.
 type ReasoningConfig struct {
-	// e.g., "low", "medium", "high"
-	Effort string `json:"effort,omitempty"`
+	Effort ReasoningEffort `json:"effort,omitempty"`
 }
 
 // ResponseFormat lets you request structured output.

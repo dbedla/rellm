@@ -62,19 +62,27 @@ func TestAgentAskLikeAPro(t *testing.T) {
 			Body:       io.NopCloser(strings.NewReader(goldenProRespHi)),
 		}, nil)
 
-	respMsg, err := agent.Prompt("Hi").
+	promptFirst, err := rellm.NewPromptBuilder().
+		WithMessage("Hi").
 		WithReasoning(testReasoningEffort).
 		WithTemperature(testTemperature).
-		Execute()
+		Build()
+	assert.NoError(t, err)
+
+	respMsg, err := agent.Execute(promptFirst)
 	assert.NoError(t, err, "failed to ask")
 
 	assert.NotNil(t, respMsg, "response message should not be nil")
 	assert.Equal(t, "Hello! How can I help you today?", respMsg, "response message should match")
 
-	_, err = agent.Prompt("What did you reason about?").
+	promptReasoning, err := rellm.NewPromptBuilder().
+		WithMessage("What did you reason about?").
 		WithReasoning(testReasoningEffort).
 		WithTemperature(testTemperature).
-		Execute()
+		Build()
+	assert.NoError(t, err)
+
+	_, err = agent.Execute(promptReasoning)
 	assert.NoError(t, err, "failed to ask with reasoning in conversation")
 }
 
@@ -128,17 +136,25 @@ func TestAgentAskLikeOpenRouterSkipsSignatureOnlyReasoningReplay(t *testing.T) {
 			Body:       io.NopCloser(strings.NewReader(goldenOpenRouterRespHi2)),
 		}, nil)
 
-	respMsg, err := agent.Prompt("Hi").
+	prompt, err := rellm.NewPromptBuilder().
+		WithMessage("Hi").
 		WithReasoning(testReasoningEffort).
 		WithTemperature(testTemperature).
-		Execute()
+		Build()
+	assert.NoError(t, err, "failed to build prompt")
+
+	respMsg, err := agent.Execute(prompt)
 	assert.NoError(t, err, "failed to ask")
 	assert.Equal(t, "Hello! How can I help you today?", respMsg)
 
-	respMsg, err = agent.Prompt("how are you").
+	secondPrompt, err := rellm.NewPromptBuilder().
+		WithMessage("how are you").
 		WithReasoning(testReasoningEffort).
 		WithTemperature(testTemperature).
-		Execute()
+		Build()
+	assert.NoError(t, err, "failed to build prompt")
+
+	respMsg, err = agent.Execute(secondPrompt)
 	assert.NoError(t, err, "failed to ask with reasoning in conversation")
 	assert.Equal(t, "I am doing well.", respMsg)
 }
@@ -217,10 +233,14 @@ func TestAgentAskLikeAProToolsCall(t *testing.T) {
 		}, nil)
 
 	q := "call one tool, check output, then call second tool, check output, provide conclusion"
-	respMsg, err := agent.Prompt(q).
+	prompt, err := rellm.NewPromptBuilder().
+		WithMessage(q).
 		WithReasoning(testReasoningEffort).
 		WithTemperature(testTemperature).
-		Execute()
+		Build()
+	assert.NoError(t, err)
+
+	respMsg, err := agent.Execute(prompt)
 	assert.NoError(t, err, "failed to ask")
 
 	assert.NotNil(t, respMsg, "response message should not be nil")
@@ -278,10 +298,14 @@ func TestAgentAskLikeAProToolsCall_UnknownFnCall(t *testing.T) {
 		}, nil)
 
 	q := "call function GetSpecialData"
-	respMsg, err := agent.Prompt(q).
-		WithReasoning("medium").
+	prompt, err := rellm.NewPromptBuilder().
+		WithMessage(q).
+		WithReasoning(testReasoningEffort).
 		WithTemperature(testTemperature).
-		Execute()
+		Build()
+	assert.NoError(t, err)
+
+	respMsg, err := agent.Execute(prompt)
 	assert.Equal(t, respMsg, "")
 	assert.Error(t, err, "failed to ask")
 	assert.ErrorIs(t, err, rellm.ErrUnknownToolCall)
@@ -291,10 +315,14 @@ func TestAgentAskLikeAProToolsCall_UnknownFnCall(t *testing.T) {
 
 	//since we get err ErrUnknownToolCall so we simulate user ask to continue
 	q = "continue"
-	respMsg, err = agent.Prompt(q).
-		WithReasoning("medium").
+	promptContinue, err := rellm.NewPromptBuilder().
+		WithMessage(q).
+		WithReasoning(testReasoningEffort).
 		WithTemperature(testTemperature).
-		Execute()
+		Build()
+	assert.NoError(t, err)
+
+	respMsg, err = agent.Execute(promptContinue)
 	assert.NoError(t, err, "failed to ask")
 
 	assert.NotNil(t, respMsg, "response message should not be nil")
@@ -341,11 +369,14 @@ func TestTooManyFunctionCall(t *testing.T) {
 		}, nil)
 
 	q := "call one tool, check output, then call second tool, check output, provide conclusion"
-	_, err := agent.Prompt(q).
+	prompt, err := rellm.NewPromptBuilder().
+		WithMessage(q).
 		WithReasoning(testReasoningEffort).
 		WithTemperature(testTemperature).
-		Execute()
-	// Budget exhausted — the model kept calling functions without producing text.
+		Build()
+	assert.NoError(t, err)
+
+	_, err = agent.Execute(prompt)
 	assert.Error(t, err, "expected error when tool iteration budget is exceeded")
 	assert.True(t, errors.Is(err, rellm.ErrMaxToolIterationsReached), "error should wrap ErrMaxToolIterationsReached")
 }

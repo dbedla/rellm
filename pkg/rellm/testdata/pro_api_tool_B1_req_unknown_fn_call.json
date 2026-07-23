@@ -21,7 +21,7 @@
   ],
   "model": "google/gemma-4-26b-a4b",
   "reasoning": {
-    "effort": "medium"
+    "effort": "low"
   },
   "temperature": 0.5,
   "tools": [

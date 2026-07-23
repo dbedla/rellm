@@ -3,6 +3,8 @@ package main
 import (
 	"rellm/pkg/agentsutils"
 
+	"rellm/pkg/rellm"
+
 	"github.com/fatih/color"
 )
 
@@ -36,10 +38,18 @@ func main() {
 		if msg == "EXIT" {
 			return
 		}
-		llmResp, err := agent.Prompt(msg).
-			WithReasoning("medium").
+
+		prompt, err := rellm.NewPromptBuilder().
+			WithMessage(msg).
+			WithReasoning(rellm.ReasoningEffort_Low).
 			WithTemperature(0.5).
-			Execute()
+			Build()
+		if err != nil {
+			color.Red("unable to build prompt: %s", err.Error())
+			continue
+		}
+
+		llmResp, err := agent.Execute(prompt)
 		if err != nil {
 			color.Red("unable to ask question: %s", err.Error())
 			continue
