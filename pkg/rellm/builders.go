@@ -37,6 +37,11 @@ func (b *EndpointBuilder) WithModel(model Model) *EndpointBuilder {
 	return b
 }
 
+func (b *EndpointBuilder) WithProvider(provider Provider) *EndpointBuilder {
+	b.endpoint.provider = provider
+	return b
+}
+
 func (b *EndpointBuilder) WithResponsesApiEndpoint(endpoint ResponsesApiEndpoint) *EndpointBuilder {
 	b.endpoint.rae = endpoint
 	return b
@@ -54,6 +59,9 @@ func (b *EndpointBuilder) Build() (*Endpoint, error) {
 	}
 	if b.endpoint.rae == nil {
 		return nil, ErrBuildNoResponsesApiEndpoint
+	}
+	if b.endpoint.provider == "" {
+		return nil, ErrBuildNoLLMProvider
 	}
 
 	return &b.endpoint, nil

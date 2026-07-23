@@ -82,6 +82,7 @@ func newTestEndpoint(t *testing.T, statusCode int, body string) *rellm.Endpoint 
 
 	endpoint, err := rellm.NewEndpointBuilder().
 		WithResponsesApiEndpoint(newTestResponsesEndpoint()).
+		WithProvider(rellm.Provider_LMStudio).
 		WithModel(rellm.Model_LMS_Google_Gemma_4_26B_A4B).
 		WithClientHttpDo(testEndpointClient{statusCode: statusCode, body: body}).
 		Build()

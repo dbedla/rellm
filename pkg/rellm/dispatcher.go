@@ -109,10 +109,10 @@ func (a *Agent) dispatchOutputItem(item OutputItem, raw json.RawMessage) ([]json
 		}
 		return fResp, "", true, nil
 	case "message":
-		result, msg, err := handleMessage(item)
+		result, msg, err := handleMessage(item, a.endpoint.provider)
 		return result, msg, false, err
 	case "reasoning":
-		elems, msg, err := handleReasoning(raw)
+		elems, msg, err := handleReasoning(raw, a.endpoint.provider)
 		return elems, msg, false, err
 	case "image_generation_call":
 		result, msg, err := a.handleImageGenerationCall(item)
@@ -190,13 +190,24 @@ func functionCallConversationElements(raw json.RawMessage, resp FunctionCallResp
 	return []json.RawMessage{raw, rawResp}, nil
 }
 
-func handleMessage(msg OutputItem) ([]json.RawMessage, string, error) {
-	var conversationElements []json.RawMessage
-	var msgRespFromLLM string
-	var allParts []MessagePart
+func handleMessage(msg OutputItem, provider Provider) ([]json.RawMessage, string, error) {
+	allParts, msgRespFromLLM := collectMessageParts(msg.Content)
 
-	for _, part := range msg.Content {
-		allParts = append(allParts, part)
+	switch provider {
+	case Provider_OpenRouter:
+		return handleOpenRouterMessage(msg, allParts, msgRespFromLLM)
+	case Provider_LMStudio:
+		fallthrough
+	default:
+		return handleOtherProviderMessage(allParts, msgRespFromLLM)
+	}
+}
+
+func collectMessageParts(parts []MessagePart) ([]MessagePart, string) {
+	collected := make([]MessagePart, 0, len(parts))
+	var msgRespFromLLM string
+	for _, part := range parts {
+		collected = append(collected, part)
 		if part.Text != "" {
 			if msgRespFromLLM != "" {
 				msgRespFromLLM += " "
@@ -205,18 +216,42 @@ func handleMessage(msg OutputItem) ([]json.RawMessage, string, error) {
 		}
 	}
 
+	return collected, msgRespFromLLM
+}
+
+func handleOpenRouterMessage(msg OutputItem, allParts []MessagePart, msgRespFromLLM string) ([]json.RawMessage, string, error) {
+	assistantMsg := openRouterTextMessage{
+		Type:    "message",
+		Role:    "assistant",
+		Id:      msg.Id,
+		Status:  msg.Status,
+		Content: messagePartsToText(allParts),
+	}
+	rawAssistantMsg, err := json.Marshal(assistantMsg)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return []json.RawMessage{rawAssistantMsg}, msgRespFromLLM, nil
+}
+
+func handleOtherProviderMessage(allParts []MessagePart, msgRespFromLLM string) ([]json.RawMessage, string, error) {
 	assistantMsg := UserMessage{Role: "assistant", Content: allParts}
 	rawAssistantMsg, err := json.Marshal(assistantMsg)
 	if err != nil {
 		return nil, "", err
 	}
-	conversationElements = append(conversationElements, rawAssistantMsg)
 
-	return conversationElements, msgRespFromLLM, nil
+	return []json.RawMessage{rawAssistantMsg}, msgRespFromLLM, nil
 }
 
-func handleReasoning(raw json.RawMessage) ([]json.RawMessage, string, error) {
-	return []json.RawMessage{raw}, "", nil
+func handleReasoning(raw json.RawMessage, provider Provider) ([]json.RawMessage, string, error) {
+	elems, err := reasoningConversationElements(raw, provider)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return elems, "", nil
 }
 
 type UserMessage struct {

@@ -2,15 +2,12 @@
   "model": "x-ai/grok-imagine-image-quality",
   "input": [
     {
+      "type": "message",
       "role": "system",
-      "content": [
-        {
-          "type": "input_text",
-          "text": "You are a helpful assistant."
-        }
-      ]
+      "content": "You are a helpful assistant."
     },
     {
+      "type": "message",
       "role": "user",
       "content": [
         {
