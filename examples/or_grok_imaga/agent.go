@@ -16,7 +16,7 @@ const (
 
 func buildLBaseAgent(workspace string) (*rellm.Agent, error) {
 
-	agentName := "OpenRouterAgent"
+	agentName := "OpenRouterImageAgent"
 
 	orEndpoint, err := newOpenRouterEndpoint()
 	if err != nil {
@@ -47,7 +47,6 @@ func buildLBaseAgent(workspace string) (*rellm.Agent, error) {
 }
 
 func testHandleImage(image rellm.OutputItem) (string, error) {
-
 	return "asd", nil
 }
 

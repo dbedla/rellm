@@ -1,0 +1,31 @@
+{
+  "id": "resp_test_openrouter",
+  "object": "response",
+  "status": "completed",
+  "model": "google/gemini-3.1-flash-lite",
+  "output": [
+    {
+      "id": "rs_tmp_oqshb32zq3",
+      "type": "reasoning",
+      "status": "completed",
+      "summary": [],
+      "signature": "EjQKMgERTTIPnzClMO/xbjXnwpkKZtZ57iWCaNI7inwDTMZoMsVRltRZUH7SuayuqsmggUjM"
+    },
+    {
+      "id": "msg_test",
+      "type": "message",
+      "role": "assistant",
+      "status": "completed",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "Hello! How can I help you today?"
+        }
+      ]
+    }
+  ],
+  "reasoning": {
+    "effort": "low",
+    "summary": null
+  }
+}

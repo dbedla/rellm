@@ -32,7 +32,7 @@ func TestHandleMessageMultimodal(t *testing.T) {
 		},
 	}
 
-	elements, msgResp, err := handleMessage(item)
+	elements, msgResp, err := handleMessage(item, Provider_LMStudio)
 	assert.NoError(t, err)
 	assert.Len(t, elements, 1)
 

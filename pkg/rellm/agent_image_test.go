@@ -7,7 +7,7 @@ import (
 	"io"
 	"net/http"
 	"rellm/pkg/rellm"
-	"strings" 
+	"strings"
 	"testing"
 
 	_ "embed"
@@ -111,6 +111,7 @@ func buildTestImageAgent(t *testing.T, maxToolsIterationWithoutReturnMessage uin
 	lmsEndpoint := rellm.NewUniversalResponsesEndpoint(testBaseUrl, testPort, testResponsesApiEndpoint, nil)
 	ep, err := rellm.NewEndpointBuilder().
 		WithResponsesApiEndpoint(lmsEndpoint).
+		WithProvider(rellm.Provider_OpenRouter).
 		WithModel(rellm.Model("x-ai/grok-imagine-image-quality")).
 		WithClientHttpDo(mockHttp).
 		Build()

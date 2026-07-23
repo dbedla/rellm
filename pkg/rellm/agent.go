@@ -62,7 +62,7 @@ func (a *Agent) run(msg string, params promptParams) (string, error) {
 
 	conversation = append(conversation, userMsg)
 
-	req := toBaseResponsesApiReq(params, a.endpoint.model, conversation)
+	req := toBaseResponsesApiReq(params, a.endpoint.model, a.endpoint.provider, conversation)
 
 	if a.toolset != nil {
 		req.Tools = a.toolset.BuildTools()
@@ -219,10 +219,15 @@ func (p *prompt) isExpired() bool {
 	return p.agent == nil || len(p.msg) == 0
 }
 
-func toBaseResponsesApiReq(params promptParams, model Model, conversation []json.RawMessage) *ResponsesApiReq {
+func toBaseResponsesApiReq(params promptParams, model Model, provider Provider, conversation []json.RawMessage) *ResponsesApiReq {
+	normalizedConversation, err := normalizeConversationForProvider(provider, conversation)
+	if err != nil {
+		normalizedConversation = conversation
+	}
+
 	return &ResponsesApiReq{
 		Model:            string(model),
-		Input:            conversation,
+		Input:            normalizedConversation,
 		Temperature:      params.Temperature,
 		Reasoning:        params.Reasoning,
 		MaxOutputTokens:  params.MaxOutputTokens,
