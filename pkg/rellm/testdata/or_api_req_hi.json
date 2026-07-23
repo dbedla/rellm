@@ -1,0 +1,51 @@
+{
+  "input": [
+    {
+      "type": "message",
+      "role": "system",
+      "content": "You are a helpful assistant."
+    },
+    {
+      "type": "message",
+      "role": "user",
+      "content": [
+        {
+          "type": "input_text",
+          "text": "Hi"
+        }
+      ]
+    }
+  ],
+  "model": "google/gemini-3.1-flash-lite",
+  "reasoning": {
+    "effort": "low"
+  },
+  "temperature": 0.5,
+  "tools": [
+    {
+      "description": "Get data for a specific input",
+      "name": "GetDataFor",
+      "parameters": {
+        "properties": {
+          "input": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "type": "object"
+      },
+      "type": "function"
+    },
+    {
+      "description": "Get static data",
+      "name": "GetStaticData",
+      "parameters": {
+        "properties": {},
+        "type": "object"
+      },
+      "type": "function"
+    }
+  ]
+}

@@ -78,6 +78,71 @@ func TestAgentAskLikeAPro(t *testing.T) {
 	assert.NoError(t, err, "failed to ask with reasoning in conversation")
 }
 
+//go:embed testdata/or_api_req_hi.json
+var goldenOpenRouterReqHi string
+
+//go:embed testdata/or_api_req_hi_no_reasoning.json
+var goldenOpenRouterReqAfterReasoning string
+
+//go:embed testdata/or_api_resp_hi.json
+var goldenOpenRouterRespHi string
+
+//go:embed testdata/or_api_resp_hi_2.json
+var goldenOpenRouterRespHi2 string
+
+func TestAgentAskLikeOpenRouterSkipsSignatureOnlyReasoningReplay(t *testing.T) {
+	agent, httpDo := buildTestOpenRouterToolAgent(t, TestDefaultMaxToolsIterationWithoutReturnMessage)
+	defer httpDo.AssertExpectations(t)
+
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Run(func(args mock.Arguments) {
+			req := args.Get(0).(*http.Request)
+
+			b, err := io.ReadAll(req.Body)
+			assert.NoError(t, err, "failed to read request body")
+
+			req.Body = io.NopCloser(bytes.NewBuffer(b))
+
+			assert.JSONEq(t, goldenOpenRouterReqHi, string(b))
+		}).
+		Return(&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(goldenOpenRouterRespHi)),
+		}, nil)
+
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Run(func(args mock.Arguments) {
+			req := args.Get(0).(*http.Request)
+
+			b, err := io.ReadAll(req.Body)
+			assert.NoError(t, err, "failed to read request body")
+
+			req.Body = io.NopCloser(bytes.NewBuffer(b))
+
+			assert.JSONEq(t, goldenOpenRouterReqAfterReasoning, string(b))
+		}).
+		Return(&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(goldenOpenRouterRespHi2)),
+		}, nil)
+
+	respMsg, err := agent.Prompt("Hi").
+		WithReasoning(testReasoningEffort).
+		WithTemperature(testTemperature).
+		Execute()
+	assert.NoError(t, err, "failed to ask")
+	assert.Equal(t, "Hello! How can I help you today?", respMsg)
+
+	respMsg, err = agent.Prompt("how are you").
+		WithReasoning(testReasoningEffort).
+		WithTemperature(testTemperature).
+		Execute()
+	assert.NoError(t, err, "failed to ask with reasoning in conversation")
+	assert.Equal(t, "I am doing well.", respMsg)
+}
+
 //go:embed testdata/pro_api_tool_A1_req.json
 var goldenProReqA1 string
 
@@ -302,7 +367,37 @@ func buildTestProToolAgent(t *testing.T, maxToolsIterationWithoutReturnMessage u
 	lmsEndpoint := rellm.NewUniversalResponsesEndpoint(testBaseUrl, testPort, testResponsesApiEndpoint, nil)
 	ep, err := rellm.NewEndpointBuilder().
 		WithResponsesApiEndpoint(lmsEndpoint).
+		WithProvider(rellm.Provider_LMStudio).
 		WithModel(rellm.Model_LMS_Google_Gemma_4_26B_A4B).
+		WithClientHttpDo(mockHttp).
+		Build()
+	assert.NoError(t, err, "failed to create endpoint")
+
+	ta, err := rellm.NewAgentBuilder().
+		WithEndpoint(ep).
+		WithAgentName(agentName).
+		WithWorkspaceDir(workspace).
+		WithMaxToolsIterationWithoutReturnMessage(maxToolsIterationWithoutReturnMessage).
+		WithContinueConversation(false).
+		WithSystemMessage("You are a helpful assistant.").
+		WithToolset(&agentsutils.DataSrcToolset{}).
+		WithNoOpLogger().
+		Build()
+
+	assert.NoError(t, err, "failed to create agent")
+	return ta, mockHttp
+}
+
+func buildTestOpenRouterToolAgent(t *testing.T, maxToolsIterationWithoutReturnMessage uint64) (*rellm.Agent, *HttpDoMock) {
+	agentName := "TestOpenRouterAgent"
+	workspace := t.TempDir()
+	mockHttp := new(HttpDoMock)
+
+	lmsEndpoint := rellm.NewUniversalResponsesEndpoint(testBaseUrl, testPort, testResponsesApiEndpoint, nil)
+	ep, err := rellm.NewEndpointBuilder().
+		WithResponsesApiEndpoint(lmsEndpoint).
+		WithProvider(rellm.Provider_OpenRouter).
+		WithModel(rellm.Model_OpenRouter_Google_Gemini_3_1_Flash_Lite).
 		WithClientHttpDo(mockHttp).
 		Build()
 	assert.NoError(t, err, "failed to create endpoint")

@@ -143,6 +143,7 @@ func buildTestAgent(t *testing.T) (*rellm.Agent, *HttpDoMock) {
 	lmsEndpoint := rellm.NewUniversalResponsesEndpoint(testBaseUrl, testPort, testResponsesApiEndpoint, nil)
 	ep, err := rellm.NewEndpointBuilder().
 		WithResponsesApiEndpoint(lmsEndpoint).
+		WithProvider(rellm.Provider_LMStudio).
 		WithModel(rellm.Model_LMS_Google_Gemma_4_26B_A4B).
 		WithClientHttpDo(mockHttp).
 		Build()

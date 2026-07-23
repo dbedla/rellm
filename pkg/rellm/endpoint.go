@@ -18,14 +18,22 @@ type ResponsesApiEndpoint interface {
 
 type Model string
 
+type Provider string
+
+const (
+	Provider_LMStudio   Provider = "other"
+	Provider_OpenRouter Provider = "openrouter"
+)
+
 type ClientHttpDo interface {
 	Do(request *http.Request) (*http.Response, error)
 }
 
 type Endpoint struct {
-	client ClientHttpDo
-	model  Model
-	rae    ResponsesApiEndpoint
+	client   ClientHttpDo
+	model    Model
+	provider Provider
+	rae      ResponsesApiEndpoint
 }
 
 type HTTPStatusError struct {
@@ -138,8 +146,6 @@ func bodySnippet(rawBody []byte) string {
 	}
 	return body[:maxBodySnippetLength] + "..."
 }
-
-
 
 type UniversalResponsesEndpoint struct {
 	baseUrl              string

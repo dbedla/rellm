@@ -4,6 +4,7 @@ import "fmt"
 
 var ErrBuildNoModelName = fmt.Errorf("missing model name for endpoint")
 var ErrBuildNoResponsesApiEndpoint = fmt.Errorf("missing ResponsesApiEndpoint")
+var ErrBuildNoLLMProvider = fmt.Errorf("missing llm provider")
 var ErrBuildNoWorkspaceDir = fmt.Errorf("missing workspaceDir path, inside this dir all agent session artefact will be stored")
 var ErrBuildNoHttpClient = fmt.Errorf("missing http client")
 var ErrBuildNoEndpoint = fmt.Errorf("missing endpoint")

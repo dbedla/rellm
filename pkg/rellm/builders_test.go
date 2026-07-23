@@ -16,6 +16,7 @@ func TestEndpointBuilder_Build(t *testing.T) {
 	t.Run("Successful build", func(t *testing.T) {
 		builder := rellm.NewEndpointBuilder().
 			WithModel(rellm.Model_LMS_Google_Gemma_4_26B_A4B).
+			WithProvider(rellm.Provider_LMStudio).
 			WithResponsesApiEndpoint(lmsEndpoint).
 			WithClientHttpDo(mockHttp)
 
@@ -63,6 +64,7 @@ func TestAgentBuilder_Build(t *testing.T) {
 	// Setup a valid endpoint for AgentBuilder tests
 	endpoint, err := rellm.NewEndpointBuilder().
 		WithModel(rellm.Model_LMS_Google_Gemma_4_26B_A4B).
+		WithProvider(rellm.Provider_LMStudio).
 		WithResponsesApiEndpoint(lmsEndpoint).
 		WithClientHttpDo(mockHttp).
 		Build()
