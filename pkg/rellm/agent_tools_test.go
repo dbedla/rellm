@@ -298,6 +298,7 @@ func TestAgentAskLikeAProToolsCall_UnknownFnCall(t *testing.T) {
 	assert.NoError(t, err)
 
 	respMsg, err := agent.Execute(prompt)
+	assert.Equal(t, respMsg, "")
 	assert.Error(t, err, "failed to ask")
 	assert.ErrorIs(t, err, rellm.ErrUnknownToolCall)
 
