@@ -155,7 +155,7 @@ func (a *Agent) handleImageGenerationCall(image OutputItem) ([]json.RawMessage, 
 func (a *Agent) handleFunctionCall(fn OutputItem, raw json.RawMessage) ([]json.RawMessage, error) {
 	if a.toolset == nil {
 		a.logger.Warn().Msgf("tool call (%s) but no tools provided)", fn.Name)
-		return nil, ErrNoToolsetButToolCall
+		return nil, ErrNoToolsetButToolCallRequested
 	}
 
 	a.logger.Debug().Msgf("tool call %s with id %s with args: %s", fn.Name, fn.CallId, string(fn.Arguments))

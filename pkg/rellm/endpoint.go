@@ -57,9 +57,11 @@ func (e *HTTPStatusError) Error() string {
 type ReasoningEffort string
 
 const (
+	ReasoningEffort_None   ReasoningEffort = "none"
 	ReasoningEffort_Low    ReasoningEffort = "low"
 	ReasoningEffort_High   ReasoningEffort = "high"
 	ReasoningEffort_Medium ReasoningEffort = "medium"
+	ReasoningEffort_XHigh  ReasoningEffort = "xhigh"
 )
 
 // Post sends a fully-built ResponsesApiReq over HTTP. The caller is responsible

@@ -12,7 +12,7 @@ var ErrBuildNoAgentName = fmt.Errorf("missing agent name")
 var ErrBuildExactlyOneLogger = fmt.Errorf("exactly one logger must be configured")
 var ErrBuildLogger = fmt.Errorf("unable to create logger")
 
-var ErrNoToolsetButToolCall = fmt.Errorf("request to call unknown tool")
+var ErrNoToolsetButToolCallRequested = fmt.Errorf("no toolset provided but request to call tool received")
 var ErrUnknownToolCall = fmt.Errorf("request to call unknown tool")
 var ErrInConversationResponse = fmt.Errorf("error in conversation response")
 var ErrMaxToolIterationsReached = fmt.Errorf("max tool iterations reached without a text response")
