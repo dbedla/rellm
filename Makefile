@@ -5,11 +5,17 @@ COMPLEXITY_PATH=./output/complexity/
 
 go-all: go-build go-test go-bench go-lint go-cyclo go-coverage
 
-go-clean-build: go-clean go-nuke
-	go build -o ./output/bin/ ./examples/...
+go-clean-build: go-nuke go-build
 
 go-build:
 	go build -o ./output/bin/ ./examples/...
+	go build -o ./output/bin/ ./e2e_tests/...
+
+e2e-lms: go-clean-build
+	$(BIN_PATH)e2e_fs_agent --lms
+
+e2e-openrouter: go-clean-build
+	$(BIN_PATH)e2e_fs_agent --openrouter
 
 go-test:
 	go test -v ./...
@@ -32,12 +38,11 @@ go-coverage:
 go-nuke:
 	go clean -cache
 	go clean -i ./...
-
-go-clean:
 	go clean
 	rm ${BIN_PATH}* || true
 	rm ${COVERAGE_PATH}* || true
 	rm ${COMPLEXITY_PATH}* || true
+
 
 lms-set-gemma-4-26b-a4b:
 	lms get gemma-4-26b-a4b --yes

@@ -1,0 +1,208 @@
+package main
+
+import (
+	"fmt"
+	"net/http"
+	"os"
+	"path/filepath"
+	"rellm/pkg/agentsutils"
+	"rellm/pkg/rellm"
+
+	"github.com/fatih/color"
+	"github.com/joho/godotenv"
+)
+
+const (
+	fsAgentSysPrompt = `You are a helpful assistant, with limited access to the file system.`
+)
+
+func buildFSAgent(ep *rellm.Endpoint, dirs agentsDirs) (*rellm.Agent, error) {
+
+	agentName := "FSAgent"
+
+	fsToolset, err := buildFSToolset(dirs.readOnlyDir, dirs.outputDir)
+	if err != nil {
+		return nil, err
+	}
+
+	return rellm.NewAgentBuilder().
+		WithEndpoint(ep).
+		WithAgentName(agentName).
+		WithWorkspaceDir(dirs.logDir).
+		WithMaxToolsIterationWithoutReturnMessage(20).
+		WithContinueConversation(true).
+		WithToolset(fsToolset).
+		WithSystemMessage(fsAgentSysPrompt).
+		WithWorkspaceLogger().
+		WithInspectEachRequest(agentsutils.InspectWithReqLog).
+		WithInspectEachResponse(agentsutils.InspectWithRespLog).
+		Build()
+}
+
+func buildLmsEndpoint() (*rellm.Endpoint, error) {
+	lmsEndpoint := rellm.NewUniversalResponsesEndpoint("http://127.0.0.1", "1234", "/v1/responses", nil)
+	ep, err := rellm.NewEndpointBuilder().
+		WithResponsesApiEndpoint(lmsEndpoint).
+		WithProvider(rellm.Provider_LMStudio).
+		WithModel(rellm.Model_LMS_Google_Gemma_4_26B_A4B).
+		WithDefaultHttpClient().
+		Build()
+	if err != nil {
+		return nil, err
+	}
+	return ep, nil
+}
+
+func buildOpenRouterEndpoint() (*rellm.Endpoint, error) {
+	orEndpoint, err := newOpenRouterEndpoint()
+	if err != nil {
+		return nil, err
+	}
+	ep, err := rellm.NewEndpointBuilder().
+		WithResponsesApiEndpoint(orEndpoint).
+		WithProvider(rellm.Provider_OpenRouter).
+		WithModel(rellm.Model_OpenRouter_Google_Gemini_3_1_Flash_Lite).
+		WithDefaultHttpClient().
+		Build()
+	if err != nil {
+		return nil, err
+	}
+	return ep, nil
+}
+
+func newOpenRouterEndpoint() (rellm.ResponsesApiEndpoint, error) {
+	err := godotenv.Load()
+	if err != nil {
+		return nil, fmt.Errorf("cannot load .env: %w", err)
+	}
+
+	apiKey := os.Getenv("OPENROUTER_API_KEY")
+	if apiKey == "" {
+		return nil, fmt.Errorf("missing apikey for OPENROUTER_API_KEY")
+	}
+
+	header := make(http.Header)
+	header.Set("Content-Type", "application/json")
+	header.Set("Authorization", "Bearer "+apiKey)
+
+	return rellm.NewUniversalResponsesEndpoint("https://openrouter.ai", "", "/api/v1/responses", header), nil
+
+}
+
+func buildFSToolset(readOnlyDir, outputDir string) (*agentsutils.FSToolset, error) {
+	fs, err := agentsutils.NewLimitedFileSystem([]string{readOnlyDir}, outputDir)
+	if err != nil {
+		return nil, err
+	}
+	fsToolset := agentsutils.NewFSToolset(fs)
+
+	return fsToolset, nil
+}
+
+func buildFsPath() (agentsDirs, error) {
+	workspace, err := agentsutils.CreateDirInSysTmp("agent-log")
+	if err != nil {
+		return agentsDirs{}, err
+	}
+
+	readOnlyDir, err := agentsutils.CreateSubDir(workspace, "readonly_agent_input")
+	if err != nil {
+		return agentsDirs{}, err
+	}
+
+	outputDir, err := agentsutils.CreateSubDir(workspace, "output")
+	if err != nil {
+		return agentsDirs{}, err
+	}
+
+	logDir, err := agentsutils.CreateSubDir(workspace, "logs")
+	if err != nil {
+		return agentsDirs{}, err
+	}
+
+	dirs := agentsDirs{
+		readOnlyDir: readOnlyDir,
+		outputDir:   outputDir,
+		logDir:      logDir,
+		workspace:   workspace,
+	}
+
+	return dirs, nil
+}
+
+type agentsDirs struct {
+	workspace   string
+	readOnlyDir string
+	outputDir   string
+	logDir      string
+}
+
+func setup(fl flag) (agentsDirs, *rellm.Agent, error) {
+
+	dirs, err := buildFsPath()
+	if err != nil {
+		return agentsDirs{}, nil, err
+	}
+
+	ep, err := endpointForProvider(fl)
+	if err != nil {
+		return agentsDirs{}, nil, err
+	}
+
+	fsAgent, err := buildFSAgent(ep, dirs)
+	if err != nil {
+		return agentsDirs{}, nil, err
+	}
+
+	return dirs, fsAgent, nil
+}
+
+func endpointForProvider(fl flag) (*rellm.Endpoint, error) {
+	switch fl {
+	case flag_LMS:
+		return buildLmsEndpoint()
+	case flag_OpenRouter:
+		return buildOpenRouterEndpoint()
+	default:
+		return nil, fmt.Errorf("unknown flag provided: %s", fl)
+	}
+
+}
+
+func panicWithLog(msg string, err error) {
+	logMsg := msg + "\n" + err.Error()
+	color.Red(logMsg)
+	panic(logMsg)
+}
+
+func createFile(locationPath, fname, content string) error {
+	filePath := filepath.Join(locationPath, fname)
+	return os.WriteFile(filePath, []byte(content), 0644)
+}
+
+type flag string
+
+const (
+	flag_LMS        flag = "--lms"
+	flag_OpenRouter flag = "--openrouter"
+	flag_Invalid    flag = "NO_FLAG"
+)
+
+func help() {
+	color.Yellow("allowed args:")
+	color.Yellow("\t %s", flag_LMS)
+	color.Yellow("\t %s", flag_OpenRouter)
+}
+
+func argsToFlag(args []string) flag {
+	if len(args) != 2 {
+		return flag_Invalid
+	}
+
+	f := flag(args[1])
+	if f == flag_LMS || f == flag_OpenRouter {
+		return f
+	}
+
+	return flag_Invalid
+}
