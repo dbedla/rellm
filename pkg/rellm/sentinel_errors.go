@@ -26,3 +26,7 @@ var ErrNoImageHandler = fmt.Errorf("image handler not provided")
 var ErrCustomImageHandlerFailed = fmt.Errorf("custom image handler failed")
 
 var ErrUserMsgConversionFailed = fmt.Errorf("user message conversion failed")
+
+var ErrEndpointMissingModelName = fmt.Errorf("missing model name for endpoint")
+var ErrEndpointMissingHost = fmt.Errorf("missing host (e.g. localhost or IP) for endpoint")
+var ErrEndpointMissingPort = fmt.Errorf("missing port for endpoint")

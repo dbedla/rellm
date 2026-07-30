@@ -1,0 +1,255 @@
+package rellm
+
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+)
+
+// --- Wire format: openrouterStyle ---------------------------------------------
+
+// openrouterStyle implements FromWire/ToWire for the OpenRouter wire format.
+type openrouterStyle struct{}
+
+func (o *openrouterStyle) FromWire(items []json.RawMessage) ([]ConversationElement, error) {
+	elements := make([]ConversationElement, 0, len(items))
+	for _, raw := range items {
+		var msg struct {
+			Type    string          `json:"type"`
+			Role    string          `json:"role"`
+			Id      string          `json:"id"`
+			Name    string          `json:"name"`
+			CallID  string          `json:"call_id"`
+			Args    json.RawMessage `json:"arguments"`
+			Content json.RawMessage `json:"content"`
+		}
+		if err := json.Unmarshal(raw, &msg); err != nil {
+			return nil, err
+		}
+
+		switch msg.Type {
+		case "function_call":
+			elements = append(elements, &FunctionCall{
+				Id:     msg.Id,
+				Name:   msg.Name,
+				Args:   msg.Args,
+				CallId: msg.CallID,
+			})
+
+		case "function_call_output":
+			// Extract output field directly from raw JSON.
+			var out struct {
+				Output string `json:"output"`
+			}
+			if err := json.Unmarshal(raw, &out); err == nil {
+				elements = append(elements, &FunctionCallResponse{
+					Id:     msg.Id,
+					CallId: msg.CallID,
+					Output: out.Output,
+				})
+			} else {
+				elements = append(elements, &FunctionCallResponse{
+					Id:     msg.Id,
+					CallId: msg.CallID,
+					Output: string(msg.Content),
+				})
+			}
+
+		case "message", "": // messages often lack an explicit type field; infer from role
+			elements = append(elements, o.parseMessage(raw, msg.Id, msg.Role, msg.Content))
+
+		case "reasoning":
+			elements = append(elements, o.parseReasoning(raw))
+
+		default:
+			// Unknown types pass through unchanged.
+		}
+	}
+	return elements, nil
+}
+
+// parseMessage parses a message item into a TextMessage.
+func (o *openrouterStyle) parseMessage(raw json.RawMessage, id, role string, content json.RawMessage) ConversationElement {
+	// Check if original had type field for faithful round-trip.
+	hasType := false
+	var typ struct{ Type string `json:"type"` }
+	if err := json.Unmarshal(raw, &typ); err == nil && typ.Type != "" {
+		hasType = true
+	}
+
+	// Check if original had status field.
+	var statusInfo struct{ Status string `json:"status"` }
+	status := ""
+	if err := json.Unmarshal(raw, &statusInfo); err == nil {
+		status = statusInfo.Status
+	}
+
+	// Check if content was originally a plain string.
+	isRawText := false
+	var textStr string
+	if err := json.Unmarshal(content, &textStr); err == nil {
+		isRawText = true
+	}
+
+	var textParts []string
+	if err := json.Unmarshal(content, &textParts); err == nil {
+		return &TextMessage{Id: id, Role: role, Content: messagePartsWithStrings(textParts), hasType: hasType, isRawText: false, Status: status}
+	}
+
+	if isRawText {
+		return &TextMessage{Id: id, Role: role, Content: messagePartsWithStrings([]string{textStr}), hasType: hasType, isRawText: true, Status: status}
+	}
+
+	var parts []MessagePart
+	if err := json.Unmarshal(content, &parts); err == nil {
+		return &TextMessage{Id: id, Role: role, Content: parts, hasType: hasType, isRawText: false, Status: status}
+	}
+
+	return &TextMessage{Id: id, Role: role, Content: nil, hasType: hasType, isRawText: false, Status: status}
+}
+
+// parseReasoning extracts reasoning text and summary from a raw item.
+func (o *openrouterStyle) parseReasoning(raw json.RawMessage) ConversationElement {
+	r := &Reasoning{}
+	if err := json.Unmarshal(raw, r); err != nil {
+		return nil // skip malformed items
+	}
+	// Clear signing data for replay compatibility.
+	r.Signature = ""
+	return r
+}
+
+func (o *openrouterStyle) ToWire(elements []ConversationElement) ([]json.RawMessage, error) {
+	if len(elements) == 0 {
+		return nil, nil
+	}
+	raw := make([]json.RawMessage, 0, len(elements))
+	for _, e := range elements {
+		switch el := e.(type) {
+		case *TextMessage:
+			payload := map[string]interface{}{
+				"role": el.Role,
+			}
+			if el.Id != "" {
+				payload["id"] = el.Id
+			}
+			if el.hasType {
+				payload["type"] = "message"
+			}
+			// Preserve status when present (e.g., assistant messages with completion).
+			if el.Status != "" {
+				payload["status"] = el.Status
+			}
+			// Preserve original content format (raw text vs structured).
+			if len(el.Content) == 0 {
+				payload["content"] = ""
+			} else if el.isRawText {
+				// Original was a plain string - preserve as string.
+				payload["content"] = TextFromContent(el.Content)
+			} else if el.hasType && len(el.Content) > 0 {
+				// Original was structured (multi-part user messages, etc.) - preserve as-is.
+				payload["content"] = el.Content
+			} else if el.Role == "user" && !isSimpleTextContent(el.Content) {
+				payload["content"] = el.Content
+			} else {
+				payload["content"] = TextFromContent(el.Content)
+			}
+			b, err := json.Marshal(payload)
+			if err != nil {
+				return nil, err
+			}
+			raw = append(raw, b)
+
+		case *FunctionCall:
+			fc := map[string]interface{}{
+				"id":        el.Id,
+				"call_id":   el.CallId,
+				"name":      el.Name,
+				"arguments": json.RawMessage(el.Args),
+				"status":    "completed",
+				"type":      "function_call",
+			}
+			b, err := json.Marshal(fc)
+			if err != nil {
+				return nil, err
+			}
+			raw = append(raw, b)
+
+		case *FunctionCallResponse:
+			resp := map[string]interface{}{
+				"call_id": el.CallId,
+				"type":    "function_call_output",
+			}
+			if el.Id != "" {
+				resp["id"] = el.Id
+			}
+			// Use Output which may be JSON-encoded or plain text.
+			resp["output"] = el.Output
+			b, err := json.Marshal(resp)
+			if err != nil {
+				return nil, err
+			}
+			raw = append(raw, b)
+
+		case *Reasoning:
+			r := map[string]interface{}{
+				"id":     el.Id,
+				"status": el.Status,
+				"type":   "reasoning",
+			}
+			if el.Summary != nil {
+				r["summary"] = el.Summary
+			}
+			if el.Text != "" {
+				r["content"] = []MessagePart{{Type: "reasoning_text", Text: el.Text}}
+			}
+			b, err := json.Marshal(r)
+			if err != nil {
+				return nil, err
+			}
+			raw = append(raw, b)
+
+		case *ImageGeneration:
+			sig := map[string]interface{}{
+				"id":     el.Id,
+				"result": el.Result,
+			}
+			b, err := json.Marshal(sig)
+			if err != nil {
+				return nil, err
+			}
+			raw = append(raw, b)
+
+		default:
+			continue // skip unknown types
+		}
+	}
+	return raw, nil
+}
+
+// --- Provider -----------------------------------------------------------------
+
+// openrouterProvider handles OpenRouter-specific configuration (URL, auth headers).
+type openrouterProvider struct {
+	openrouterStyle
+}
+
+var _ ProviderConfig = &openrouterProvider{}
+
+// NewOpenRouterEndpoint returns a configured endpoint for OpenRouter's API. apiKey and model are required.
+func NewOpenRouterEndpoint(apiKey string, model Model) (*Endpoint, error) {
+	if model == "" {
+		return nil, ErrEndpointMissingModelName
+	}
+	if apiKey == "" {
+		return nil, fmt.Errorf("missing API key for OpenRouter endpoint")
+	}
+	header := make(http.Header)
+	header.Set("Authorization", "Bearer "+apiKey)
+	return &Endpoint{
+		model:    model,
+		provider: Provider_OpenRouter,
+		rae:      &UniversalResponsesEndpoint{baseUrl: "https://router.openrouter.ai", responsesApiEndpoint: "/v1/responses", httpHeader: header},
+		client:   &http.Client{},
+	}, nil
+}
