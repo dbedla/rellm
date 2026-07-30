@@ -36,7 +36,7 @@ func TestHandleMessageMultimodal(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, elements, 1)
 
-	var assistantMsg UserMessage
+	var assistantMsg AssistantMessage
 	err = json.Unmarshal(elements[0], &assistantMsg)
 	assert.NoError(t, err)
 	assert.Equal(t, "assistant", assistantMsg.Role)

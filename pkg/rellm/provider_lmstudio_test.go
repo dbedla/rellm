@@ -11,7 +11,7 @@ import (
 //go:embed testdata/pro_api_tool_B2_req_unknown_fn_call.json
 var goldenLMStudioRequest []byte
 
-func TestLMStudioFromWire_Message(t *testing.T) {
+func TestLMStudioFromWire_UserMessage(t *testing.T) {
 	p := &lmstudioProvider{}
 	items := []json.RawMessage{
 		json.RawMessage(`{"role":"user","content":[{"type":"input_text","text":"hi"}]}`),
@@ -20,18 +20,52 @@ func TestLMStudioFromWire_Message(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, elems, 1)
 
-	msg, ok := elems[0].(*TextMessage)
+	msg, ok := elems[0].(*UserMessage)
 	assert.True(t, ok)
 	assert.Equal(t, "user", msg.Role)
 	assert.Equal(t, "hi", TextFromContent(msg.Content))
 }
 
-func TestLMStudioToWire_TextMessage(t *testing.T) {
+func TestLMStudioFromWire_ImageGeneration(t *testing.T) {
 	p := &lmstudioProvider{}
-	msg := TextMessage{
-		Role:    "user",
-		Content: []MessagePart{{Type: "input_text", Text: "hi"}},
+	items := []json.RawMessage{
+		json.RawMessage(`{"id":"ig_tmp_vqotwoa5eg","type":"image_generation_call","status":"completed","result":"data:image/jpeg;base64,/9j/4AAQ"}`),
 	}
+	elems, err := p.FromWire(items)
+	assert.NoError(t, err)
+	assert.Len(t, elems, 1)
+
+	ig, ok := elems[0].(*ImageGeneration)
+	assert.True(t, ok)
+	assert.Equal(t, "ig_tmp_vqotwoa5eg", ig.Id)
+	assert.Equal(t, "completed", ig.Status)
+	assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQ", ig.Result)
+}
+
+func TestLMStudioToWire_ImageGeneration(t *testing.T) {
+	p := &lmstudioProvider{}
+	ig := ImageGeneration{Id: "ig_tmp_vqotwoa5eg", Status: "completed", Result: "data:image/jpeg;base64,/9j/4AAQ"}
+	raw, err := p.ToWire([]ConversationElement{&ig})
+	assert.NoError(t, err)
+	assert.Len(t, raw, 1)
+
+	var wire struct {
+		Id     string `json:"id"`
+		Type   string `json:"type"`
+		Status string `json:"status"`
+		Result string `json:"result"`
+	}
+	err = json.Unmarshal(raw[0], &wire)
+	assert.NoError(t, err)
+	assert.Equal(t, "ig_tmp_vqotwoa5eg", wire.Id)
+	assert.Equal(t, "image_generation_call", wire.Type)
+	assert.Equal(t, "completed", wire.Status)
+	assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQ", wire.Result)
+}
+
+func TestLMStudioToWire_UserMessage(t *testing.T) {
+	p := &lmstudioProvider{}
+	msg := UserMessage{messageContent{Role: "user", Content: []MessagePart{{Type: "input_text", Text: "hi"}}}}
 	raw, err := p.ToWire([]ConversationElement{&msg})
 	assert.NoError(t, err)
 	assert.Len(t, raw, 1)

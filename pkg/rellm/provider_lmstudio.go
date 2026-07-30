@@ -39,6 +39,9 @@ func (l *lmstudioStyle) FromWire(items []json.RawMessage) ([]ConversationElement
 		case "reasoning":
 			elements = append(elements, l.parseReasoning(raw))
 
+		case "image_generation_call":
+			elements = append(elements, parseImageGeneration(raw))
+
 		case "function_call_output":
 			// Extract output field directly from raw JSON
 			var out struct {
@@ -59,25 +62,15 @@ func (l *lmstudioStyle) FromWire(items []json.RawMessage) ([]ConversationElement
 			}
 
 		case "message", "": // messages often lack an explicit type field
-			var textParts []string
-			if err := json.Unmarshal(msg.Content, &textParts); err == nil {
-				elements = append(elements, &TextMessage{Id: msg.Id, Role: msg.Role, Content: messagePartsWithStrings(textParts)})
-				continue
+			parts := parseMessageContent(msg.Content)
+			switch msg.Role {
+			case "assistant":
+				elements = append(elements, &AssistantMessage{messageContent{Id: msg.Id, Role: msg.Role, Content: parts}})
+			case "system":
+				elements = append(elements, &SystemMessage{messageContent{Id: msg.Id, Role: msg.Role, Content: parts}})
+			default: // "user" or unknown
+				elements = append(elements, &UserMessage{messageContent{Id: msg.Id, Role: msg.Role, Content: parts}})
 			}
-
-			var text string
-			if err := json.Unmarshal(msg.Content, &text); err == nil {
-				elements = append(elements, &TextMessage{Id: msg.Id, Role: msg.Role, Content: messagePartsWithStrings([]string{text})})
-				continue
-			}
-
-			var parts []MessagePart
-			if err := json.Unmarshal(msg.Content, &parts); err == nil {
-				elements = append(elements, &TextMessage{Id: msg.Id, Role: msg.Role, Content: parts})
-				continue
-			}
-
-			elements = append(elements, &TextMessage{Id: msg.Id, Role: msg.Role, Content: nil})
 		}
 	}
 	return elements, nil
@@ -134,6 +127,26 @@ func joinTextParts(parts []string) string {
 	return sb.String()
 }
 
+// marshalMessage serializes any role-typed message for LM Studio: content is
+// always a structured array (LM Studio does not use the "type":"message" field).
+func (l *lmstudioStyle) marshalMessage(mc messageContent) (json.RawMessage, error) {
+	payload := map[string]interface{}{
+		"role": mc.Role,
+	}
+	if mc.Id != "" {
+		payload["id"] = mc.Id
+	}
+	if mc.Status != "" {
+		payload["status"] = mc.Status
+	}
+	if len(mc.Content) == 0 {
+		payload["content"] = []MessagePart{}
+	} else {
+		payload["content"] = mc.Content
+	}
+	return json.Marshal(payload)
+}
+
 func (l *lmstudioStyle) ToWire(elements []ConversationElement) ([]json.RawMessage, error) {
 	if len(elements) == 0 {
 		return nil, nil
@@ -141,23 +154,22 @@ func (l *lmstudioStyle) ToWire(elements []ConversationElement) ([]json.RawMessag
 	raw := make([]json.RawMessage, 0, len(elements))
 	for _, e := range elements {
 		switch el := e.(type) {
-		case *TextMessage:
-			// LM Studio always uses structured content arrays.
-			payload := map[string]interface{}{
-				"role": el.Role,
+		case *UserMessage:
+			b, err := l.marshalMessage(el.messageContent)
+			if err != nil {
+				return nil, err
 			}
-			if el.Id != "" {
-				payload["id"] = el.Id
+			raw = append(raw, b)
+
+		case *AssistantMessage:
+			b, err := l.marshalMessage(el.messageContent)
+			if err != nil {
+				return nil, err
 			}
-			if el.Status != "" {
-				payload["status"] = el.Status
-			}
-			if len(el.Content) == 0 {
-				payload["content"] = []MessagePart{}
-			} else {
-				payload["content"] = el.Content
-			}
-			b, err := json.Marshal(payload)
+			raw = append(raw, b)
+
+		case *SystemMessage:
+			b, err := l.marshalMessage(el.messageContent)
 			if err != nil {
 				return nil, err
 			}
@@ -209,6 +221,19 @@ func (l *lmstudioStyle) ToWire(elements []ConversationElement) ([]json.RawMessag
 				payload["content"] = []MessagePart{{Type: "reasoning_text", Text: el.Text}}
 			}
 			b, err := json.Marshal(payload)
+			if err != nil {
+				return nil, err
+			}
+			raw = append(raw, b)
+
+		case *ImageGeneration:
+			sig := map[string]interface{}{
+				"id":     el.Id,
+				"type":   "image_generation_call",
+				"status": el.Status,
+				"result": el.Result,
+			}
+			b, err := json.Marshal(sig)
 			if err != nil {
 				return nil, err
 			}

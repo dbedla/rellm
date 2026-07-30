@@ -61,6 +61,9 @@ func (o *openrouterStyle) FromWire(items []json.RawMessage) ([]ConversationEleme
 		case "reasoning":
 			elements = append(elements, o.parseReasoning(raw))
 
+		case "image_generation_call":
+			elements = append(elements, parseImageGeneration(raw))
+
 		default:
 			// Unknown types pass through unchanged.
 		}
@@ -68,44 +71,46 @@ func (o *openrouterStyle) FromWire(items []json.RawMessage) ([]ConversationEleme
 	return elements, nil
 }
 
-// parseMessage parses a message item into a TextMessage.
+// parseMessage parses a message item into a role-typed message. Content is
+// normalized to []MessagePart; ToWire re-serializes per the type's shape rule.
 func (o *openrouterStyle) parseMessage(raw json.RawMessage, id, role string, content json.RawMessage) ConversationElement {
-	// Check if original had type field for faithful round-trip.
-	hasType := false
-	var typ struct{ Type string `json:"type"` }
-	if err := json.Unmarshal(raw, &typ); err == nil && typ.Type != "" {
-		hasType = true
-	}
-
-	// Check if original had status field.
 	var statusInfo struct{ Status string `json:"status"` }
 	status := ""
 	if err := json.Unmarshal(raw, &statusInfo); err == nil {
 		status = statusInfo.Status
 	}
-
-	// Check if content was originally a plain string.
-	isRawText := false
-	var textStr string
-	if err := json.Unmarshal(content, &textStr); err == nil {
-		isRawText = true
+	parts := parseMessageContent(content)
+	switch role {
+	case "assistant":
+		return &AssistantMessage{messageContent{Id: id, Role: role, Status: status, Content: parts}}
+	case "system":
+		return &SystemMessage{messageContent{Id: id, Role: role, Content: parts}}
+	default: // "user" or unknown
+		return &UserMessage{messageContent{Id: id, Role: role, Status: status, Content: parts}}
 	}
+}
 
-	var textParts []string
-	if err := json.Unmarshal(content, &textParts); err == nil {
-		return &TextMessage{Id: id, Role: role, Content: messagePartsWithStrings(textParts), hasType: hasType, isRawText: false, Status: status}
+// marshalTextMessage serializes an assistant/system message for OpenRouter:
+// text-only content becomes a string, multimodal stays an array.
+func marshalTextMessage(mc messageContent) (json.RawMessage, error) {
+	payload := map[string]interface{}{
+		"role": mc.Role,
+		"type": "message",
 	}
-
-	if isRawText {
-		return &TextMessage{Id: id, Role: role, Content: messagePartsWithStrings([]string{textStr}), hasType: hasType, isRawText: true, Status: status}
+	if mc.Id != "" {
+		payload["id"] = mc.Id
 	}
-
-	var parts []MessagePart
-	if err := json.Unmarshal(content, &parts); err == nil {
-		return &TextMessage{Id: id, Role: role, Content: parts, hasType: hasType, isRawText: false, Status: status}
+	if mc.Status != "" {
+		payload["status"] = mc.Status
 	}
-
-	return &TextMessage{Id: id, Role: role, Content: nil, hasType: hasType, isRawText: false, Status: status}
+	if len(mc.Content) == 0 {
+		payload["content"] = ""
+	} else if isSimpleTextContent(mc.Content) {
+		payload["content"] = TextFromContent(mc.Content)
+	} else {
+		payload["content"] = mc.Content
+	}
+	return json.Marshal(payload)
 }
 
 // parseReasoning extracts reasoning text and summary from a raw item.
@@ -126,35 +131,33 @@ func (o *openrouterStyle) ToWire(elements []ConversationElement) ([]json.RawMess
 	raw := make([]json.RawMessage, 0, len(elements))
 	for _, e := range elements {
 		switch el := e.(type) {
-		case *TextMessage:
+		case *UserMessage:
 			payload := map[string]interface{}{
-				"role": el.Role,
+				"role":    el.Role,
+				"type":    "message",
+				"content": el.Content,
 			}
 			if el.Id != "" {
 				payload["id"] = el.Id
 			}
-			if el.hasType {
-				payload["type"] = "message"
-			}
-			// Preserve status when present (e.g., assistant messages with completion).
 			if el.Status != "" {
 				payload["status"] = el.Status
 			}
-			// Preserve original content format (raw text vs structured).
-			if len(el.Content) == 0 {
-				payload["content"] = ""
-			} else if el.isRawText {
-				// Original was a plain string - preserve as string.
-				payload["content"] = TextFromContent(el.Content)
-			} else if el.hasType && len(el.Content) > 0 {
-				// Original was structured (multi-part user messages, etc.) - preserve as-is.
-				payload["content"] = el.Content
-			} else if el.Role == "user" && !isSimpleTextContent(el.Content) {
-				payload["content"] = el.Content
-			} else {
-				payload["content"] = TextFromContent(el.Content)
-			}
 			b, err := json.Marshal(payload)
+			if err != nil {
+				return nil, err
+			}
+			raw = append(raw, b)
+
+		case *AssistantMessage:
+			b, err := marshalTextMessage(el.messageContent)
+			if err != nil {
+				return nil, err
+			}
+			raw = append(raw, b)
+
+		case *SystemMessage:
+			b, err := marshalTextMessage(el.messageContent)
 			if err != nil {
 				return nil, err
 			}
@@ -212,6 +215,8 @@ func (o *openrouterStyle) ToWire(elements []ConversationElement) ([]json.RawMess
 		case *ImageGeneration:
 			sig := map[string]interface{}{
 				"id":     el.Id,
+				"type":   "image_generation_call",
+				"status": el.Status,
 				"result": el.Result,
 			}
 			b, err := json.Marshal(sig)

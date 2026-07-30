@@ -8,14 +8,17 @@ import (
 
 func TestElementTypeInterface(t *testing.T) {
 	elems := []ConversationElement{
-		&TextMessage{},
+		&UserMessage{},
+		&AssistantMessage{},
+		&SystemMessage{},
 		&FunctionCall{},
 		&FunctionCallResponse{},
 		&Reasoning{},
 		&ImageGeneration{},
 	}
 	want := []ElementType{
-		ElementTypeMessage, ElementTypeFunctionCall, ElementTypeFunctionCallResp,
+		ElementTypeMessage, ElementTypeMessage, ElementTypeMessage,
+		ElementTypeFunctionCall, ElementTypeFunctionCallResp,
 		ElementTypeReasoning, ElementTypeImageGeneration,
 	}
 	for i, e := range elems {

@@ -236,7 +236,7 @@ func handleOpenRouterMessage(msg OutputItem, allParts []MessagePart, msgRespFrom
 }
 
 func handleOtherProviderMessage(allParts []MessagePart, msgRespFromLLM string) ([]json.RawMessage, string, error) {
-	assistantMsg := UserMessage{Role: "assistant", Content: allParts}
+	assistantMsg := AssistantMessage{messageContent{Role: "assistant", Content: allParts}}
 	rawAssistantMsg, err := json.Marshal(assistantMsg)
 	if err != nil {
 		return nil, "", err
@@ -252,9 +252,4 @@ func handleReasoning(raw json.RawMessage, provider Provider) ([]json.RawMessage,
 	}
 
 	return elems, "", nil
-}
-
-type UserMessage struct {
-	Role    string        `json:"role"`
-	Content []MessagePart `json:"content"`
 }

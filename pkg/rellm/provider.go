@@ -26,17 +26,39 @@ type ConversationElement interface {
 	elementType() ElementType
 }
 
-// TextMessage is a user/assistant/system message with text or multimodal parts.
-type TextMessage struct {
-	Id        string        `json:"id,omitempty"`
-	Role      string        `json:"role"` // "user", "assistant", "system"
-	Status    string        `json:"status,omitempty"`
-	Content   []MessagePart `json:"content"` // structured parts (text + images etc.)
-	hasType   bool          // private: track if original had type field
-	isRawText bool          // private: true if content was originally a plain string (not structured)
+// messageContent holds shared fields for role-typed messages. Role is the wire
+// role field; the concrete type constrains it to a fixed value and drives
+// per-type serialization shape.
+type messageContent struct {
+	Id      string        `json:"id,omitempty"`
+	Role    string        `json:"role"`
+	Status  string        `json:"status,omitempty"`
+	Content []MessagePart `json:"content"` // structured parts (text + images etc.)
 }
 
-func (*TextMessage) elementType() ElementType { return ElementTypeMessage }
+// UserMessage is a user-authored message. Content is always a parts array on
+// the wire (supports multimodal: text, images, files).
+type UserMessage struct {
+	messageContent
+}
+
+func (*UserMessage) elementType() ElementType { return ElementTypeMessage }
+
+// AssistantMessage is a model-generated text message. Content serializes as a
+// plain string on the wire.
+type AssistantMessage struct {
+	messageContent
+}
+
+func (*AssistantMessage) elementType() ElementType { return ElementTypeMessage }
+
+// SystemMessage is a system instruction. Content serializes as a plain string
+// on the wire.
+type SystemMessage struct {
+	messageContent
+}
+
+func (*SystemMessage) elementType() ElementType { return ElementTypeMessage }
 
 // FunctionCall is a model-requested tool invocation.
 type FunctionCall struct {
@@ -136,4 +158,36 @@ func messagePartsWithStrings(texts []string) []MessagePart {
 		parts = append(parts, MessagePart{Type: "input_text", Text: t})
 	}
 	return parts
+}
+
+// parseMessageContent normalizes a wire content field (string, []string, or
+// []MessagePart) into []MessagePart.
+func parseMessageContent(content json.RawMessage) []MessagePart {
+	var textStr string
+	if json.Unmarshal(content, &textStr) == nil {
+		return messagePartsWithStrings([]string{textStr})
+	}
+	var textParts []string
+	if json.Unmarshal(content, &textParts) == nil {
+		return messagePartsWithStrings(textParts)
+	}
+	var parts []MessagePart
+	if json.Unmarshal(content, &parts) == nil {
+		return parts
+	}
+	return nil
+}
+
+// parseImageGeneration parses an image_generation_call wire item into an
+// ImageGeneration element.
+func parseImageGeneration(raw json.RawMessage) ConversationElement {
+	var ig struct {
+		Id     string `json:"id"`
+		Status string `json:"status"`
+		Result string `json:"result"`
+	}
+	if err := json.Unmarshal(raw, &ig); err != nil {
+		return nil // skip malformed items
+	}
+	return &ImageGeneration{Id: ig.Id, Status: ig.Status, Result: ig.Result}
 }
