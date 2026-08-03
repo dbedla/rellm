@@ -13,11 +13,11 @@ type Toolset interface {
 	DispatchTools(name string, callID string, arguments json.RawMessage) (FunctionCallResp, bool)
 }
 
-type FunctionCallResp struct {
-	Type   string `json:"type"`
-	CallId string `json:"call_id"`
-	Output string `json:"output"`
-}
+//type FunctionCallResp struct {
+//	Type   string `json:"type"`
+//	CallId string `json:"call_id"`
+//	Output string `json:"output"`
+//}
 
 type ImageGenerationConversationPlaceholder struct {
 	Type   string `json:"type"`
@@ -38,14 +38,18 @@ type Agent struct {
 	continueConversation                  bool
 	maxToolsIterationWithoutReturnMessage uint64
 
-	handleImage HandleImage
-	inspectReq  InspectEachRequest
-	inspectResp InspectEachResponse
+	llmProvider LLMProvider
+
+	handleImage         HandleImage
+	handleImage_newFlow HandleImage_newFlow
+	inspectReq          InspectEachRequest
+	inspectResp         InspectEachResponse
 }
 
 // HandleImage used as a callback for image generation
-// returned string will be used as image identifier in conversation
+// returned string will be used as image identifier and stored instead of original image content
 type HandleImage func(image OutputItem) (string, error)
+type HandleImage_newFlow func(image *ImageGeneration) (string, error)
 type InspectEachRequest func(*ResponsesApiReq)
 type InspectEachResponse func(resp *ResponsesApiResp)
 

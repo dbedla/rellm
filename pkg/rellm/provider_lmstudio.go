@@ -45,13 +45,13 @@ func (l *LMSConversationConverter) ToConversationElements(items []json.RawMessag
 				Output string `json:"output"`
 			}
 			if err := json.Unmarshal(raw, &out); err == nil {
-				elements = append(elements, &FunctionCallResponse{
+				elements = append(elements, &FunctionCallResp{
 					Id:     msg.Id,
 					CallId: msg.CallID,
 					Output: out.Output,
 				})
 			} else {
-				elements = append(elements, &FunctionCallResponse{
+				elements = append(elements, &FunctionCallResp{
 					Id:     msg.Id,
 					CallId: msg.CallID,
 					Output: string(msg.Content),
@@ -187,7 +187,7 @@ func (l *LMSConversationConverter) ToProviderRepresentation(elements []Conversat
 			}
 			raw = append(raw, b)
 
-		case *FunctionCallResponse:
+		case *FunctionCallResp:
 			resp := map[string]interface{}{
 				"call_id": el.CallId,
 				"type":    "function_call_output",

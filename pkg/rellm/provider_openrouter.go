@@ -39,13 +39,13 @@ func (o *OpenRouterConversationConverter) ToConversationElements(items []json.Ra
 				Output string `json:"output"`
 			}
 			if err := json.Unmarshal(raw, &out); err == nil {
-				elements = append(elements, &FunctionCallResponse{
+				elements = append(elements, &FunctionCallResp{
 					Id:     msg.Id,
 					CallId: msg.CallID,
 					Output: out.Output,
 				})
 			} else {
-				elements = append(elements, &FunctionCallResponse{
+				elements = append(elements, &FunctionCallResp{
 					Id:     msg.Id,
 					CallId: msg.CallID,
 					Output: string(msg.Content),
@@ -177,7 +177,7 @@ func (o *OpenRouterConversationConverter) ToProviderRepresentation(elements []Co
 			}
 			raw = append(raw, b)
 
-		case *FunctionCallResponse:
+		case *FunctionCallResp:
 			resp := map[string]interface{}{
 				"call_id": el.CallId,
 				"type":    "function_call_output",

@@ -12,7 +12,7 @@ func TestElementTypeInterface(t *testing.T) {
 		&AssistantMessage{},
 		&SystemMessage{},
 		&FunctionCall{},
-		&FunctionCallResponse{},
+		&FunctionCallResp{},
 		&Reasoning{},
 		&ImageGeneration{},
 	}

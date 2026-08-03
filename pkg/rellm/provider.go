@@ -70,13 +70,14 @@ type FunctionCall struct {
 func (*FunctionCall) elementType() ElementType { return ElementTypeFunctionCall }
 
 // FunctionCallResponse is the tool's result sent back to the model.
-type FunctionCallResponse struct {
+type FunctionCallResp struct {
 	Id     string `json:"id,omitempty"`
+	Type   string `json:"type"`
 	CallId string `json:"call_id"`
 	Output string `json:"output"` // raw output (may be JSON-encoded by some providers, plain text by others)
 }
 
-func (*FunctionCallResponse) elementType() ElementType { return ElementTypeFunctionCallResp }
+func (*FunctionCallResp) elementType() ElementType { return ElementTypeFunctionCallResp }
 
 // Reasoning captures model chain-of-thought output.
 type Reasoning struct {
@@ -122,6 +123,11 @@ func TextFromContent(parts []MessagePart) string {
 		sb.WriteString(p.Text)
 	}
 	return sb.String()
+}
+
+type LLMProvider struct {
+	cc       ConversationConverter
+	endpoint *Endpoint
 }
 
 type ConversationConverter interface {

@@ -165,7 +165,7 @@ func (a *Agent) handleFunctionCall(fn OutputItem, raw json.RawMessage) ([]json.R
 		a.logger.Warn().Msgf("tool call (%s) not supported)", fn.Name)
 		conversation, err := functionCallConversationElements(raw, funcCallResp)
 
-		return conversation, errors.Join(ErrUnknownToolCall, fmt.Errorf("unknown tool name (%s)", fn.Name), err)
+		return conversation, errors.Join(ErrWhileDispatchToolCall, fmt.Errorf("unknown tool name (%s)", fn.Name), err)
 	}
 
 	a.logger.Debug().Msgf("tool returned call id: %s, value: %s", funcCallResp.CallId, funcCallResp.Output)

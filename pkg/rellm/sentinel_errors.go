@@ -13,10 +13,11 @@ var ErrBuildExactlyOneLogger = fmt.Errorf("exactly one logger must be configured
 var ErrBuildLogger = fmt.Errorf("unable to create logger")
 
 var ErrNoToolsetButToolCallRequested = fmt.Errorf("no toolset provided but request to call tool received")
-var ErrUnknownToolCall = fmt.Errorf("request to call unknown tool")
+var ErrWhileDispatchToolCall = fmt.Errorf("unable to dispatch tool call")
 var ErrInConversationResponse = fmt.Errorf("error in conversation response")
 var ErrMaxToolIterationsReached = fmt.Errorf("max tool iterations reached without a text response")
 var ErrModelReturnedUnproductiveOutput = fmt.Errorf("model returned output but no function call and no text message")
+var ErrUnknownResponseMessageFormat = fmt.Errorf("unknown message format")
 
 var ErrEmptyPrompt = fmt.Errorf("prompt message is empty")
 var ErrEmptyReasoningEffort = fmt.Errorf("reasoning effort cannot be empty")
