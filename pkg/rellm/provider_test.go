@@ -36,14 +36,3 @@ func TestTextFromContent(t *testing.T) {
 
 	assert.Empty(t, TextFromContent(nil))
 }
-
-func TestProviderRegistry(t *testing.T) {
-	for _, prov := range []Provider{Provider_OpenRouter, Provider_LMStudio} {
-		cfg, err := getProviderConfig(prov)
-		assert.NoError(t, err)
-		assert.NotNil(t, cfg)
-	}
-
-	_, err := getProviderConfig("totally_unknown")
-	assert.Error(t, err)
-}

@@ -15,11 +15,11 @@ var goldenOrLongConv []byte
 var goldenImageResp []byte
 
 func TestOpenRouterFromWire_ImageGeneration(t *testing.T) {
-	p := &openrouterProvider{}
+	p := &OpenRouterConversationConverter{}
 	items := []json.RawMessage{
 		json.RawMessage(`{"id":"ig_tmp_vqotwoa5eg","type":"image_generation_call","status":"completed","result":"data:image/jpeg;base64,/9j/4AAQ"}`),
 	}
-	elems, err := p.FromWire(items)
+	elems, err := p.ToConversationElements(items)
 	assert.NoError(t, err)
 	assert.Len(t, elems, 1)
 
@@ -31,9 +31,9 @@ func TestOpenRouterFromWire_ImageGeneration(t *testing.T) {
 }
 
 func TestOpenRouterToWire_ImageGeneration(t *testing.T) {
-	p := &openrouterProvider{}
+	p := &OpenRouterConversationConverter{}
 	ig := ImageGeneration{Id: "ig_tmp_vqotwoa5eg", Status: "completed", Result: "data:image/jpeg;base64,/9j/4AAQ"}
-	raw, err := p.ToWire([]ConversationElement{&ig})
+	raw, err := p.ToProviderRepresentation([]ConversationElement{&ig})
 	assert.NoError(t, err)
 	assert.Len(t, raw, 1)
 
@@ -61,12 +61,12 @@ func TestOpenRouterRoundTrip_ImageGeneration_FromFile(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, resp.Output)
 
-	p := &openrouterProvider{}
-	elems, err := p.FromWire(resp.Output)
+	p := &OpenRouterConversationConverter{}
+	elems, err := p.ToConversationElements(resp.Output)
 	assert.NoError(t, err)
 	assert.Len(t, elems, len(resp.Output))
 
-	wireBack, err := p.ToWire(elems)
+	wireBack, err := p.ToProviderRepresentation(elems)
 	assert.NoError(t, err)
 	assert.Len(t, wireBack, len(resp.Output))
 
@@ -76,11 +76,11 @@ func TestOpenRouterRoundTrip_ImageGeneration_FromFile(t *testing.T) {
 }
 
 func TestOpenRouterFromWire_AssistantMessage(t *testing.T) {
-	p := &openrouterProvider{}
+	p := &OpenRouterConversationConverter{}
 	items := []json.RawMessage{
 		json.RawMessage(`{"role":"assistant","content":[{"type":"input_text","text":"hello world"}]}`),
 	}
-	elems, err := p.FromWire(items)
+	elems, err := p.ToConversationElements(items)
 	assert.NoError(t, err)
 	assert.Len(t, elems, 1)
 
@@ -91,11 +91,11 @@ func TestOpenRouterFromWire_AssistantMessage(t *testing.T) {
 }
 
 func TestOpenRouterFromWire_FunctionCall(t *testing.T) {
-	p := &openrouterProvider{}
+	p := &OpenRouterConversationConverter{}
 	items := []json.RawMessage{
 		json.RawMessage(`{"type":"function_call","name":"search","call_id":"abc","arguments":{"query":"test"}}`),
 	}
-	elems, err := p.FromWire(items)
+	elems, err := p.ToConversationElements(items)
 	assert.NoError(t, err)
 	assert.Len(t, elems, 1)
 
@@ -106,9 +106,9 @@ func TestOpenRouterFromWire_FunctionCall(t *testing.T) {
 }
 
 func TestOpenRouterToWire_AssistantMessage(t *testing.T) {
-	p := &openrouterProvider{}
+	p := &OpenRouterConversationConverter{}
 	msg := AssistantMessage{messageContent{Role: "assistant", Content: []MessagePart{{Type: "input_text", Text: "hello world"}}}}
-	raw, err := p.ToWire([]ConversationElement{&msg})
+	raw, err := p.ToProviderRepresentation([]ConversationElement{&msg})
 	assert.NoError(t, err)
 	assert.Len(t, raw, 1)
 
@@ -123,12 +123,12 @@ func TestOpenRouterToWire_AssistantMessage(t *testing.T) {
 }
 
 func TestOpenRouterToWire_UserStructuredContent(t *testing.T) {
-	p := &openrouterProvider{}
+	p := &OpenRouterConversationConverter{}
 	msg := UserMessage{messageContent{Role: "user", Content: []MessagePart{
 		{Type: "input_text", Text: "hello"},
 		{Type: "image_url", ImageURL: &ImageURL{URL: "https://example.com/img.png"}},
 	}}}
-	raw, err := p.ToWire([]ConversationElement{&msg})
+	raw, err := p.ToProviderRepresentation([]ConversationElement{&msg})
 	assert.NoError(t, err)
 
 	var wire struct {
@@ -142,20 +142,20 @@ func TestOpenRouterToWire_UserStructuredContent(t *testing.T) {
 }
 
 func TestOpenRouterToWire_FunctionCall(t *testing.T) {
-	p := &openrouterProvider{}
+	p := &OpenRouterConversationConverter{}
 	fc := FunctionCall{
 		Id:     "fc-1",
 		Name:   "search",
 		Args:   json.RawMessage(`{"query":"test"}`),
 		CallId: "call_abc",
 	}
-	raw, err := p.ToWire([]ConversationElement{&fc})
+	raw, err := p.ToProviderRepresentation([]ConversationElement{&fc})
 	assert.NoError(t, err)
 
 	var wire struct {
-		Name    string          `json:"name"`
-		Args    json.RawMessage `json:"arguments"`
-		CallId  string          `json:"call_id"`
+		Name   string          `json:"name"`
+		Args   json.RawMessage `json:"arguments"`
+		CallId string          `json:"call_id"`
 	}
 	err = json.Unmarshal(raw[0], &wire)
 	assert.NoError(t, err)
@@ -165,8 +165,8 @@ func TestOpenRouterToWire_FunctionCall(t *testing.T) {
 }
 
 func TestOpenRouterToWire_EmptyElements(t *testing.T) {
-	p := &openrouterProvider{}
-	raw, err := p.ToWire(nil)
+	p := &OpenRouterConversationConverter{}
+	raw, err := p.ToProviderRepresentation(nil)
 	assert.NoError(t, err)
 	assert.Nil(t, raw)
 }
@@ -200,12 +200,12 @@ func TestOpenRouterRoundTrip_FromFile(t *testing.T) {
 	err := json.Unmarshal(goldenOrLongConv, &req)
 	assert.NoError(t, err)
 
-	p := &openrouterProvider{}
-	elements, err := p.FromWire(req.Input)
+	p := &OpenRouterConversationConverter{}
+	elements, err := p.ToConversationElements(req.Input)
 	assert.NoError(t, err)
 	assert.Len(t, elements, len(req.Input))
 
-	wireBack, err := p.ToWire(elements)
+	wireBack, err := p.ToProviderRepresentation(elements)
 	assert.NoError(t, err)
 	assert.Len(t, wireBack, len(req.Input))
 

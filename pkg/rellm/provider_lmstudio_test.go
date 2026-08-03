@@ -12,11 +12,11 @@ import (
 var goldenLMStudioRequest []byte
 
 func TestLMStudioFromWire_UserMessage(t *testing.T) {
-	p := &lmstudioProvider{}
+	p := &LMSConversationConverter{}
 	items := []json.RawMessage{
 		json.RawMessage(`{"role":"user","content":[{"type":"input_text","text":"hi"}]}`),
 	}
-	elems, err := p.FromWire(items)
+	elems, err := p.ToConversationElements(items)
 	assert.NoError(t, err)
 	assert.Len(t, elems, 1)
 
@@ -27,11 +27,11 @@ func TestLMStudioFromWire_UserMessage(t *testing.T) {
 }
 
 func TestLMStudioFromWire_ImageGeneration(t *testing.T) {
-	p := &lmstudioProvider{}
+	p := &LMSConversationConverter{}
 	items := []json.RawMessage{
 		json.RawMessage(`{"id":"ig_tmp_vqotwoa5eg","type":"image_generation_call","status":"completed","result":"data:image/jpeg;base64,/9j/4AAQ"}`),
 	}
-	elems, err := p.FromWire(items)
+	elems, err := p.ToConversationElements(items)
 	assert.NoError(t, err)
 	assert.Len(t, elems, 1)
 
@@ -43,9 +43,9 @@ func TestLMStudioFromWire_ImageGeneration(t *testing.T) {
 }
 
 func TestLMStudioToWire_ImageGeneration(t *testing.T) {
-	p := &lmstudioProvider{}
+	p := &LMSConversationConverter{}
 	ig := ImageGeneration{Id: "ig_tmp_vqotwoa5eg", Status: "completed", Result: "data:image/jpeg;base64,/9j/4AAQ"}
-	raw, err := p.ToWire([]ConversationElement{&ig})
+	raw, err := p.ToProviderRepresentation([]ConversationElement{&ig})
 	assert.NoError(t, err)
 	assert.Len(t, raw, 1)
 
@@ -64,9 +64,9 @@ func TestLMStudioToWire_ImageGeneration(t *testing.T) {
 }
 
 func TestLMStudioToWire_UserMessage(t *testing.T) {
-	p := &lmstudioProvider{}
+	p := &LMSConversationConverter{}
 	msg := UserMessage{messageContent{Role: "user", Content: []MessagePart{{Type: "input_text", Text: "hi"}}}}
-	raw, err := p.ToWire([]ConversationElement{&msg})
+	raw, err := p.ToProviderRepresentation([]ConversationElement{&msg})
 	assert.NoError(t, err)
 	assert.Len(t, raw, 1)
 
@@ -77,21 +77,21 @@ func TestLMStudioToWire_UserMessage(t *testing.T) {
 }
 
 func TestLMStudioToWire_EmptyElements(t *testing.T) {
-	p := &lmstudioProvider{}
-	raw, err := p.ToWire(nil)
+	p := &LMSConversationConverter{}
+	raw, err := p.ToProviderRepresentation(nil)
 	assert.NoError(t, err)
 	assert.Nil(t, raw)
 }
 
 func TestNewLMStudioEndpoint_ValidArgs(t *testing.T) {
-	lm, err := NewLMStudioEndpoint(Model("local/model"), "localhost", "1234")
+	lm, err := NewLMStudioEndpoint(Model("local/model"), "http://localhost", "1234")
 	assert.NoError(t, err)
 	assert.Equal(t, Provider_LMStudio, lm.provider)
 	assert.Equal(t, "http://localhost:1234/v1/responses", lm.rae.GetUrl())
 }
 
 func TestNewLMStudioEndpoint_RemoteHost(t *testing.T) {
-	lm, err := NewLMStudioEndpoint(Model("local/model"), "192.168.1.50", "1234")
+	lm, err := NewLMStudioEndpoint(Model("local/model"), "http://192.168.1.50", "1234")
 	assert.NoError(t, err)
 	assert.Equal(t, "http://192.168.1.50:1234/v1/responses", lm.rae.GetUrl())
 }
@@ -118,12 +118,12 @@ func TestLMStudioRoundTrip_FromFile(t *testing.T) {
 	err := json.Unmarshal(goldenLMStudioRequest, &req)
 	assert.NoError(t, err)
 
-	p := &lmstudioProvider{}
-	elements, err := p.FromWire(req.Input)
+	p := &LMSConversationConverter{}
+	elements, err := p.ToConversationElements(req.Input)
 	assert.NoError(t, err)
 	assert.Len(t, elements, len(req.Input))
 
-	wireBack, err := p.ToWire(elements)
+	wireBack, err := p.ToProviderRepresentation(elements)
 	assert.NoError(t, err)
 
 	// Round-trip should preserve all items.

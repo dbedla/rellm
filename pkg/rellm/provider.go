@@ -2,7 +2,6 @@ package rellm
 
 import (
 	"encoding/json"
-	"errors"
 	"strings"
 )
 
@@ -125,30 +124,9 @@ func TextFromContent(parts []MessagePart) string {
 	return sb.String()
 }
 
-type ProviderConfig interface {
-	// FromWire parses the provider's response items into canonical conversation
-	// elements. Each item becomes one or more ConversationElements plus any
-	// extracted text for that element.
-	FromWire(items []json.RawMessage) (elements []ConversationElement, err error)
-
-	// ToWire serializes canonical conversation elements back into a JSON-encoded
-	// list of wire-format messages for this provider's request payload.
-	ToWire(elements []ConversationElement) ([]json.RawMessage, error)
-}
-
-// --- Provider registry -------------------------------------------------------
-
-var providerConfigs = map[Provider]ProviderConfig{
-	Provider_OpenRouter: &openrouterProvider{},
-	Provider_LMStudio:   &lmstudioProvider{},
-}
-
-func getProviderConfig(p Provider) (ProviderConfig, error) {
-	cfg, ok := providerConfigs[p]
-	if !ok {
-		return nil, errors.New("rellm: unknown provider " + string(p))
-	}
-	return cfg, nil
+type ConversationConverter interface {
+	ToConversationElements(items []json.RawMessage) (elements []ConversationElement, err error)
+	ToProviderRepresentation(elements []ConversationElement) ([]json.RawMessage, error)
 }
 
 // messagePartsWithStrings creates MessagePart slice from a string list.

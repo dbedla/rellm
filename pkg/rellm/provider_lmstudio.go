@@ -6,12 +6,9 @@ import (
 	"strings"
 )
 
-// --- Wire format: lmstudioStyle -----------------------------------------------
+type LMSConversationConverter struct{}
 
-// lmstudioStyle implements FromWire/ToWire for the LM Studio wire format (pass-through).
-type lmstudioStyle struct{}
-
-func (l *lmstudioStyle) FromWire(items []json.RawMessage) ([]ConversationElement, error) {
+func (l *LMSConversationConverter) ToConversationElements(items []json.RawMessage) ([]ConversationElement, error) {
 	elements := make([]ConversationElement, 0, len(items))
 	for _, raw := range items {
 		var msg struct {
@@ -77,7 +74,7 @@ func (l *lmstudioStyle) FromWire(items []json.RawMessage) ([]ConversationElement
 }
 
 // parseReasoning extracts reasoning text and summary from a raw item.
-func (l *lmstudioStyle) parseReasoning(raw json.RawMessage) ConversationElement {
+func (l *LMSConversationConverter) parseReasoning(raw json.RawMessage) ConversationElement {
 	r := &Reasoning{}
 
 	// Extract id, status, summary from top level
@@ -129,7 +126,7 @@ func joinTextParts(parts []string) string {
 
 // marshalMessage serializes any role-typed message for LM Studio: content is
 // always a structured array (LM Studio does not use the "type":"message" field).
-func (l *lmstudioStyle) marshalMessage(mc messageContent) (json.RawMessage, error) {
+func (l *LMSConversationConverter) marshalMessage(mc messageContent) (json.RawMessage, error) {
 	payload := map[string]interface{}{
 		"role": mc.Role,
 	}
@@ -147,7 +144,7 @@ func (l *lmstudioStyle) marshalMessage(mc messageContent) (json.RawMessage, erro
 	return json.Marshal(payload)
 }
 
-func (l *lmstudioStyle) ToWire(elements []ConversationElement) ([]json.RawMessage, error) {
+func (l *LMSConversationConverter) ToProviderRepresentation(elements []ConversationElement) ([]json.RawMessage, error) {
 	if len(elements) == 0 {
 		return nil, nil
 	}
@@ -246,14 +243,7 @@ func (l *lmstudioStyle) ToWire(elements []ConversationElement) ([]json.RawMessag
 	return raw, nil
 }
 
-// --- Provider -----------------------------------------------------------------
-
-// lmstudioProvider handles LM Studio-specific configuration (URL, port).
-type lmstudioProvider struct {
-	lmstudioStyle
-}
-
-var _ ProviderConfig = &lmstudioProvider{}
+var _ ConversationConverter = &LMSConversationConverter{}
 
 // NewLMStudioEndpoint returns a configured endpoint for LM Studio. All arguments are required.
 func NewLMStudioEndpoint(model Model, host string, port string) (*Endpoint, error) {
@@ -269,7 +259,7 @@ func NewLMStudioEndpoint(model Model, host string, port string) (*Endpoint, erro
 	return &Endpoint{
 		model:    model,
 		provider: Provider_LMStudio,
-		rae:      &UniversalResponsesEndpoint{baseUrl: "http://" + host, port: port, responsesApiEndpoint: "/v1/responses"},
+		rae:      &UniversalResponsesEndpoint{baseUrl: host, port: port, responsesApiEndpoint: "/v1/responses"},
 		client:   &http.Client{},
 	}, nil
 }

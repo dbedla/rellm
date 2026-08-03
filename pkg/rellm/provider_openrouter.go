@@ -6,12 +6,9 @@ import (
 	"net/http"
 )
 
-// --- Wire format: openrouterStyle ---------------------------------------------
+type OpenRouterConversationConverter struct{}
 
-// openrouterStyle implements FromWire/ToWire for the OpenRouter wire format.
-type openrouterStyle struct{}
-
-func (o *openrouterStyle) FromWire(items []json.RawMessage) ([]ConversationElement, error) {
+func (o *OpenRouterConversationConverter) ToConversationElements(items []json.RawMessage) ([]ConversationElement, error) {
 	elements := make([]ConversationElement, 0, len(items))
 	for _, raw := range items {
 		var msg struct {
@@ -73,8 +70,10 @@ func (o *openrouterStyle) FromWire(items []json.RawMessage) ([]ConversationEleme
 
 // parseMessage parses a message item into a role-typed message. Content is
 // normalized to []MessagePart; ToWire re-serializes per the type's shape rule.
-func (o *openrouterStyle) parseMessage(raw json.RawMessage, id, role string, content json.RawMessage) ConversationElement {
-	var statusInfo struct{ Status string `json:"status"` }
+func (o *OpenRouterConversationConverter) parseMessage(raw json.RawMessage, id, role string, content json.RawMessage) ConversationElement {
+	var statusInfo struct {
+		Status string `json:"status"`
+	}
 	status := ""
 	if err := json.Unmarshal(raw, &statusInfo); err == nil {
 		status = statusInfo.Status
@@ -114,7 +113,7 @@ func marshalTextMessage(mc messageContent) (json.RawMessage, error) {
 }
 
 // parseReasoning extracts reasoning text and summary from a raw item.
-func (o *openrouterStyle) parseReasoning(raw json.RawMessage) ConversationElement {
+func (o *OpenRouterConversationConverter) parseReasoning(raw json.RawMessage) ConversationElement {
 	r := &Reasoning{}
 	if err := json.Unmarshal(raw, r); err != nil {
 		return nil // skip malformed items
@@ -124,7 +123,7 @@ func (o *openrouterStyle) parseReasoning(raw json.RawMessage) ConversationElemen
 	return r
 }
 
-func (o *openrouterStyle) ToWire(elements []ConversationElement) ([]json.RawMessage, error) {
+func (o *OpenRouterConversationConverter) ToProviderRepresentation(elements []ConversationElement) ([]json.RawMessage, error) {
 	if len(elements) == 0 {
 		return nil, nil
 	}
@@ -232,14 +231,7 @@ func (o *openrouterStyle) ToWire(elements []ConversationElement) ([]json.RawMess
 	return raw, nil
 }
 
-// --- Provider -----------------------------------------------------------------
-
-// openrouterProvider handles OpenRouter-specific configuration (URL, auth headers).
-type openrouterProvider struct {
-	openrouterStyle
-}
-
-var _ ProviderConfig = &openrouterProvider{}
+var _ ConversationConverter = &OpenRouterConversationConverter{}
 
 // NewOpenRouterEndpoint returns a configured endpoint for OpenRouter's API. apiKey and model are required.
 func NewOpenRouterEndpoint(apiKey string, model Model) (*Endpoint, error) {
