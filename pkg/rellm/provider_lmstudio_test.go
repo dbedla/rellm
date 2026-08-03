@@ -11,7 +11,7 @@ import (
 //go:embed testdata/pro_api_tool_B2_req_unknown_fn_call.json
 var goldenLMStudioRequest []byte
 
-func TestLMStudioFromWire_UserMessage(t *testing.T) {
+func TestLMStudioToConversationElements_UserMessage(t *testing.T) {
 	p := &LMSConversationConverter{}
 	items := []json.RawMessage{
 		json.RawMessage(`{"role":"user","content":[{"type":"input_text","text":"hi"}]}`),
@@ -26,7 +26,7 @@ func TestLMStudioFromWire_UserMessage(t *testing.T) {
 	assert.Equal(t, "hi", TextFromContent(msg.Content))
 }
 
-func TestLMStudioFromWire_ImageGeneration(t *testing.T) {
+func TestLMStudioToConversationElements_ImageGeneration(t *testing.T) {
 	p := &LMSConversationConverter{}
 	items := []json.RawMessage{
 		json.RawMessage(`{"id":"ig_tmp_vqotwoa5eg","type":"image_generation_call","status":"completed","result":"data:image/jpeg;base64,/9j/4AAQ"}`),
@@ -42,7 +42,7 @@ func TestLMStudioFromWire_ImageGeneration(t *testing.T) {
 	assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQ", ig.Result)
 }
 
-func TestLMStudioToWire_ImageGeneration(t *testing.T) {
+func TestLMStudioToProviderRepresentation_ImageGeneration(t *testing.T) {
 	p := &LMSConversationConverter{}
 	ig := ImageGeneration{Id: "ig_tmp_vqotwoa5eg", Status: "completed", Result: "data:image/jpeg;base64,/9j/4AAQ"}
 	raw, err := p.ToProviderRepresentation([]ConversationElement{&ig})
@@ -63,7 +63,7 @@ func TestLMStudioToWire_ImageGeneration(t *testing.T) {
 	assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQ", wire.Result)
 }
 
-func TestLMStudioToWire_UserMessage(t *testing.T) {
+func TestLMStudioToProviderRepresentation_UserMessage(t *testing.T) {
 	p := &LMSConversationConverter{}
 	msg := UserMessage{messageContent{Role: "user", Content: []MessagePart{{Type: "input_text", Text: "hi"}}}}
 	raw, err := p.ToProviderRepresentation([]ConversationElement{&msg})
@@ -76,7 +76,7 @@ func TestLMStudioToWire_UserMessage(t *testing.T) {
 	assert.Equal(t, "user", wire["role"])
 }
 
-func TestLMStudioToWire_EmptyElements(t *testing.T) {
+func TestLMStudioToProviderRepresentation_EmptyElements(t *testing.T) {
 	p := &LMSConversationConverter{}
 	raw, err := p.ToProviderRepresentation(nil)
 	assert.NoError(t, err)

@@ -14,7 +14,7 @@ var goldenOrLongConv []byte
 //go:embed testdata/image_resp.json
 var goldenImageResp []byte
 
-func TestOpenRouterFromWire_ImageGeneration(t *testing.T) {
+func TestOpenRouterToConversationElements_ImageGeneration(t *testing.T) {
 	p := &OpenRouterConversationConverter{}
 	items := []json.RawMessage{
 		json.RawMessage(`{"id":"ig_tmp_vqotwoa5eg","type":"image_generation_call","status":"completed","result":"data:image/jpeg;base64,/9j/4AAQ"}`),
@@ -30,7 +30,7 @@ func TestOpenRouterFromWire_ImageGeneration(t *testing.T) {
 	assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQ", ig.Result)
 }
 
-func TestOpenRouterToWire_ImageGeneration(t *testing.T) {
+func TestOpenRouterToProviderRepresentation_ImageGeneration(t *testing.T) {
 	p := &OpenRouterConversationConverter{}
 	ig := ImageGeneration{Id: "ig_tmp_vqotwoa5eg", Status: "completed", Result: "data:image/jpeg;base64,/9j/4AAQ"}
 	raw, err := p.ToProviderRepresentation([]ConversationElement{&ig})
@@ -75,7 +75,7 @@ func TestOpenRouterRoundTrip_ImageGeneration_FromFile(t *testing.T) {
 	}
 }
 
-func TestOpenRouterFromWire_AssistantMessage(t *testing.T) {
+func TestOpenRouterToConversationElements_AssistantMessage(t *testing.T) {
 	p := &OpenRouterConversationConverter{}
 	items := []json.RawMessage{
 		json.RawMessage(`{"role":"assistant","content":[{"type":"input_text","text":"hello world"}]}`),
@@ -90,7 +90,7 @@ func TestOpenRouterFromWire_AssistantMessage(t *testing.T) {
 	assert.Equal(t, "hello world", TextFromContent(msg.Content))
 }
 
-func TestOpenRouterFromWire_FunctionCall(t *testing.T) {
+func TestOpenRouterToConversationElements_FunctionCall(t *testing.T) {
 	p := &OpenRouterConversationConverter{}
 	items := []json.RawMessage{
 		json.RawMessage(`{"type":"function_call","name":"search","call_id":"abc","arguments":{"query":"test"}}`),
@@ -105,7 +105,7 @@ func TestOpenRouterFromWire_FunctionCall(t *testing.T) {
 	assert.Equal(t, `{"query":"test"}`, string(fn.Args))
 }
 
-func TestOpenRouterToWire_AssistantMessage(t *testing.T) {
+func TestOpenRouterToProviderRepresentation_AssistantMessage(t *testing.T) {
 	p := &OpenRouterConversationConverter{}
 	msg := AssistantMessage{messageContent{Role: "assistant", Content: []MessagePart{{Type: "input_text", Text: "hello world"}}}}
 	raw, err := p.ToProviderRepresentation([]ConversationElement{&msg})
@@ -122,7 +122,7 @@ func TestOpenRouterToWire_AssistantMessage(t *testing.T) {
 	assert.Equal(t, "hello world", wire.Content)
 }
 
-func TestOpenRouterToWire_UserStructuredContent(t *testing.T) {
+func TestOpenRouterToProviderRepresentation_UserStructuredContent(t *testing.T) {
 	p := &OpenRouterConversationConverter{}
 	msg := UserMessage{messageContent{Role: "user", Content: []MessagePart{
 		{Type: "input_text", Text: "hello"},
@@ -141,7 +141,7 @@ func TestOpenRouterToWire_UserStructuredContent(t *testing.T) {
 	assert.Len(t, wire.Content, 2)
 }
 
-func TestOpenRouterToWire_FunctionCall(t *testing.T) {
+func TestOpenRouterToProviderRepresentation_FunctionCall(t *testing.T) {
 	p := &OpenRouterConversationConverter{}
 	fc := FunctionCall{
 		Id:     "fc-1",
@@ -164,7 +164,7 @@ func TestOpenRouterToWire_FunctionCall(t *testing.T) {
 	assert.Equal(t, "call_abc", wire.CallId)
 }
 
-func TestOpenRouterToWire_EmptyElements(t *testing.T) {
+func TestOpenRouterToProviderRepresentation_EmptyElements(t *testing.T) {
 	p := &OpenRouterConversationConverter{}
 	raw, err := p.ToProviderRepresentation(nil)
 	assert.NoError(t, err)
@@ -189,7 +189,7 @@ func TestNewOpenRouterEndpoint_EmptyApiKey(t *testing.T) {
 	assert.EqualError(t, err, "missing API key for OpenRouter endpoint")
 }
 
-// TestOpenRouterRoundTrip_FromFile verifies faithful FromWire→ToWire round-trip
+// TestOpenRouterRoundTrip_FromFile verifies faithful ToConversationElements→ToProviderRepresentation round-trip
 // using the embedded golden conversation file. With role-typed messages, each
 // type serializes deterministically, so the wire output matches the input byte-for-byte.
 func TestOpenRouterRoundTrip_FromFile(t *testing.T) {

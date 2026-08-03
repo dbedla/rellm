@@ -69,7 +69,7 @@ func (o *OpenRouterConversationConverter) ToConversationElements(items []json.Ra
 }
 
 // parseMessage parses a message item into a role-typed message. Content is
-// normalized to []MessagePart; ToWire re-serializes per the type's shape rule.
+// normalized to []MessagePart; ToProviderRepresentation re-serializes per the type's shape rule.
 func (o *OpenRouterConversationConverter) parseMessage(raw json.RawMessage, id, role string, content json.RawMessage) ConversationElement {
 	var statusInfo struct {
 		Status string `json:"status"`
