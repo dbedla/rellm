@@ -114,13 +114,30 @@ func marshalTextMessage(mc messageContent) (json.RawMessage, error) {
 
 // parseReasoning extracts reasoning text and summary from a raw item.
 func (o *OpenRouterConversationConverter) parseReasoning(raw json.RawMessage) ConversationElement {
-	r := &Reasoning{}
-	if err := json.Unmarshal(raw, r); err != nil {
+	var item struct {
+		Id      string                 `json:"id"`
+		Status  string                 `json:"status"`
+		Summary []string               `json:"summary"`
+		Content []ReasoningContentPart `json:"content"`
+	}
+	if err := json.Unmarshal(raw, &item); err != nil {
 		return nil // skip malformed items
 	}
-	// Clear signing data for replay compatibility.
-	r.Signature = ""
-	return r
+
+	textParts := make([]string, 0, len(item.Content))
+	for _, part := range item.Content {
+		if part.Type == "reasoning_text" || part.Type == "text" {
+			textParts = append(textParts, part.Text)
+		}
+	}
+
+	return &Reasoning{
+		Id:      item.Id,
+		Status:  item.Status,
+		Summary: item.Summary,
+		Text:    joinTextParts(textParts),
+		// Signing data is intentionally not retained for replay compatibility.
+	}
 }
 
 func (o *OpenRouterConversationConverter) ToProviderRepresentation(elements []ConversationElement) ([]json.RawMessage, error) {

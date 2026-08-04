@@ -105,6 +105,29 @@ func TestOpenRouterToConversationElements_FunctionCall(t *testing.T) {
 	assert.Equal(t, `{"query":"test"}`, string(fn.Args))
 }
 
+func TestOpenRouterReasoningContentRoundTrip(t *testing.T) {
+	p := &OpenRouterConversationConverter{}
+	items := []json.RawMessage{
+		json.RawMessage(`{"id":"rs-1","type":"reasoning","status":"completed","content":[{"type":"reasoning_text","text":"first"},{"type":"reasoning_text","text":"second"}],"summary":[],"signature":"not-replayed","format":"unknown"}`),
+	}
+
+	elements, err := p.ToConversationElements(items)
+	assert.NoError(t, err)
+	assert.Len(t, elements, 1)
+
+	reasoning, ok := elements[0].(*Reasoning)
+	assert.True(t, ok)
+	assert.Equal(t, "rs-1", reasoning.Id)
+	assert.Equal(t, "completed", reasoning.Status)
+	assert.Equal(t, "first second", reasoning.Text)
+	assert.Empty(t, reasoning.Signature)
+
+	wire, err := p.ToProviderRepresentation(elements)
+	assert.NoError(t, err)
+	assert.Len(t, wire, 1)
+	assert.JSONEq(t, `{"id":"rs-1","type":"reasoning","status":"completed","content":[{"type":"reasoning_text","text":"first second"}],"summary":[]}`, string(wire[0]))
+}
+
 func TestOpenRouterToProviderRepresentation_AssistantMessage(t *testing.T) {
 	p := &OpenRouterConversationConverter{}
 	msg := AssistantMessage{messageContent{Role: "assistant", Content: []MessagePart{{Type: "input_text", Text: "hello world"}}}}
