@@ -136,8 +136,8 @@ func (a *Agent) Execute(p *Prompt) (string, error) {
 	if p == nil || p.msg == "" {
 		return "", ErrEmptyPrompt
 	}
-	return a.run(p.msg, p.params)
-	//return a.run_newFlow(p.msg, p.params)
+	//return a.run(p.msg, p.params)
+	return a.run_newFlow(p.msg, p.params)
 }
 
 // Ask is the simple entry point for quick questions — no builder needed.

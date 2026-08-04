@@ -1,0 +1,68 @@
+{
+  "model": "google/gemini-3.1-flash-lite",
+  "input": [
+    {
+      "type": "message",
+      "role": "system",
+      "content": "You are a helpful assistant."
+    },
+    {
+      "type": "message",
+      "role": "user",
+      "content": [
+        {
+          "type": "input_text",
+          "text": "hi"
+        }
+      ]
+    },
+    {
+      "type": "message",
+      "role": "assistant",
+      "id": "msg_tmp_crvebpc35w8",
+      "status": "completed",
+      "content": "Hello! How can I help you today?"
+    },
+    {
+      "type": "message",
+      "role": "user",
+      "content": [
+        {
+          "type": "input_text",
+          "text": "what tools do you see?"
+        }
+      ]
+    }
+  ],
+  "temperature": 0.5,
+  "tools": [
+    {
+      "type": "function",
+      "name": "GetDataFor",
+      "description": "Get data for a specific input",
+      "parameters": {
+        "properties": {
+          "input": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "type": "function",
+      "name": "GetStaticData",
+      "description": "Get static data",
+      "parameters": {
+        "properties": {},
+        "type": "object"
+      }
+    }
+  ],
+  "reasoning": {
+    "effort": "low"
+  }
+}

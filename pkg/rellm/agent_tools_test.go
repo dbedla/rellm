@@ -102,7 +102,7 @@ var goldenOR_Hi_03_req string
 //go:embed testdata/openrouter/hi_04_gemma_resp.json
 var goldenOR_Hi_04_resp string
 
-func disable_TestOpenRouterAgentHiWithToolsNoCallGemma(t *testing.T) {
+func TestOpenRouterAgentHiWithToolsNoCallGemma(t *testing.T) {
 	agent, httpDo := buildTestProToolAgentOpenRouter(t, rellm.Model_OpenRouter_Google_Gemma_4_26b_A4b_It, TestDefaultMaxToolsIterationWithoutReturnMessage)
 	defer httpDo.AssertExpectations(t)
 
@@ -153,6 +153,79 @@ func disable_TestOpenRouterAgentHiWithToolsNoCallGemma(t *testing.T) {
 
 	secondPrompt, err := rellm.NewPromptBuilder().
 		WithMessage("what tool do you see?").
+		WithReasoning(testReasoningEffort).
+		WithTemperature(testTemperature).
+		Build()
+	assert.NoError(t, err)
+
+	respMsg, err = agent.Execute(secondPrompt)
+	assert.NoError(t, err, "failed to ask with reasoning in conversation")
+	//assert.Equal(t, "I am doing well.", respMsg)
+}
+
+//go:embed testdata/openrouter/hi_gemini_01_req.json
+var goldenOR_Hi_gemini_01_req string
+
+//go:embed testdata/openrouter/hi_gemini_02_resp.json
+var goldenOR_Hi_gemini_02_resp string
+
+//go:embed testdata/openrouter/hi_gemini_03_req.json
+var goldenOR_Hi_gemini_03_req string
+
+//go:embed testdata/openrouter/hi_gemini_04_resp.json
+var goldenOR_Hi_gemini_04_resp string
+
+func TestOpenRouterAgentHiWithToolsNoCallGemini(t *testing.T) {
+	agent, httpDo := buildTestProToolAgentOpenRouter(t, rellm.Model_OpenRouter_Google_Gemini_3_1_Flash_Lite, TestDefaultMaxToolsIterationWithoutReturnMessage)
+	defer httpDo.AssertExpectations(t)
+
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Run(func(args mock.Arguments) {
+			req := args.Get(0).(*http.Request)
+
+			b, err := io.ReadAll(req.Body)
+			assert.NoError(t, err, "failed to read request body")
+
+			req.Body = io.NopCloser(bytes.NewBuffer(b))
+
+			assert.JSONEq(t, goldenOR_Hi_gemini_01_req, string(b))
+		}).
+		Return(&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(goldenOR_Hi_gemini_02_resp)),
+		}, nil)
+
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Run(func(args mock.Arguments) {
+			req := args.Get(0).(*http.Request)
+
+			b, err := io.ReadAll(req.Body)
+			assert.NoError(t, err, "failed to read request body")
+
+			req.Body = io.NopCloser(bytes.NewBuffer(b))
+
+			assert.JSONEq(t, goldenOR_Hi_gemini_03_req, string(b))
+		}).
+		Return(&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(goldenOR_Hi_gemini_04_resp)),
+		}, nil)
+
+	prompt, err := rellm.NewPromptBuilder().
+		WithMessage("hi").
+		WithReasoning(testReasoningEffort).
+		WithTemperature(testTemperature).
+		Build()
+	assert.NoError(t, err)
+
+	respMsg, err := agent.Execute(prompt)
+	assert.NoError(t, err)
+	assert.Equal(t, "Hello! How can I help you today?", respMsg)
+
+	secondPrompt, err := rellm.NewPromptBuilder().
+		WithMessage("what tools do you see?").
 		WithReasoning(testReasoningEffort).
 		WithTemperature(testTemperature).
 		Build()
