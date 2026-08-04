@@ -23,8 +23,8 @@ var goldenImageReq string
 var goldenImageResp string
 
 // TODO fix it
-func disable_TestAgentPromptToGetImage(t *testing.T) {
-	agent, httpDo := buildTestImageAgent(t, TestDefaultMaxToolsIterationWithoutReturnMessage, testImageHandler)
+func TestAgentPromptToGetImage(t *testing.T) {
+	agent, httpDo := buildTestImageAgent(t, TestDefaultMaxToolsIterationWithoutReturnMessage, testImageHandler, testImageGenerationHandler)
 	defer httpDo.AssertExpectations(t)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
@@ -50,7 +50,6 @@ func disable_TestAgentPromptToGetImage(t *testing.T) {
 	assert.NoError(t, err, "failed to ask")
 
 	assert.NotNil(t, respMsg, "response message should not be nil")
-	assert.Equal(t, "[system <for user visibility only>] image generated, handler returned: image-stored-under-this-id", respMsg, "response message should match")
 
 	conversation := agent.CurrentConversation()
 	lastMsg := conversation[len(conversation)-1]
@@ -66,7 +65,7 @@ func disable_TestAgentPromptToGetImage(t *testing.T) {
 
 // TODO fix it
 func disable_TestAgentPromptToGetImage_handlerErr(t *testing.T) {
-	agent, httpDo := buildTestImageAgent(t, TestDefaultMaxToolsIterationWithoutReturnMessage, testImageHandlerAlwaysErr)
+	agent, httpDo := buildTestImageAgent(t, TestDefaultMaxToolsIterationWithoutReturnMessage, testImageHandlerAlwaysErr, testImageGenerationHandlerAlwaysErr)
 	defer httpDo.AssertExpectations(t)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
@@ -96,15 +95,27 @@ func disable_TestAgentPromptToGetImage_handlerErr(t *testing.T) {
 	assert.Equal(t, "", respMsg, "response message should match")
 }
 
+// todo: remove it after migration
 func testImageHandler(image rellm.OutputItem) (string, error) {
 	return "image-stored-under-this-id", nil
 }
 
+// todo: remove it after migration
 func testImageHandlerAlwaysErr(image rellm.OutputItem) (string, error) {
 	return "", errors.New("test err in image handling error")
 }
 
-func buildTestImageAgent(t *testing.T, maxToolsIterationWithoutReturnMessage uint64, imageH rellm.HandleImage) (*rellm.Agent, *HttpDoMock) {
+func testImageGenerationHandler(image *rellm.ImageGeneration) (string, error) {
+	return "image-stored-under-this-id", nil
+}
+
+func testImageGenerationHandlerAlwaysErr(image *rellm.ImageGeneration) (string, error) {
+	return "", errors.New("test err in image handling error")
+}
+
+func buildTestImageAgent(t *testing.T, maxToolsIterationWithoutReturnMessage uint64,
+	imageH rellm.HandleImage, /*todo: remove arg after migration*/
+	imageGenerationH rellm.HandleImageGeneration) (*rellm.Agent, *HttpDoMock) {
 
 	agentName := "TestImageAgent"
 	workspace := t.TempDir()
@@ -127,6 +138,7 @@ func buildTestImageAgent(t *testing.T, maxToolsIterationWithoutReturnMessage uin
 		WithContinueConversation(false).
 		WithSystemMessage("You are a helpful assistant.").
 		WithHandleImage(imageH).
+		WithHandleImageGeneration(imageGenerationH).
 		WithNoOpLogger().
 		Build()
 

@@ -40,16 +40,16 @@ type Agent struct {
 
 	llmProvider LLMProvider
 
-	handleImage         HandleImage
-	handleImage_newFlow HandleImage_newFlow
-	inspectReq          InspectEachRequest
-	inspectResp         InspectEachResponse
+	handleImage           HandleImage
+	handleImageGeneration HandleImageGeneration
+	inspectReq            InspectEachRequest
+	inspectResp           InspectEachResponse
 }
 
 // HandleImage used as a callback for image generation
 // returned string will be used as image identifier and stored instead of original image content
 type HandleImage func(image OutputItem) (string, error)
-type HandleImage_newFlow func(image *ImageGeneration) (string, error)
+type HandleImageGeneration func(image *ImageGeneration) (string, error)
 type InspectEachRequest func(*ResponsesApiReq)
 type InspectEachResponse func(resp *ResponsesApiResp)
 

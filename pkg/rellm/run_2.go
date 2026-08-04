@@ -153,11 +153,11 @@ func messagesFromParts(parts []MessagePart) string {
 func (a *Agent) handleImageGenerationCall_newFlow(image *ImageGeneration) error {
 
 	// todo: return image as message or something?
-	if a.handleImage_newFlow == nil {
+	if a.handleImageGeneration == nil {
 		return ErrNoImageHandler
 	}
 
-	resultNote, err := a.handleImage_newFlow(image)
+	resultNote, err := a.handleImageGeneration(image)
 	if err != nil {
 		return errors.Join(ErrCustomImageHandlerFailed, err)
 	}

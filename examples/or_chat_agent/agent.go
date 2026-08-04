@@ -25,7 +25,7 @@ func buildLBaseAgent(workspace string) (*rellm.Agent, error) {
 	ep, err := rellm.NewEndpointBuilder().
 		WithResponsesApiEndpoint(orEndpoint).
 		WithProvider(rellm.Provider_OpenRouter).
-		WithModel(rellm.Model("x-ai/grok-imagine-image-quality")).
+		WithModel(rellm.Model_OpenRouter_Google_Gemini_3_1_Flash_Lite).
 		WithDefaultHttpClient().
 		Build()
 	if err != nil {
@@ -40,15 +40,9 @@ func buildLBaseAgent(workspace string) (*rellm.Agent, error) {
 		WithContinueConversation(false).
 		WithSystemMessage(baseAgentSysPrompt).
 		WithWorkspaceLogger().
-		WithHandleImage(testHandleImage).
 		WithInspectEachRequest(agentsutils.InspectWithReqLog).
 		WithInspectEachResponse(agentsutils.InspectWithRespLog).
 		Build()
-}
-
-func testHandleImage(image rellm.OutputItem) (string, error) {
-
-	return "asd", nil
 }
 
 func newOpenRouterEndpoint() (rellm.ResponsesApiEndpoint, error) {
