@@ -76,17 +76,17 @@ func (a *Agent) process_newFlow(req *ResponsesApiReq) ([]json.RawMessage, string
 			conversation = append(conversation, fResp)
 		}
 		raw, errProviderRep := a.llmProvider.cc.ToProviderRepresentation(conversation)
+		req.Input = append(req.Input, raw...)
 		if errProviderRep != nil {
 			return req.Input, "", conversationResponse, errors.Join(ErrUnknownResponseMessageFormat, errProviderRep)
 		}
 		if err != nil {
-			return raw, "", conversationResponse, errors.Join(ErrUnknownResponseMessageFormat, err)
+			return req.Input, "", conversationResponse, errors.Join(ErrUnknownResponseMessageFormat, err)
 		}
 		if imageHandled || msg != "" {
-			return raw, msg, conversationResponse, nil
+			return req.Input, msg, conversationResponse, nil
 		}
 
-		req.Input = raw
 	}
 
 	a.logger.Error().Msgf("max tool iterations (%d) reached without a return message", a.maxToolsIterationWithoutReturnMessage)

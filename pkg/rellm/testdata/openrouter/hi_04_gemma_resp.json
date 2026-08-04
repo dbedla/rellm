@@ -1,32 +1,33 @@
 {
-  "id": "resp_7f51c9c3e91e1264d07a68415c130d1cf820ba9283028234",
+  "id": "gen-1785841218-XUebxtgFr8746klE0Icn",
   "object": "response",
-  "created_at": 1785838238,
-  "model": "google/gemma-4-26b-a4b",
+  "created_at": 1785841218,
+  "model": "google/gemma-4-26b-a4b-it",
   "status": "completed",
-  "completed_at": 1785838244,
+  "completed_at": 1785841220,
   "output": [
     {
-      "id": "rs_ijgu6lv73hc6mesdlym15",
+      "id": "rs_tmp_z7h3yzqm27",
       "type": "reasoning",
       "status": "completed",
-      "summary": [],
       "content": [
         {
           "type": "reasoning_text",
-          "text": "The user is asking \"what tools do you see?\". This refers to the available functions/tools that the model can call.\n\nI should look at the definitions of the tools provided in the system prompt.\n\nThe tools are:\n1. `GetDataFor`: Takes an `input` (string) and returns data for it.\n2. `GetStaticData`: Takes no arguments and returns static data.\n\nI will list these tools to answer the user's question."
+          "text": "The user is asking \"what tool do you see?\". This is a question about my internal capabilities or the tools available to me in the current context.\n\nI have access to two tools:\n1. `GetDataFor`: Takes a string `input` and returns data for it.\n2. `GetStaticData`: Takes no arguments and returns static data.\n\nI should answer the user by listing the tools I have access to."
         }
-      ]
+      ],
+      "summary": [],
+      "format": "unknown"
     },
     {
-      "id": "msg_24b4ppar0q7wqwq6lt453r",
+      "id": "msg_tmp_hmgps09k8dg",
       "type": "message",
       "role": "assistant",
       "status": "completed",
       "content": [
         {
           "type": "output_text",
-          "text": "I have access to the following tools:\n\n1.  **`GetDataFor`**: This tool allows me to retrieve specific data based on an input string you provide.\n2.  **`GetStaticData`**: This tool allows me to retrieve predefined static information.",
+          "text": "I have access to the following tools:\n\n1.  **`GetDataFor`**: This tool allows me to retrieve specific data based on an input string you provide.\n2.  **`GetStaticData`**: This tool allows me to retrieve pre-defined static data.",
           "annotations": [],
           "logprobs": []
         }
@@ -68,17 +69,17 @@
   "parallel_tool_calls": true,
   "max_output_tokens": null,
   "temperature": 0.5,
-  "top_p": 0.95,
+  "top_p": 1,
   "presence_penalty": 0,
-  "frequency_penalty": 1.1,
+  "frequency_penalty": 0,
   "top_logprobs": 0,
   "max_tool_calls": null,
   "metadata": {},
   "background": false,
   "previous_response_id": null,
-  "service_tier": "default",
-  "truncation": "auto",
-  "store": true,
+  "service_tier": "auto",
+  "truncation": "disabled",
+  "store": false,
   "instructions": null,
   "text": {
     "format": {
@@ -86,20 +87,26 @@
     }
   },
   "reasoning": {
-    "effort": "low",
-    "summary": null
+    "effort": "low"
   },
   "safety_identifier": null,
   "prompt_cache_key": null,
   "usage": {
-    "input_tokens": 114,
+    "input_tokens": 115,
     "input_tokens_details": {
-      "cached_tokens": 79
+      "cached_tokens": 64
     },
-    "output_tokens": 152,
+    "output_tokens": 150,
     "output_tokens_details": {
-      "reasoning_tokens": 97
+      "reasoning_tokens": 94
     },
-    "total_tokens": 266
+    "total_tokens": 265,
+    "cost": 0.00005432,
+    "is_byok": false,
+    "cost_details": {
+      "upstream_inference_cost": 0.00005432,
+      "upstream_inference_input_cost": 0.00000932,
+      "upstream_inference_output_cost": 0.000045
+    }
   }
 }

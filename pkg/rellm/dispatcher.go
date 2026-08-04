@@ -199,7 +199,7 @@ func handleMessage(msg OutputItem, provider Provider) ([]json.RawMessage, string
 	case Provider_LMStudio:
 		fallthrough
 	default:
-		return handleOtherProviderMessage(allParts, msgRespFromLLM)
+		return handleOtherProviderMessage(msg, allParts, msgRespFromLLM)
 	}
 }
 
@@ -235,8 +235,10 @@ func handleOpenRouterMessage(msg OutputItem, allParts []MessagePart, msgRespFrom
 	return []json.RawMessage{rawAssistantMsg}, msgRespFromLLM, nil
 }
 
-func handleOtherProviderMessage(allParts []MessagePart, msgRespFromLLM string) ([]json.RawMessage, string, error) {
-	assistantMsg := AssistantMessage{messageContent{Role: "assistant", Content: allParts}}
+func handleOtherProviderMessage(msg OutputItem, allParts []MessagePart, msgRespFromLLM string) ([]json.RawMessage, string, error) {
+	assistantMsg := AssistantMessage{messageContent{
+		Id:   msg.Id,
+		Role: "assistant", Content: allParts}}
 	rawAssistantMsg, err := json.Marshal(assistantMsg)
 	if err != nil {
 		return nil, "", err

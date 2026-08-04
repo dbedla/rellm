@@ -1,16 +1,13 @@
 {
-  "model": "google/gemma-4-26b-a4b",
+  "model": "google/gemma-4-26b-a4b-it",
   "input": [
     {
+      "type": "message",
       "role": "system",
-      "content": [
-        {
-          "type": "input_text",
-          "text": "You are a helpful assistant."
-        }
-      ]
+      "content": "You are a helpful assistant."
     },
     {
+      "type": "message",
       "role": "user",
       "content": [
         {
@@ -20,33 +17,30 @@
       ]
     },
     {
+      "id": "rs_tmp_ib4lofq4dw",
+      "type": "reasoning",
+      "status": "completed",
       "content": [
         {
           "type": "reasoning_text",
-          "text": "The user said \"hi\". This is a standard greeting. I should respond with a friendly and helpful greeting to initiate the conversation.\n\nPlan:\n1. Respond with a polite greeting.\n2. Offer assistance."
+          "text": "The user said \"hi\".\nThis is a simple greeting.\nThe appropriate response is a friendly greeting and an offer to help.\n\nPlan:\n1. Greet the user.\n2. Ask how I can assist them."
         }
-      ],
-      "id": "rs_omjbfc08iir310s0fv7bt7",
+      ]
+    },
+    {
+      "type": "message",
+      "role": "assistant",
+      "id": "msg_tmp_40o24xun0au",
       "status": "completed",
-      "summary": [],
-      "type": "reasoning"
+      "content": "Hello! How can I help you today?"
     },
     {
-      "content": [
-        {
-          "type": "output_text",
-          "text": "Hello! How can I help you today?"
-        }
-      ],
-      "id": "msg_rn2l0u1nii7119fztumpw",
-      "role": "assistant"
-    },
-    {
+      "type": "message",
       "role": "user",
       "content": [
         {
           "type": "input_text",
-          "text": "what tools do you see?"
+          "text": "what tool do you see?"
         }
       ]
     }

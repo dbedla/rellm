@@ -1,25 +1,26 @@
 {
-  "id": "resp_85f7918264ccd17165946a17a5d36a868d0c2945b85b8646",
+  "id": "gen-1785841211-Fi9d8GGKSbAZ4pRNUmSJ",
   "object": "response",
-  "created_at": 1785838217,
-  "model": "google/gemma-4-26b-a4b",
+  "created_at": 1785841211,
+  "model": "google/gemma-4-26b-a4b-it",
   "status": "completed",
-  "completed_at": 1785838220,
+  "completed_at": 1785841212,
   "output": [
     {
-      "id": "rs_omjbfc08iir310s0fv7bt7",
+      "id": "rs_tmp_ib4lofq4dw",
       "type": "reasoning",
       "status": "completed",
-      "summary": [],
       "content": [
         {
           "type": "reasoning_text",
-          "text": "The user said \"hi\". This is a standard greeting. I should respond with a friendly and helpful greeting to initiate the conversation.\n\nPlan:\n1. Respond with a polite greeting.\n2. Offer assistance."
+          "text": "The user said \"hi\".\nThis is a simple greeting.\nThe appropriate response is a friendly greeting and an offer to help.\n\nPlan:\n1. Greet the user.\n2. Ask how I can assist them."
         }
-      ]
+      ],
+      "summary": [],
+      "format": "unknown"
     },
     {
-      "id": "msg_rn2l0u1nii7119fztumpw",
+      "id": "msg_tmp_40o24xun0au",
       "type": "message",
       "role": "assistant",
       "status": "completed",
@@ -68,17 +69,17 @@
   "parallel_tool_calls": true,
   "max_output_tokens": null,
   "temperature": 0.5,
-  "top_p": 0.95,
+  "top_p": 1,
   "presence_penalty": 0,
-  "frequency_penalty": 1.1,
+  "frequency_penalty": 0,
   "top_logprobs": 0,
   "max_tool_calls": null,
   "metadata": {},
   "background": false,
   "previous_response_id": null,
-  "service_tier": "default",
-  "truncation": "auto",
-  "store": true,
+  "service_tier": "auto",
+  "truncation": "disabled",
+  "store": false,
   "instructions": null,
   "text": {
     "format": {
@@ -86,20 +87,26 @@
     }
   },
   "reasoning": {
-    "effort": "low",
-    "summary": null
+    "effort": "low"
   },
   "safety_identifier": null,
   "prompt_cache_key": null,
   "usage": {
-    "input_tokens": 89,
+    "input_tokens": 90,
     "input_tokens_details": {
-      "cached_tokens": 79
+      "cached_tokens": 0
     },
-    "output_tokens": 53,
+    "output_tokens": 62,
     "output_tokens_details": {
-      "reasoning_tokens": 44
+      "reasoning_tokens": 45
     },
-    "total_tokens": 142
+    "total_tokens": 152,
+    "cost": 0.0000294,
+    "is_byok": false,
+    "cost_details": {
+      "upstream_inference_cost": 0.0000294,
+      "upstream_inference_input_cost": 0.0000108,
+      "upstream_inference_output_cost": 0.0000186
+    }
   }
 }

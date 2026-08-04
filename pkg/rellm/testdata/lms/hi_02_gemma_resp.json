@@ -1,25 +1,25 @@
 {
-  "id": "resp_0bfe527bfb9122ae091f4b9f5b9d8a3bce7cc9b4d26bd1e9",
+  "id": "resp_85f7918264ccd17165946a17a5d36a868d0c2945b85b8646",
   "object": "response",
-  "created_at": 1785836896,
+  "created_at": 1785838217,
   "model": "google/gemma-4-26b-a4b",
   "status": "completed",
-  "completed_at": 1785836906,
+  "completed_at": 1785838220,
   "output": [
     {
-      "id": "rs_0uc7ace8dfko442on7ngla",
+      "id": "rs_omjbfc08iir310s0fv7bt7",
       "type": "reasoning",
       "status": "completed",
       "summary": [],
       "content": [
         {
           "type": "reasoning_text",
-          "text": "The user said \"hi\". This is a standard greeting. I should respond with a friendly and helpful greeting to initiate the conversation.\n\nPlan:\n1. Acknowledge the greeting.\n2. Offer assistance."
+          "text": "The user said \"hi\". This is a standard greeting. I should respond with a friendly and helpful greeting to initiate the conversation.\n\nPlan:\n1. Respond with a polite greeting.\n2. Offer assistance."
         }
       ]
     },
     {
-      "id": "msg_4gueg6gi3e5jk0ax2uagoa",
+      "id": "msg_rn2l0u1nii7119fztumpw",
       "type": "message",
       "role": "assistant",
       "status": "completed",
@@ -94,7 +94,7 @@
   "usage": {
     "input_tokens": 89,
     "input_tokens_details": {
-      "cached_tokens": 0
+      "cached_tokens": 79
     },
     "output_tokens": 53,
     "output_tokens_details": {
