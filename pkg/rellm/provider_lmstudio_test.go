@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-//go:embed testdata/pro_api_tool_B2_req_unknown_fn_call.json
+//go:embed testdata/lms/unknown_fn_call_03_req.json
 var goldenLMStudioRequest []byte
 
 func TestLMStudioToConversationElements_UserMessage(t *testing.T) {

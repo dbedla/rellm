@@ -254,7 +254,7 @@ var goldenProReqA3 string
 //go:embed testdata/pro_api_tool_A3_resp.json
 var goldenProRespA3 string
 
-func TestAgentAskLikeAProToolsCall(t *testing.T) {
+func TestAgentLMS_ToolsCall(t *testing.T) {
 	agent, httpDo := buildTestProToolAgentLMS(t, TestDefaultMaxToolsIterationWithoutReturnMessage)
 	defer httpDo.AssertExpectations(t)
 
@@ -324,19 +324,19 @@ func TestAgentAskLikeAProToolsCall(t *testing.T) {
 	assert.Equal(t, "The first tool call to `GetStaticData` returned the value `42`. The second tool call to `GetDataFor` with the input \"the meaning of 42\" returned a list containing `[\"abc\", \"def\"]`. Therefore, based on these specific tool outputs, the data associated with the value 42 is \"abc\" and \"def\".", respMsg, "response message should match")
 }
 
-//go:embed testdata/pro_api_tool_B1_req_unknown_fn_call.json
-var goldenProReqB1_UnknownFnCAll string
+//go:embed testdata/lms/unknown_fn_call_01_req.json
+var goldenLMS_UnknownFnCall_req_01 string
 
-//go:embed testdata/pro_api_tool_B1_resp_unknown_fn_call.json
-var goldenProRespB1_UnknownFnCAll string
+//go:embed testdata/lms/unknown_fn_call_02_resp.json
+var goldenLMs_UnknownFnCall_resp_02 string
 
-//go:embed testdata/pro_api_tool_B2_req_unknown_fn_call.json
-var goldenProReqB2_UnknownFnCAll string
+//go:embed testdata/lms/unknown_fn_call_03_req.json
+var goldenLMS_UnknownFnCall_req_03 string
 
-//go:embed testdata/pro_api_tool_B2_resp_unknown_fn_call.json
-var goldenProRespB2_UnknownFnCAll string
+//go:embed testdata/lms/unknown_fn_call_04_resp.json
+var goldenLMS_UnknownFnCall_resp_04 string
 
-func TestAgentAskLikeAProToolsCall_UnknownFnCall(t *testing.T) {
+func TestAgentLMS_UnknownFnCall(t *testing.T) {
 	agent, httpDo := buildTestProToolAgentLMS(t, TestDefaultMaxToolsIterationWithoutReturnMessage)
 	defer httpDo.AssertExpectations(t)
 
@@ -350,11 +350,11 @@ func TestAgentAskLikeAProToolsCall_UnknownFnCall(t *testing.T) {
 
 			req.Body = io.NopCloser(bytes.NewBuffer(b))
 
-			assert.JSONEq(t, goldenProReqB1_UnknownFnCAll, string(b))
+			assert.JSONEq(t, goldenLMS_UnknownFnCall_req_01, string(b))
 		}).
 		Return(&http.Response{
 			StatusCode: http.StatusOK,
-			Body:       io.NopCloser(strings.NewReader(goldenProRespB1_UnknownFnCAll)),
+			Body:       io.NopCloser(strings.NewReader(goldenLMs_UnknownFnCall_resp_02)),
 		}, nil)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
@@ -367,11 +367,11 @@ func TestAgentAskLikeAProToolsCall_UnknownFnCall(t *testing.T) {
 
 			req.Body = io.NopCloser(bytes.NewBuffer(b))
 
-			assert.JSONEq(t, goldenProReqB2_UnknownFnCAll, string(b))
+			assert.JSONEq(t, goldenLMS_UnknownFnCall_req_03, string(b))
 		}).
 		Return(&http.Response{
 			StatusCode: http.StatusOK,
-			Body:       io.NopCloser(strings.NewReader(goldenProRespB2_UnknownFnCAll)),
+			Body:       io.NopCloser(strings.NewReader(goldenLMS_UnknownFnCall_resp_04)),
 		}, nil)
 
 	q := "call function GetSpecialData"
@@ -406,7 +406,7 @@ func TestAgentAskLikeAProToolsCall_UnknownFnCall(t *testing.T) {
 	assert.Equal(t, "It appears that the attempt to call `GetSpecialData` resulted in an error indicating the function was not found. \n\nHow would you like to proceed? I can try calling one of the other available functions, such as `GetStaticData` or `GetDataFor`, if you provide a specific input.", respMsg, "response message should match")
 }
 
-func TestTooManyFunctionCall(t *testing.T) {
+func TestAgentLMSTooManyFunctionCall(t *testing.T) {
 	const NotEnoughToolLoopLimit = 2
 	agent, httpDo := buildTestProToolAgentLMS(t, NotEnoughToolLoopLimit)
 	defer httpDo.AssertExpectations(t)

@@ -112,7 +112,9 @@ func (a *Agent) dispatchConversation(conversation []ConversationElement) (string
 			if err != nil {
 				outputErr = errors.Join(outputErr, err)
 			}
-			fnCallsResults = append(fnCallsResults, fResp)
+			if fResp != nil {
+				fnCallsResults = append(fnCallsResults, fResp)
+			}
 		//case *UserMessage:
 
 		case *AssistantMessage:
@@ -174,7 +176,7 @@ func (a *Agent) handleFunctionCall_newFlow(fn *FunctionCall) (*FunctionCallResp,
 	funcCallResp, ok := a.toolset.DispatchTools(fn.Name, fn.CallId, fn.Args)
 	if !ok {
 		funcCallResp = invalidFunctionCallResp_newFlow(fn)
-		return nil, errors.Join(ErrWhileDispatchToolCall, fmt.Errorf("unknown tool name (%s)", fn.Name))
+		return &funcCallResp, errors.Join(ErrWhileDispatchToolCall, fmt.Errorf("unknown tool name (%s)", fn.Name))
 	}
 
 	return &funcCallResp, nil
