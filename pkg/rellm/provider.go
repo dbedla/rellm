@@ -8,22 +8,10 @@ import (
 
 // --- Canonical conversation element types ------------------------------------
 
-// ElementType identifies the kind of a conversation element.
-type ElementType string
-
-const (
-	ElementTypeMessage          ElementType = "message"
-	ElementTypeFunctionCall     ElementType = "function_call"
-	ElementTypeFunctionCallResp ElementType = "function_call_response"
-	ElementTypeReasoning        ElementType = "reasoning"
-	ElementTypeImageGeneration  ElementType = "image_generation"
-)
-
 // ConversationElement is a typed item in a conversation. Providers convert their
 // raw wire output into these; the agent operates on them without knowing which
 // provider produced them.
 type ConversationElement interface {
-	elementType() ElementType
 }
 
 // messageContent holds shared fields for role-typed messages. Role is the wire
@@ -42,23 +30,17 @@ type UserMessage struct {
 	messageContent
 }
 
-func (*UserMessage) elementType() ElementType { return ElementTypeMessage }
-
 // AssistantMessage is a model-generated text message. Content serializes as a
 // plain string on the wire.
 type AssistantMessage struct {
 	messageContent
 }
 
-func (*AssistantMessage) elementType() ElementType { return ElementTypeMessage }
-
 // SystemMessage is a system instruction. Content serializes as a plain string
 // on the wire.
 type SystemMessage struct {
 	messageContent
 }
-
-func (*SystemMessage) elementType() ElementType { return ElementTypeMessage }
 
 // FunctionCall is a model-requested tool invocation.
 type FunctionCall struct {
@@ -68,8 +50,6 @@ type FunctionCall struct {
 	CallId string          `json:"call_id"`
 }
 
-func (*FunctionCall) elementType() ElementType { return ElementTypeFunctionCall }
-
 // FunctionCallResponse is the tool's result sent back to the model.
 type FunctionCallResp struct {
 	Id     string `json:"id,omitempty"`
@@ -77,8 +57,6 @@ type FunctionCallResp struct {
 	CallId string `json:"call_id"`
 	Output string `json:"output"` // raw output (may be JSON-encoded by some providers, plain text by others)
 }
-
-func (*FunctionCallResp) elementType() ElementType { return ElementTypeFunctionCallResp }
 
 // Reasoning captures model chain-of-thought output.
 type Reasoning struct {
@@ -89,16 +67,12 @@ type Reasoning struct {
 	Signature string   `json:"signature,omitempty"` // OpenRouter-only signing key
 }
 
-func (*Reasoning) elementType() ElementType { return ElementTypeReasoning }
-
 // ImageGeneration is a generated image with its result note.
 type ImageGeneration struct {
 	Id     string `json:"id,omitempty"`
 	Status string `json:"status,omitempty"`
 	Result string `json:"result"` // user-visible identifier returned by the handler
 }
-
-func (*ImageGeneration) elementType() ElementType { return ElementTypeImageGeneration }
 
 // TextFromContent extracts concatenated text from structured parts.
 // Works on both string-based and MessagePart-based content.

@@ -6,26 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestElementTypeInterface(t *testing.T) {
-	elems := []ConversationElement{
-		&UserMessage{},
-		&AssistantMessage{},
-		&SystemMessage{},
-		&FunctionCall{},
-		&FunctionCallResp{},
-		&Reasoning{},
-		&ImageGeneration{},
-	}
-	want := []ElementType{
-		ElementTypeMessage, ElementTypeMessage, ElementTypeMessage,
-		ElementTypeFunctionCall, ElementTypeFunctionCallResp,
-		ElementTypeReasoning, ElementTypeImageGeneration,
-	}
-	for i, e := range elems {
-		assert.Equal(t, want[i], e.elementType())
-	}
-}
-
 func TestTextFromContent(t *testing.T) {
 	parts := []MessagePart{
 		{Type: "input_text", Text: "hello"},

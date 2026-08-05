@@ -195,7 +195,6 @@ func (p *OpenRouterProvider) parseReasoning(raw json.RawMessage) ConversationEle
 		Status:  item.Status,
 		Summary: item.Summary,
 		Text:    joinTextParts(textParts),
-		// Signing data is intentionally not retained for replay compatibility.
 	}
 }
 
