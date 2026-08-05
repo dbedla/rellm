@@ -124,7 +124,7 @@ func (a *Agent) process(req *ResponsesApiReq) ([]json.RawMessage, string, *Respo
 			return req.Input, "", conversationResponse, errors.Join(ErrConversationElementConversion, errProviderRep)
 		}
 		if err != nil {
-			return req.Input, "", conversationResponse, errors.Join(ErrConversationElementConversion, err)
+			return req.Input, "", conversationResponse, err
 		}
 		if imageHandled || msg != "" {
 			return req.Input, msg, conversationResponse, nil
