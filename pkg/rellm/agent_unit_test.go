@@ -21,25 +21,3 @@ func TestPromptMessageToConversationMultimodal(t *testing.T) {
 	assert.Equal(t, "input_text", userMsg.Content[0].Type)
 	assert.Equal(t, prompt, userMsg.Content[0].Text)
 }
-
-func TestHandleMessageMultimodal(t *testing.T) {
-	item := OutputItem{
-		Type: "message",
-		Content: []MessagePart{
-			{Type: "text", Text: "Here is an image: "},
-			{Type: "image_url", ImageURL: &ImageURL{URL: "http://example.com/image.png"}},
-			{Type: "text", Text: "It is a nice image."},
-		},
-	}
-
-	elements, msgResp, err := handleMessage(item, Provider_LMStudio)
-	assert.NoError(t, err)
-	assert.Len(t, elements, 1)
-
-	var assistantMsg AssistantMessage
-	err = json.Unmarshal(elements[0], &assistantMsg)
-	assert.NoError(t, err)
-	assert.Equal(t, "assistant", assistantMsg.Role)
-	assert.Len(t, assistantMsg.Content, 3)
-	assert.Equal(t, "Here is an image:  It is a nice image.", msgResp)
-}

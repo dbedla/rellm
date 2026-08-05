@@ -76,7 +76,7 @@ func TestLMSAgentHiWithToolsNoCall(t *testing.T) {
 	assert.NoError(t, err, "failed to ask")
 
 	assert.NotNil(t, respMsg, "response message should not be nil")
-	assert.Equal(t, "Hello! How can I help you today?", respMsg, "response message should match")
+	assert.Equal(t, "Hello! How can I help you today?", respMsg)
 
 	promptReasoning, err := rellm.NewPromptBuilder().
 		WithMessage("what tools do you see?").
@@ -87,7 +87,7 @@ func TestLMSAgentHiWithToolsNoCall(t *testing.T) {
 
 	respMsg, err = agent.Execute(promptReasoning)
 	assert.NoError(t, err, "failed to ask with reasoning in conversation")
-	//assert.Equal(t, "Hello! How can I help you today?", respMsg, "response message should match")
+	assert.Equal(t, "I have access to the following tools:\n\n1.  **`GetDataFor`**: This tool allows me to retrieve specific data based on an input string you provide.\n2.  **`GetStaticData`**: This tool allows me to retrieve predefined static information.", respMsg)
 }
 
 //go:embed testdata/openrouter/hi_01_gemma_req.json
@@ -160,7 +160,7 @@ func TestOpenRouterAgentHiWithToolsNoCallGemma(t *testing.T) {
 
 	respMsg, err = agent.Execute(secondPrompt)
 	assert.NoError(t, err, "failed to ask with reasoning in conversation")
-	//assert.Equal(t, "I am doing well.", respMsg)
+	assert.Equal(t, "I have access to the following tools:\n\n1.  **`GetDataFor`**: This tool allows me to retrieve specific data based on an input string you provide.\n2.  **`GetStaticData`**: This tool allows me to retrieve pre-defined static data.", respMsg)
 }
 
 //go:embed testdata/openrouter/hi_gemini_01_req.json
@@ -233,7 +233,7 @@ func TestOpenRouterAgentHiWithToolsNoCallGemini(t *testing.T) {
 
 	respMsg, err = agent.Execute(secondPrompt)
 	assert.NoError(t, err, "failed to ask with reasoning in conversation")
-	//assert.Equal(t, "I am doing well.", respMsg)
+	assert.Equal(t, "I have access to the following tools:\n\n*   **`GetDataFor`**: This tool allows me to retrieve specific data based on an input you provide.\n*   **`GetStaticData`**: This tool allows me to retrieve general static information.\n\nHow can I help you use these today?", respMsg)
 }
 
 //go:embed testdata/pro_api_tool_A1_req.json
@@ -507,35 +507,6 @@ func buildTestProToolAgentOpenRouter(t *testing.T, model rellm.Model, maxToolsIt
 		WithResponsesApiEndpoint(orEndpoint).
 		WithProvider(rellm.Provider_OpenRouter).
 		WithModel(model).
-		WithClientHttpDo(mockHttp).
-		Build()
-	assert.NoError(t, err, "failed to create endpoint")
-
-	ta, err := rellm.NewAgentBuilder().
-		WithEndpoint(ep).
-		WithAgentName(agentName).
-		WithWorkspaceDir(workspace).
-		WithMaxToolsIterationWithoutReturnMessage(maxToolsIterationWithoutReturnMessage).
-		WithContinueConversation(false).
-		WithSystemMessage("You are a helpful assistant.").
-		WithToolset(&agentsutils.DataSrcToolset{}).
-		WithNoOpLogger().
-		Build()
-
-	assert.NoError(t, err, "failed to create agent")
-	return ta, mockHttp
-}
-
-func buildTestOpenRouterToolAgent(t *testing.T, maxToolsIterationWithoutReturnMessage uint64) (*rellm.Agent, *HttpDoMock) {
-	agentName := "TestOpenRouterAgent"
-	workspace := t.TempDir()
-	mockHttp := new(HttpDoMock)
-
-	lmsEndpoint := rellm.NewUniversalResponsesEndpoint(testBaseUrl, testPort, testResponsesApiEndpoint, nil)
-	ep, err := rellm.NewEndpointBuilder().
-		WithResponsesApiEndpoint(lmsEndpoint).
-		WithProvider(rellm.Provider_OpenRouter).
-		WithModel(rellm.Model_OpenRouter_Google_Gemini_3_1_Flash_Lite).
 		WithClientHttpDo(mockHttp).
 		Build()
 	assert.NoError(t, err, "failed to create endpoint")

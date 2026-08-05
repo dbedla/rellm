@@ -24,7 +24,7 @@ var goldenImageResp string
 
 // TODO fix it
 func TestAgentPromptToGetImage(t *testing.T) {
-	agent, httpDo := buildTestImageAgent(t, TestDefaultMaxToolsIterationWithoutReturnMessage, testImageHandler, testImageGenerationHandler)
+	agent, httpDo := buildTestImageAgent(t, TestDefaultMaxToolsIterationWithoutReturnMessage, testImageGenerationHandler)
 	defer httpDo.AssertExpectations(t)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
@@ -64,8 +64,8 @@ func TestAgentPromptToGetImage(t *testing.T) {
 }
 
 // TODO fix it
-func disable_TestAgentPromptToGetImage_handlerErr(t *testing.T) {
-	agent, httpDo := buildTestImageAgent(t, TestDefaultMaxToolsIterationWithoutReturnMessage, testImageHandlerAlwaysErr, testImageGenerationHandlerAlwaysErr)
+func TestAgentPromptToGetImage_handlerErr(t *testing.T) {
+	agent, httpDo := buildTestImageAgent(t, TestDefaultMaxToolsIterationWithoutReturnMessage, testImageGenerationHandlerAlwaysErr)
 	defer httpDo.AssertExpectations(t)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
@@ -95,16 +95,6 @@ func disable_TestAgentPromptToGetImage_handlerErr(t *testing.T) {
 	assert.Equal(t, "", respMsg, "response message should match")
 }
 
-// todo: remove it after migration
-func testImageHandler(image rellm.OutputItem) (string, error) {
-	return "image-stored-under-this-id", nil
-}
-
-// todo: remove it after migration
-func testImageHandlerAlwaysErr(image rellm.OutputItem) (string, error) {
-	return "", errors.New("test err in image handling error")
-}
-
 func testImageGenerationHandler(image *rellm.ImageGeneration) (string, error) {
 	return "image-stored-under-this-id", nil
 }
@@ -114,7 +104,6 @@ func testImageGenerationHandlerAlwaysErr(image *rellm.ImageGeneration) (string, 
 }
 
 func buildTestImageAgent(t *testing.T, maxToolsIterationWithoutReturnMessage uint64,
-	imageH rellm.HandleImage, /*todo: remove arg after migration*/
 	imageGenerationH rellm.HandleImageGeneration) (*rellm.Agent, *HttpDoMock) {
 
 	agentName := "TestImageAgent"
@@ -137,7 +126,6 @@ func buildTestImageAgent(t *testing.T, maxToolsIterationWithoutReturnMessage uin
 		WithMaxToolsIterationWithoutReturnMessage(maxToolsIterationWithoutReturnMessage).
 		WithContinueConversation(false).
 		WithSystemMessage("You are a helpful assistant.").
-		WithHandleImage(imageH).
 		WithHandleImageGeneration(imageGenerationH).
 		WithNoOpLogger().
 		Build()

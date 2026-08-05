@@ -18,35 +18,6 @@ type ReasoningConversationItem struct {
 	Format           string                 `json:"format,omitempty"`
 }
 
-func reasoningConversationElements(raw json.RawMessage, provider Provider) ([]json.RawMessage, error) {
-	switch provider {
-	case Provider_OpenRouter:
-		var reasoning ReasoningConversationItem
-		if err := json.Unmarshal(raw, &reasoning); err != nil {
-			return nil, err
-		}
-
-		if len(reasoning.Content) == 0 {
-			return nil, nil
-		}
-
-		reasoning.Signature = ""
-		reasoning.EncryptedContent = ""
-		reasoning.Format = ""
-
-		sanitized, err := json.Marshal(reasoning)
-		if err != nil {
-			return nil, err
-		}
-
-		return []json.RawMessage{sanitized}, nil
-	case Provider_LMStudio:
-		fallthrough
-	default:
-		return []json.RawMessage{raw}, nil
-	}
-}
-
 func normalizeOpenRouterReasoningItem(raw json.RawMessage) (json.RawMessage, error) {
 	var reasoning ReasoningConversationItem
 	if err := json.Unmarshal(raw, &reasoning); err != nil {

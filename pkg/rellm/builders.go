@@ -125,12 +125,6 @@ func (b *AgentBuilder) WithMaxToolsIterationWithoutReturnMessage(max uint64) *Ag
 	return b
 }
 
-// todo: remove it
-func (b *AgentBuilder) WithHandleImage(handleImage HandleImage) *AgentBuilder {
-	b.agent.handleImage = handleImage
-	return b
-}
-
 // HandleImageGeneration
 func (b *AgentBuilder) WithHandleImageGeneration(handleImage HandleImageGeneration) *AgentBuilder {
 	b.agent.handleImageGeneration = handleImage

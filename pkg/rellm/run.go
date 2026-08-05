@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func (a *Agent) run_newFlow(msg string, params promptParams) (string, error) {
+func (a *Agent) run(msg string, params promptParams) (string, error) {
 
 	if a.endpoint.provider == Provider_LMStudio {
 		a.llmProvider = LLMProvider{
@@ -40,7 +40,7 @@ func (a *Agent) run_newFlow(msg string, params promptParams) (string, error) {
 		req.Tools = a.toolset.BuildTools()
 	}
 
-	newConversation, msgRespFromLLM, _, err := a.process_newFlow(req)
+	newConversation, msgRespFromLLM, _, err := a.process(req)
 
 	if len(newConversation) > 0 {
 		a.inMemoryConversation = newConversation
@@ -55,7 +55,7 @@ func (a *Agent) run_newFlow(msg string, params promptParams) (string, error) {
 	return msgRespFromLLM, nil
 }
 
-func (a *Agent) process_newFlow(req *ResponsesApiReq) ([]json.RawMessage, string, *ResponsesApiResp, error) {
+func (a *Agent) process(req *ResponsesApiReq) ([]json.RawMessage, string, *ResponsesApiResp, error) {
 	for i := uint64(0); i < a.maxToolsIterationWithoutReturnMessage; i++ {
 		conversationResponse, err := a.endpoint.Post(req, a.inspectReq, a.inspectResp)
 		if err != nil {
@@ -108,7 +108,7 @@ func (a *Agent) dispatchConversation(conversation []ConversationElement) (string
 		//case *SystemMessage:
 
 		case *FunctionCall:
-			fResp, err := a.handleFunctionCall_newFlow(el)
+			fResp, err := a.handleFunctionCall(el)
 			if err != nil {
 				outputErr = errors.Join(outputErr, err)
 			}
@@ -127,7 +127,7 @@ func (a *Agent) dispatchConversation(conversation []ConversationElement) (string
 			continue
 
 		case *ImageGeneration:
-			err := a.handleImageGenerationCall_newFlow(el)
+			err := a.handleImageGenerationCall(el)
 			if err != nil {
 				outputErr = errors.Join(outputErr, err)
 			}
@@ -150,7 +150,7 @@ func messagesFromParts(parts []MessagePart) string {
 	return msg.String()
 }
 
-func (a *Agent) handleImageGenerationCall_newFlow(image *ImageGeneration) error {
+func (a *Agent) handleImageGenerationCall(image *ImageGeneration) error {
 
 	// todo: return image as message or something?
 	if a.handleImageGeneration == nil {
@@ -167,7 +167,7 @@ func (a *Agent) handleImageGenerationCall_newFlow(image *ImageGeneration) error 
 	return nil
 }
 
-func (a *Agent) handleFunctionCall_newFlow(fn *FunctionCall) (*FunctionCallResp, error) {
+func (a *Agent) handleFunctionCall(fn *FunctionCall) (*FunctionCallResp, error) {
 	if a.toolset == nil {
 		a.logger.Warn().Msgf("tool call (%s) but no tools provided)", fn.Name)
 		return nil, ErrNoToolsetButToolCallRequested
@@ -175,18 +175,39 @@ func (a *Agent) handleFunctionCall_newFlow(fn *FunctionCall) (*FunctionCallResp,
 
 	funcCallResp, ok := a.toolset.DispatchTools(fn.Name, fn.CallId, fn.Args)
 	if !ok {
-		funcCallResp = invalidFunctionCallResp_newFlow(fn)
+		funcCallResp = invalidFunctionCallResp(fn)
 		return &funcCallResp, errors.Join(ErrWhileDispatchToolCall, fmt.Errorf("unknown tool name (%s)", fn.Name))
 	}
 
 	return &funcCallResp, nil
 }
 
-func invalidFunctionCallResp_newFlow(fn *FunctionCall) FunctionCallResp {
+func invalidFunctionCallResp(fn *FunctionCall) FunctionCallResp {
 	return FunctionCallResp{
 		Type:   "function_call_output",
 		CallId: fn.CallId,
 		Output: "invalid function call (function not found)" + fn.Name,
 	}
 
+}
+
+func toBaseResponsesApiReq(params promptParams, model Model, provider Provider, conversation []json.RawMessage) *ResponsesApiReq {
+	normalizedConversation, err := normalizeConversationForProvider(provider, conversation)
+	if err != nil {
+		normalizedConversation = conversation
+	}
+
+	return &ResponsesApiReq{
+		Model:            string(model),
+		Input:            normalizedConversation,
+		Temperature:      params.Temperature,
+		Reasoning:        params.Reasoning,
+		MaxOutputTokens:  params.MaxOutputTokens,
+		TopP:             params.TopP,
+		PresencePenalty:  params.PresencePenalty,
+		FrequencyPenalty: params.FrequencyPenalty,
+		Seed:             params.Seed,
+		Logprobs:         params.Logprobs,
+		TopLogprobs:      params.TopLogprobs,
+	}
 }

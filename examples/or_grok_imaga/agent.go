@@ -40,13 +40,13 @@ func buildLBaseAgent(workspace string) (*rellm.Agent, error) {
 		WithContinueConversation(false).
 		WithSystemMessage(baseAgentSysPrompt).
 		WithWorkspaceLogger().
-		WithHandleImage(testHandleImage).
+		WithHandleImageGeneration(testHandleImage).
 		WithInspectEachRequest(agentsutils.InspectWithReqLog).
 		WithInspectEachResponse(agentsutils.InspectWithRespLog).
 		Build()
 }
 
-func testHandleImage(image rellm.OutputItem) (string, error) {
+func testHandleImage(image *rellm.ImageGeneration) (string, error) {
 	return "asd", nil
 }
 

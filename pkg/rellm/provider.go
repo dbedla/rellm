@@ -175,3 +175,15 @@ func parseImageGeneration(raw json.RawMessage) ConversationElement {
 	}
 	return &ImageGeneration{Id: ig.Id, Status: ig.Status, Result: ig.Result}
 }
+
+type ImageURL struct {
+	URL string `json:"url"`
+}
+
+type MessagePart struct {
+	Type        string        `json:"type"`
+	Text        string        `json:"text,omitempty"`
+	ImageURL    *ImageURL     `json:"image_url,omitempty"`
+	Annotations []interface{} `json:"annotations,omitempty"`
+	Logprobs    []interface{} `json:"logprobs,omitempty"`
+}
