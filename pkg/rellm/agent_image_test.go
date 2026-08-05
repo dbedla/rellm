@@ -22,7 +22,6 @@ var goldenImageReq string
 //go:embed testdata/image_resp.json
 var goldenImageResp string
 
-// TODO fix it
 func TestAgentPromptToGetImage(t *testing.T) {
 	agent, httpDo := buildTestImageAgent(t, TestDefaultMaxToolsIterationWithoutReturnMessage, testImageGenerationHandler)
 	defer httpDo.AssertExpectations(t)
@@ -63,7 +62,6 @@ func TestAgentPromptToGetImage(t *testing.T) {
 	assert.Equal(t, "ig_tmp_vqotwoa5eg", imageConversationRepresentation.Id)
 }
 
-// TODO fix it
 func TestAgentPromptToGetImage_handlerErr(t *testing.T) {
 	agent, httpDo := buildTestImageAgent(t, TestDefaultMaxToolsIterationWithoutReturnMessage, testImageGenerationHandlerAlwaysErr)
 	defer httpDo.AssertExpectations(t)

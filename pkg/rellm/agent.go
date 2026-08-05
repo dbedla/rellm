@@ -12,12 +12,6 @@ type Toolset interface {
 	DispatchTools(name string, callID string, arguments json.RawMessage) (FunctionCallResp, bool)
 }
 
-//type FunctionCallResp struct {
-//	Type   string `json:"type"`
-//	CallId string `json:"call_id"`
-//	Output string `json:"output"`
-//}
-
 type ImageGenerationConversationPlaceholder struct {
 	Type   string `json:"type"`
 	Id     string `json:"id"`
