@@ -13,7 +13,7 @@ var ErrWhileDispatchToolCall = fmt.Errorf("unable to dispatch tool call")
 var ErrInConversationResponse = fmt.Errorf("error in conversation response")
 var ErrMaxToolIterationsReached = fmt.Errorf("max tool iterations reached without a text response")
 var ErrModelReturnedUnproductiveOutput = fmt.Errorf("model returned output but no function call and no text message")
-var ErrUnknownResponseMessageFormat = fmt.Errorf("unknown message format")
+var ErrConversationElementConversion = fmt.Errorf("error converting conversation element")
 
 var ErrEmptyPrompt = fmt.Errorf("prompt message is empty")
 var ErrEmptyReasoningEffort = fmt.Errorf("reasoning effort cannot be empty")

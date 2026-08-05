@@ -26,11 +26,11 @@ func (a *Agent) run(msg string, params promptParams) (string, error) {
 
 	elements, err := a.provider.ToConversationElements(conversation)
 	if err != nil {
-		return "", errors.Join(ErrUnknownResponseMessageFormat, err)
+		return "", errors.Join(ErrConversationElementConversion, err)
 	}
 	wire, err := a.provider.ToProviderRepresentation(elements)
 	if err != nil {
-		return "", errors.Join(ErrUnknownResponseMessageFormat, err)
+		return "", errors.Join(ErrConversationElementConversion, err)
 	}
 
 	req := toBaseResponsesApiReq(params, a.provider.Model(), wire)
@@ -111,7 +111,7 @@ func (a *Agent) process(req *ResponsesApiReq) ([]json.RawMessage, string, *Respo
 
 		conversation, err := a.provider.ToConversationElements(conversationResponse.Output)
 		if err != nil {
-			return req.Input, "", conversationResponse, errors.Join(ErrUnknownResponseMessageFormat, err)
+			return req.Input, "", conversationResponse, errors.Join(ErrConversationElementConversion, err)
 		}
 		msg, fnCallsResp, imageHandled, err := a.dispatchConversation(conversation)
 		for _, fResp := range fnCallsResp {
@@ -120,10 +120,10 @@ func (a *Agent) process(req *ResponsesApiReq) ([]json.RawMessage, string, *Respo
 		raw, errProviderRep := a.provider.ToProviderRepresentation(conversation)
 		req.Input = append(req.Input, raw...)
 		if errProviderRep != nil {
-			return req.Input, "", conversationResponse, errors.Join(ErrUnknownResponseMessageFormat, errProviderRep)
+			return req.Input, "", conversationResponse, errors.Join(ErrConversationElementConversion, errProviderRep)
 		}
 		if err != nil {
-			return req.Input, "", conversationResponse, errors.Join(ErrUnknownResponseMessageFormat, err)
+			return req.Input, "", conversationResponse, errors.Join(ErrConversationElementConversion, err)
 		}
 		if imageHandled || msg != "" {
 			return req.Input, msg, conversationResponse, nil
@@ -139,7 +139,7 @@ func (a *Agent) process(req *ResponsesApiReq) ([]json.RawMessage, string, *Respo
 
 func (a *Agent) dispatchConversation(conversation []ConversationElement) (string, []*FunctionCallResp, bool, error) {
 
-	message := ""
+	var message strings.Builder
 	fnCallsResults := []*FunctionCallResp{}
 	imageHandled := false
 
@@ -160,7 +160,7 @@ func (a *Agent) dispatchConversation(conversation []ConversationElement) (string
 		//case *UserMessage:
 
 		case *AssistantMessage:
-			message += messagesFromParts(el.Content)
+			message.WriteString(messagesFromParts(el.Content))
 			continue
 
 		//case *FunctionCallResponse:
@@ -181,7 +181,7 @@ func (a *Agent) dispatchConversation(conversation []ConversationElement) (string
 		}
 	}
 
-	return message, fnCallsResults, imageHandled, outputErr
+	return message.String(), fnCallsResults, imageHandled, outputErr
 }
 
 func messagesFromParts(parts []MessagePart) string {
