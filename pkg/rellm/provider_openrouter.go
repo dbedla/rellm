@@ -171,13 +171,14 @@ func hasImageParts(parts []MessagePart) bool {
 	return false
 }
 
-// parseReasoning extracts reasoning text and summary from a raw item.
+// parseReasoning extracts reasoning text, summary, and provider continuation state.
 func (p *OpenRouterProvider) parseReasoning(raw json.RawMessage) ConversationElement {
 	var item struct {
-		Id      string                 `json:"id"`
-		Status  string                 `json:"status"`
-		Summary []string               `json:"summary"`
-		Content []ReasoningContentPart `json:"content"`
+		Id        string                 `json:"id"`
+		Status    string                 `json:"status"`
+		Summary   []string               `json:"summary"`
+		Content   []ReasoningContentPart `json:"content"`
+		Signature string                 `json:"signature"`
 	}
 	if err := json.Unmarshal(raw, &item); err != nil {
 		return nil // skip malformed items
@@ -191,10 +192,11 @@ func (p *OpenRouterProvider) parseReasoning(raw json.RawMessage) ConversationEle
 	}
 
 	return &Reasoning{
-		Id:      item.Id,
-		Status:  item.Status,
-		Summary: item.Summary,
-		Text:    joinTextParts(textParts),
+		Id:        item.Id,
+		Status:    item.Status,
+		Summary:   item.Summary,
+		Text:      joinTextParts(textParts),
+		Signature: item.Signature,
 	}
 }
 
@@ -269,9 +271,9 @@ func (p *OpenRouterProvider) ToProviderRepresentation(elements []ConversationEle
 			raw = append(raw, b)
 
 		case *Reasoning:
-			// OpenRouter drops reasoning items that carry no text (matches the
-			// observed wire format, which omits empty-content reasoning).
-			if el.Text == "" {
+			// A signature-only reasoning item carries provider continuation state
+			// and must be replayed even though it has no user-visible text.
+			if el.Text == "" && el.Signature == "" && len(el.Summary) == 0 {
 				continue
 			}
 			r := map[string]interface{}{
@@ -279,12 +281,16 @@ func (p *OpenRouterProvider) ToProviderRepresentation(elements []ConversationEle
 				"status": el.Status,
 				"type":   "reasoning",
 			}
-			// OpenRouter omits an empty summary (matches observed wire format).
-			if len(el.Summary) > 0 {
+			// Signed reasoning blocks are provider continuation state; preserve
+			// their summary field even when it is empty.
+			if len(el.Summary) > 0 || el.Signature != "" {
 				r["summary"] = el.Summary
 			}
 			if el.Text != "" {
 				r["content"] = []MessagePart{{Type: "reasoning_text", Text: el.Text}}
+			}
+			if el.Signature != "" {
+				r["signature"] = el.Signature
 			}
 			b, err := json.Marshal(r)
 			if err != nil {

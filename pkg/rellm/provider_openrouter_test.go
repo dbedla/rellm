@@ -108,7 +108,7 @@ func TestOpenRouterToConversationElements_FunctionCall(t *testing.T) {
 func TestOpenRouterReasoningContentRoundTrip(t *testing.T) {
 	p := &OpenRouterProvider{}
 	items := []json.RawMessage{
-		json.RawMessage(`{"id":"rs-1","type":"reasoning","status":"completed","content":[{"type":"reasoning_text","text":"first"},{"type":"reasoning_text","text":"second"}],"summary":[],"signature":"not-replayed","format":"unknown"}`),
+		json.RawMessage(`{"id":"rs-1","type":"reasoning","status":"completed","content":[{"type":"reasoning_text","text":"first"},{"type":"reasoning_text","text":"second"}],"summary":[],"signature":"replay-me"}`),
 	}
 
 	elements, err := p.ToConversationElements(items)
@@ -120,13 +120,29 @@ func TestOpenRouterReasoningContentRoundTrip(t *testing.T) {
 	assert.Equal(t, "rs-1", reasoning.Id)
 	assert.Equal(t, "completed", reasoning.Status)
 	assert.Equal(t, "first second", reasoning.Text)
-	assert.Empty(t, reasoning.Signature)
+	assert.Equal(t, "replay-me", reasoning.Signature)
 
 	wire, err := p.ToProviderRepresentation(elements)
 	assert.NoError(t, err)
 	assert.Len(t, wire, 1)
-	// OpenRouter omits an empty summary (matches observed wire format).
-	assert.JSONEq(t, `{"id":"rs-1","type":"reasoning","status":"completed","content":[{"type":"reasoning_text","text":"first second"}]}`, string(wire[0]))
+	// Signed reasoning blocks retain their empty summary and signature.
+	assert.JSONEq(t, `{"id":"rs-1","type":"reasoning","status":"completed","content":[{"type":"reasoning_text","text":"first second"}],"summary":[],"signature":"replay-me"}`, string(wire[0]))
+}
+
+func TestOpenRouterReasoningSignatureOnlyRoundTrip(t *testing.T) {
+	p := &OpenRouterProvider{}
+	items := []json.RawMessage{
+		json.RawMessage(`{"id":"rs-1","type":"reasoning","status":"completed","summary":[],"signature":"replay-me"}`),
+	}
+
+	elements, err := p.ToConversationElements(items)
+	assert.NoError(t, err)
+	assert.Len(t, elements, 1)
+
+	wire, err := p.ToProviderRepresentation(elements)
+	assert.NoError(t, err)
+	assert.Len(t, wire, 1)
+	assert.JSONEq(t, string(items[0]), string(wire[0]))
 }
 
 func TestOpenRouterToProviderRepresentation_AssistantMessage(t *testing.T) {

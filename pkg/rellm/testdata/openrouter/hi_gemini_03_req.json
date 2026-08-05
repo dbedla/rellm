@@ -24,6 +24,13 @@
       "content": "Hello! How can I help you today?"
     },
     {
+      "id": "rs_tmp_g577rkkq6xk",
+      "type": "reasoning",
+      "status": "completed",
+      "summary": [],
+      "signature": "AY89a1/CRg/lzVTzjdrPSlp4xvpwSNRJ6GQgzIy0AdFabYY8ct0mowOpMy9YwfC9FQoq9+E+QP99mGKsqPlikHRK4lAz3mxLG34Ng6uDXfs6IRY6HW9hEgzTtLXIh0MizOWUFFQM7UWqpKKBlzXMhj/cwpaCWaTDCUQ7UThpfB2ZrBVlIdgPJw68hcZPArVVLTjWB487NPU4pcUQgI3ldsmPRVsDDRpJJ/d1AxQHMNqFZt1VrgbLvIcmHDsoAxGtjBTaQvoGF8OzNRf1XeLHG6gsR9a5ejyMywU/dHbEbYMgMydpOHmjXf+qGtoSk6N0rRpaubKOSAVK8GWLhYOhXBgaXXs1Wm0oFV+BkUYOE5su57lBM0T4qFcGwOJg2q9ttW5DkYlKfGUPGos1uCw8duT3+PGI+NY5qVrxZTCSDNU8KrZDV3xqJmUXNLQlLm5gJyN73BWFQRmgRMlHPkWtdP9hiah0p+nIf/nF95T9z+tWN+ID/KTa8g4vljLG3SccP5eyvXULig0RIePpvVZteIEwPtD60DQ0mo+wqI0OHlCR8sFSoB3wtaVetqox3EBLrEF0eMd/FWSt0cl0iEhhXwjiYy77cpILPXYu27kURmu1hsmSI+G0EP2Q/ZcAR2roY2bJ80HCINhDQAwXoRVhMS+wsuonaHOy22Y1J4MAx+apHlpZkpzTInC5qSd3tsqLU0vu4udH3dz3KpWYVR4="
+    },
+    {
       "type": "message",
       "role": "user",
       "content": [
