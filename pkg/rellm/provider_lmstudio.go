@@ -6,9 +6,50 @@ import (
 	"strings"
 )
 
-type LMSConversationConverter struct{}
+// LMStudioProvider talks to a local LM Studio Responses API endpoint.
+type LMStudioProvider struct {
+	model  Model
+	url    string
+	header http.Header
+	client ClientHttpDo
+}
 
-func (l *LMSConversationConverter) ToConversationElements(items []json.RawMessage) ([]ConversationElement, error) {
+// NewLMStudioProvider builds an LM Studio provider. model, host and port are required.
+// The HTTP client defaults to http.Client{}; override with WithHTTPClient.
+func NewLMStudioProvider(model Model, host, port string) (*LMStudioProvider, error) {
+	if model == "" {
+		return nil, ErrEndpointMissingModelName
+	}
+	if host == "" {
+		return nil, ErrEndpointMissingHost
+	}
+	if port == "" {
+		return nil, ErrEndpointMissingPort
+	}
+	h := make(http.Header)
+	h.Set("Content-Type", "application/json")
+	return &LMStudioProvider{
+		model:  model,
+		url:    host + ":" + port + "/v1/responses",
+		header: h,
+		client: &http.Client{},
+	}, nil
+}
+
+// WithHTTPClient injects a custom HTTP client (e.g. a test fake).
+func (p *LMStudioProvider) WithHTTPClient(c ClientHttpDo) *LMStudioProvider {
+	p.client = c
+	return p
+}
+
+func (p *LMStudioProvider) Model() Model        { return p.model }
+func (p *LMStudioProvider) URL() string         { return p.url }
+func (p *LMStudioProvider) Header() http.Header { return p.header }
+func (p *LMStudioProvider) Do(r *http.Request) (*http.Response, error) {
+	return p.client.Do(r)
+}
+
+func (p *LMStudioProvider) ToConversationElements(items []json.RawMessage) ([]ConversationElement, error) {
 	elements := make([]ConversationElement, 0, len(items))
 	for _, raw := range items {
 		var msg struct {
@@ -34,7 +75,7 @@ func (l *LMSConversationConverter) ToConversationElements(items []json.RawMessag
 			})
 
 		case "reasoning":
-			elements = append(elements, l.parseReasoning(raw))
+			elements = append(elements, p.parseReasoning(raw))
 
 		case "image_generation_call":
 			elements = append(elements, parseImageGeneration(raw))
@@ -74,7 +115,7 @@ func (l *LMSConversationConverter) ToConversationElements(items []json.RawMessag
 }
 
 // parseReasoning extracts reasoning text and summary from a raw item.
-func (l *LMSConversationConverter) parseReasoning(raw json.RawMessage) ConversationElement {
+func (p *LMStudioProvider) parseReasoning(raw json.RawMessage) ConversationElement {
 	r := &Reasoning{}
 
 	// Extract id, status, summary from top level
@@ -109,24 +150,9 @@ func (l *LMSConversationConverter) parseReasoning(raw json.RawMessage) Conversat
 	return r
 }
 
-// joinTextParts joins text parts with spaces.
-func joinTextParts(parts []string) string {
-	var sb strings.Builder
-	for i, p := range parts {
-		if p == "" {
-			continue
-		}
-		if i > 0 && sb.Len() > 0 {
-			sb.WriteByte(' ')
-		}
-		sb.WriteString(p)
-	}
-	return sb.String()
-}
-
 // marshalMessage serializes any role-typed message for LM Studio: content is
 // always a structured array (LM Studio does not use the "type":"message" field).
-func (l *LMSConversationConverter) marshalMessage(mc messageContent) (json.RawMessage, error) {
+func (p *LMStudioProvider) marshalMessage(mc messageContent) (json.RawMessage, error) {
 	payload := map[string]interface{}{
 		"role": mc.Role,
 	}
@@ -144,7 +170,7 @@ func (l *LMSConversationConverter) marshalMessage(mc messageContent) (json.RawMe
 	return json.Marshal(payload)
 }
 
-func (l *LMSConversationConverter) ToProviderRepresentation(elements []ConversationElement) ([]json.RawMessage, error) {
+func (p *LMStudioProvider) ToProviderRepresentation(elements []ConversationElement) ([]json.RawMessage, error) {
 	if len(elements) == 0 {
 		return nil, nil
 	}
@@ -152,21 +178,21 @@ func (l *LMSConversationConverter) ToProviderRepresentation(elements []Conversat
 	for _, e := range elements {
 		switch el := e.(type) {
 		case *UserMessage:
-			b, err := l.marshalMessage(el.messageContent)
+			b, err := p.marshalMessage(el.messageContent)
 			if err != nil {
 				return nil, err
 			}
 			raw = append(raw, b)
 
 		case *AssistantMessage:
-			b, err := l.marshalMessage(el.messageContent)
+			b, err := p.marshalMessage(el.messageContent)
 			if err != nil {
 				return nil, err
 			}
 			raw = append(raw, b)
 
 		case *SystemMessage:
-			b, err := l.marshalMessage(el.messageContent)
+			b, err := p.marshalMessage(el.messageContent)
 			if err != nil {
 				return nil, err
 			}
@@ -243,23 +269,19 @@ func (l *LMSConversationConverter) ToProviderRepresentation(elements []Conversat
 	return raw, nil
 }
 
-var _ ConversationConverter = &LMSConversationConverter{}
+var _ Provider = &LMStudioProvider{}
 
-// NewLMStudioEndpoint returns a configured endpoint for LM Studio. All arguments are required.
-func NewLMStudioEndpoint(model Model, host string, port string) (*Endpoint, error) {
-	if model == "" {
-		return nil, ErrEndpointMissingModelName
+// joinTextParts joins text parts with spaces.
+func joinTextParts(parts []string) string {
+	var sb strings.Builder
+	for i, p := range parts {
+		if p == "" {
+			continue
+		}
+		if i > 0 && sb.Len() > 0 {
+			sb.WriteByte(' ')
+		}
+		sb.WriteString(p)
 	}
-	if host == "" {
-		return nil, ErrEndpointMissingHost
-	}
-	if port == "" {
-		return nil, ErrEndpointMissingPort
-	}
-	return &Endpoint{
-		model:    model,
-		provider: Provider_LMStudio,
-		rae:      &UniversalResponsesEndpoint{baseUrl: host, port: port, responsesApiEndpoint: "/v1/responses"},
-		client:   &http.Client{},
-	}, nil
+	return sb.String()
 }

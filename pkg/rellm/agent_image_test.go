@@ -110,17 +110,12 @@ func buildTestImageAgent(t *testing.T, maxToolsIterationWithoutReturnMessage uin
 	workspace := t.TempDir()
 	mockHttp := new(HttpDoMock)
 
-	lmsEndpoint := rellm.NewUniversalResponsesEndpoint(testBaseUrl, testPort, testResponsesApiEndpoint, nil)
-	ep, err := rellm.NewEndpointBuilder().
-		WithResponsesApiEndpoint(lmsEndpoint).
-		WithProvider(rellm.Provider_OpenRouter).
-		WithModel(rellm.Model("x-ai/grok-imagine-image-quality")).
-		WithClientHttpDo(mockHttp).
-		Build()
-	assert.NoError(t, err, "failed to create endpoint")
+	p, err := rellm.NewOpenRouterProvider("test-key", rellm.Model("x-ai/grok-imagine-image-quality"))
+	assert.NoError(t, err, "failed to create provider")
+	p.WithHTTPClient(mockHttp).WithURL(testBaseUrl + ":" + testPort + testResponsesApiEndpoint)
 
 	ta, err := rellm.NewAgentBuilder().
-		WithEndpoint(ep).
+		WithProvider(p).
 		WithAgentName(agentName).
 		WithWorkspaceDir(workspace).
 		WithMaxToolsIterationWithoutReturnMessage(maxToolsIterationWithoutReturnMessage).

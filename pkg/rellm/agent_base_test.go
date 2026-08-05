@@ -173,17 +173,12 @@ func buildTestAgent(t *testing.T) (*rellm.Agent, *HttpDoMock) {
 	workspace := t.TempDir()
 	mockHttp := new(HttpDoMock)
 
-	lmsEndpoint := rellm.NewUniversalResponsesEndpoint(testBaseUrl, testPort, testResponsesApiEndpoint, nil)
-	ep, err := rellm.NewEndpointBuilder().
-		WithResponsesApiEndpoint(lmsEndpoint).
-		WithProvider(rellm.Provider_LMStudio).
-		WithModel(rellm.Model_LMS_Google_Gemma_4_26B_A4B).
-		WithClientHttpDo(mockHttp).
-		Build()
-	assert.NoError(t, err, "failed to create endpoint")
+	p, err := rellm.NewLMStudioProvider(rellm.Model_LMS_Google_Gemma_4_26B_A4B, testBaseUrl, testPort)
+	assert.NoError(t, err, "failed to create provider")
+	p.WithHTTPClient(mockHttp)
 
 	ta, err := rellm.NewAgentBuilder().
-		WithEndpoint(ep).
+		WithProvider(p).
 		WithAgentName(agentName).
 		WithWorkspaceDir(workspace).
 		WithMaxToolsIterationWithoutReturnMessage(20).

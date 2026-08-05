@@ -12,7 +12,7 @@ import (
 var goldenLMStudioRequest []byte
 
 func TestLMStudioToConversationElements_UserMessage(t *testing.T) {
-	p := &LMSConversationConverter{}
+	p := &LMStudioProvider{}
 	items := []json.RawMessage{
 		json.RawMessage(`{"role":"user","content":[{"type":"input_text","text":"hi"}]}`),
 	}
@@ -27,7 +27,7 @@ func TestLMStudioToConversationElements_UserMessage(t *testing.T) {
 }
 
 func TestLMStudioToConversationElements_ImageGeneration(t *testing.T) {
-	p := &LMSConversationConverter{}
+	p := &LMStudioProvider{}
 	items := []json.RawMessage{
 		json.RawMessage(`{"id":"ig_tmp_vqotwoa5eg","type":"image_generation_call","status":"completed","result":"data:image/jpeg;base64,/9j/4AAQ"}`),
 	}
@@ -43,7 +43,7 @@ func TestLMStudioToConversationElements_ImageGeneration(t *testing.T) {
 }
 
 func TestLMStudioToProviderRepresentation_ImageGeneration(t *testing.T) {
-	p := &LMSConversationConverter{}
+	p := &LMStudioProvider{}
 	ig := ImageGeneration{Id: "ig_tmp_vqotwoa5eg", Status: "completed", Result: "data:image/jpeg;base64,/9j/4AAQ"}
 	raw, err := p.ToProviderRepresentation([]ConversationElement{&ig})
 	assert.NoError(t, err)
@@ -64,7 +64,7 @@ func TestLMStudioToProviderRepresentation_ImageGeneration(t *testing.T) {
 }
 
 func TestLMStudioToProviderRepresentation_UserMessage(t *testing.T) {
-	p := &LMSConversationConverter{}
+	p := &LMStudioProvider{}
 	msg := UserMessage{messageContent{Role: "user", Content: []MessagePart{{Type: "input_text", Text: "hi"}}}}
 	raw, err := p.ToProviderRepresentation([]ConversationElement{&msg})
 	assert.NoError(t, err)
@@ -77,37 +77,37 @@ func TestLMStudioToProviderRepresentation_UserMessage(t *testing.T) {
 }
 
 func TestLMStudioToProviderRepresentation_EmptyElements(t *testing.T) {
-	p := &LMSConversationConverter{}
+	p := &LMStudioProvider{}
 	raw, err := p.ToProviderRepresentation(nil)
 	assert.NoError(t, err)
 	assert.Nil(t, raw)
 }
 
-func TestNewLMStudioEndpoint_ValidArgs(t *testing.T) {
-	lm, err := NewLMStudioEndpoint(Model("local/model"), "http://localhost", "1234")
+func TestNewLMStudioProvider_ValidArgs(t *testing.T) {
+	lm, err := NewLMStudioProvider(Model("local/model"), "http://localhost", "1234")
 	assert.NoError(t, err)
-	assert.Equal(t, Provider_LMStudio, lm.provider)
-	assert.Equal(t, "http://localhost:1234/v1/responses", lm.rae.GetUrl())
+	assert.Equal(t, Model("local/model"), lm.Model())
+	assert.Equal(t, "http://localhost:1234/v1/responses", lm.URL())
 }
 
-func TestNewLMStudioEndpoint_RemoteHost(t *testing.T) {
-	lm, err := NewLMStudioEndpoint(Model("local/model"), "http://192.168.1.50", "1234")
+func TestNewLMStudioProvider_RemoteHost(t *testing.T) {
+	lm, err := NewLMStudioProvider(Model("local/model"), "http://192.168.1.50", "1234")
 	assert.NoError(t, err)
-	assert.Equal(t, "http://192.168.1.50:1234/v1/responses", lm.rae.GetUrl())
+	assert.Equal(t, "http://192.168.1.50:1234/v1/responses", lm.URL())
 }
 
-func TestNewLMStudioEndpoint_MissingModel(t *testing.T) {
-	_, err := NewLMStudioEndpoint("", "localhost", "1234")
+func TestNewLMStudioProvider_MissingModel(t *testing.T) {
+	_, err := NewLMStudioProvider("", "localhost", "1234")
 	assert.ErrorIs(t, err, ErrEndpointMissingModelName)
 }
 
-func TestNewLMStudioEndpoint_MissingHost(t *testing.T) {
-	_, err := NewLMStudioEndpoint(Model("local/model"), "", "1234")
+func TestNewLMStudioProvider_MissingHost(t *testing.T) {
+	_, err := NewLMStudioProvider(Model("local/model"), "", "1234")
 	assert.ErrorIs(t, err, ErrEndpointMissingHost)
 }
 
-func TestNewLMStudioEndpoint_MissingPort(t *testing.T) {
-	_, err := NewLMStudioEndpoint(Model("local/model"), "localhost", "")
+func TestNewLMStudioProvider_MissingPort(t *testing.T) {
+	_, err := NewLMStudioProvider(Model("local/model"), "localhost", "")
 	assert.ErrorIs(t, err, ErrEndpointMissingPort)
 }
 
@@ -118,7 +118,7 @@ func TestLMStudioRoundTrip_FromFile(t *testing.T) {
 	err := json.Unmarshal(goldenLMStudioRequest, &req)
 	assert.NoError(t, err)
 
-	p := &LMSConversationConverter{}
+	p := &LMStudioProvider{}
 	elements, err := p.ToConversationElements(req.Input)
 	assert.NoError(t, err)
 	assert.Len(t, elements, len(req.Input))

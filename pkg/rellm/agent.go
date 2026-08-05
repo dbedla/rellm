@@ -26,7 +26,7 @@ type ImageGenerationConversationPlaceholder struct {
 }
 
 type Agent struct {
-	endpoint                              *Endpoint
+	provider                              Provider
 	toolset                               Toolset
 	logger                                *zerolog.Logger
 	conversationStorage                   *conversation_storage.ConversationStorage
@@ -36,8 +36,6 @@ type Agent struct {
 	inMemoryConversation                  []json.RawMessage
 	continueConversation                  bool
 	maxToolsIterationWithoutReturnMessage uint64
-
-	llmProvider LLMProvider
 
 	handleImageGeneration HandleImageGeneration
 	inspectReq            InspectEachRequest

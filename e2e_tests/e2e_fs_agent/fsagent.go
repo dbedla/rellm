@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 	"path/filepath"
 	"rellm/pkg/agentsutils"
@@ -16,7 +15,7 @@ const (
 	fsAgentSysPrompt = `You are a helpful assistant, with limited access to the file system.`
 )
 
-func buildFSAgent(ep *rellm.Endpoint, dirs agentsDirs) (*rellm.Agent, error) {
+func buildFSAgent(p rellm.Provider, dirs agentsDirs) (*rellm.Agent, error) {
 
 	agentName := "FSAgent"
 
@@ -26,7 +25,7 @@ func buildFSAgent(ep *rellm.Endpoint, dirs agentsDirs) (*rellm.Agent, error) {
 	}
 
 	return rellm.NewAgentBuilder().
-		WithEndpoint(ep).
+		WithProvider(p).
 		WithAgentName(agentName).
 		WithWorkspaceDir(dirs.logDir).
 		WithMaxToolsIterationWithoutReturnMessage(20).
@@ -39,38 +38,11 @@ func buildFSAgent(ep *rellm.Endpoint, dirs agentsDirs) (*rellm.Agent, error) {
 		Build()
 }
 
-func buildLmsEndpoint() (*rellm.Endpoint, error) {
-	lmsEndpoint := rellm.NewUniversalResponsesEndpoint("http://127.0.0.1", "1234", "/v1/responses", nil)
-	ep, err := rellm.NewEndpointBuilder().
-		WithResponsesApiEndpoint(lmsEndpoint).
-		WithProvider(rellm.Provider_LMStudio).
-		WithModel(rellm.Model_LMS_Google_Gemma_4_26B_A4B).
-		WithDefaultHttpClient().
-		Build()
-	if err != nil {
-		return nil, err
-	}
-	return ep, nil
+func buildLmsProvider() (rellm.Provider, error) {
+	return rellm.NewLMStudioProvider(rellm.Model_LMS_Google_Gemma_4_26B_A4B, "http://127.0.0.1", "1234")
 }
 
-func buildOpenRouterEndpoint() (*rellm.Endpoint, error) {
-	orEndpoint, err := newOpenRouterEndpoint()
-	if err != nil {
-		return nil, err
-	}
-	ep, err := rellm.NewEndpointBuilder().
-		WithResponsesApiEndpoint(orEndpoint).
-		WithProvider(rellm.Provider_OpenRouter).
-		WithModel(rellm.Model_OpenRouter_Google_Gemini_3_1_Flash_Lite).
-		WithDefaultHttpClient().
-		Build()
-	if err != nil {
-		return nil, err
-	}
-	return ep, nil
-}
-
-func newOpenRouterEndpoint() (rellm.ResponsesApiEndpoint, error) {
+func buildOpenRouterProvider() (rellm.Provider, error) {
 	err := godotenv.Load()
 	if err != nil {
 		return nil, fmt.Errorf("cannot load .env: %w", err)
@@ -81,12 +53,7 @@ func newOpenRouterEndpoint() (rellm.ResponsesApiEndpoint, error) {
 		return nil, fmt.Errorf("missing apikey for OPENROUTER_API_KEY")
 	}
 
-	header := make(http.Header)
-	header.Set("Content-Type", "application/json")
-	header.Set("Authorization", "Bearer "+apiKey)
-
-	return rellm.NewUniversalResponsesEndpoint("https://openrouter.ai", "", "/api/v1/responses", header), nil
-
+	return rellm.NewOpenRouterProvider(apiKey, rellm.Model_OpenRouter_Google_Gemini_3_1_Flash_Lite)
 }
 
 func buildFSToolset(readOnlyDir, outputDir string) (*agentsutils.FSToolset, error) {
@@ -144,7 +111,7 @@ func setup(fl flag) (agentsDirs, *rellm.Agent, error) {
 		return agentsDirs{}, nil, err
 	}
 
-	ep, err := endpointForProvider(fl)
+	ep, err := providerForFlag(fl)
 	if err != nil {
 		return agentsDirs{}, nil, err
 	}
@@ -157,12 +124,12 @@ func setup(fl flag) (agentsDirs, *rellm.Agent, error) {
 	return dirs, fsAgent, nil
 }
 
-func endpointForProvider(fl flag) (*rellm.Endpoint, error) {
+func providerForFlag(fl flag) (rellm.Provider, error) {
 	switch fl {
 	case flag_LMS:
-		return buildLmsEndpoint()
+		return buildLmsProvider()
 	case flag_OpenRouter:
-		return buildOpenRouterEndpoint()
+		return buildOpenRouterProvider()
 	default:
 		return nil, fmt.Errorf("unknown flag provided: %s", fl)
 	}

@@ -1,27 +1,17 @@
 package rellm
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
+	"net/url"
 	"strings"
 )
 
 func (a *Agent) run(msg string, params promptParams) (string, error) {
-
-	if a.endpoint.provider == Provider_LMStudio {
-		a.llmProvider = LLMProvider{
-			cc:       &LMSConversationConverter{},
-			endpoint: a.endpoint,
-		}
-	}
-	if a.endpoint.provider == Provider_OpenRouter {
-		a.llmProvider = LLMProvider{
-			cc:       &OpenRouterConversationConverter{},
-			endpoint: a.endpoint,
-		}
-	}
-
 	a.logger.Info().Msgf("question to agent: %s", string(msg))
 	defer a.logger.Info().Msg("question answered")
 
@@ -34,7 +24,16 @@ func (a *Agent) run(msg string, params promptParams) (string, error) {
 
 	conversation = append(conversation, userMsg)
 
-	req := toBaseResponsesApiReq(params, a.endpoint.model, a.endpoint.provider, conversation)
+	elements, err := a.provider.ToConversationElements(conversation)
+	if err != nil {
+		return "", errors.Join(ErrUnknownResponseMessageFormat, err)
+	}
+	wire, err := a.provider.ToProviderRepresentation(elements)
+	if err != nil {
+		return "", errors.Join(ErrUnknownResponseMessageFormat, err)
+	}
+
+	req := toBaseResponsesApiReq(params, a.provider.Model(), wire)
 
 	if a.toolset != nil {
 		req.Tools = a.toolset.BuildTools()
@@ -55,9 +54,52 @@ func (a *Agent) run(msg string, params promptParams) (string, error) {
 	return msgRespFromLLM, nil
 }
 
+func (a *Agent) post(req *ResponsesApiReq) (*ResponsesApiResp, error) {
+	if a.inspectReq != nil {
+		a.inspectReq(req)
+	}
+
+	body, err := json.Marshal(req)
+	if err != nil {
+		return nil, fmt.Errorf("marshal request: %w", err)
+	}
+
+	apiUrl, err := url.Parse(a.provider.URL())
+	if err != nil {
+		return nil, err
+	}
+
+	httpReq := &http.Request{
+		Method: "POST",
+		Header: a.provider.Header(),
+		URL:    apiUrl,
+		Body:   io.NopCloser(bytes.NewReader(body)),
+	}
+
+	resp, err := a.provider.Do(httpReq)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp == nil {
+		return nil, errors.New("nil response")
+	}
+
+	if resp.Body == nil {
+		return nil, errors.New("empty response body")
+	}
+	defer closeAndLogIfError_DEFER_ME(resp.Body)
+	rawBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return parseResponsesApiResponse(resp, rawBody, apiUrl.String(), a.inspectResp)
+}
+
 func (a *Agent) process(req *ResponsesApiReq) ([]json.RawMessage, string, *ResponsesApiResp, error) {
 	for i := uint64(0); i < a.maxToolsIterationWithoutReturnMessage; i++ {
-		conversationResponse, err := a.endpoint.Post(req, a.inspectReq, a.inspectResp)
+		conversationResponse, err := a.post(req)
 		if err != nil {
 			return nil, "", conversationResponse, err
 		}
@@ -67,7 +109,7 @@ func (a *Agent) process(req *ResponsesApiReq) ([]json.RawMessage, string, *Respo
 			return nil, "", conversationResponse, errors.Join(ErrInConversationResponse, fmt.Errorf("err msg: %v", conversationResponse.Error.Message))
 		}
 
-		conversation, err := a.llmProvider.cc.ToConversationElements(conversationResponse.Output)
+		conversation, err := a.provider.ToConversationElements(conversationResponse.Output)
 		if err != nil {
 			return req.Input, "", conversationResponse, errors.Join(ErrUnknownResponseMessageFormat, err)
 		}
@@ -75,7 +117,7 @@ func (a *Agent) process(req *ResponsesApiReq) ([]json.RawMessage, string, *Respo
 		for _, fResp := range fnCallsResp {
 			conversation = append(conversation, fResp)
 		}
-		raw, errProviderRep := a.llmProvider.cc.ToProviderRepresentation(conversation)
+		raw, errProviderRep := a.provider.ToProviderRepresentation(conversation)
 		req.Input = append(req.Input, raw...)
 		if errProviderRep != nil {
 			return req.Input, "", conversationResponse, errors.Join(ErrUnknownResponseMessageFormat, errProviderRep)
@@ -191,15 +233,10 @@ func invalidFunctionCallResp(fn *FunctionCall) FunctionCallResp {
 
 }
 
-func toBaseResponsesApiReq(params promptParams, model Model, provider Provider, conversation []json.RawMessage) *ResponsesApiReq {
-	normalizedConversation, err := normalizeConversationForProvider(provider, conversation)
-	if err != nil {
-		normalizedConversation = conversation
-	}
-
+func toBaseResponsesApiReq(params promptParams, model Model, conversation []json.RawMessage) *ResponsesApiReq {
 	return &ResponsesApiReq{
 		Model:            string(model),
-		Input:            normalizedConversation,
+		Input:            conversation,
 		Temperature:      params.Temperature,
 		Reasoning:        params.Reasoning,
 		MaxOutputTokens:  params.MaxOutputTokens,

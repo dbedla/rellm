@@ -6,9 +6,56 @@ import (
 	"net/http"
 )
 
-type OpenRouterConversationConverter struct{}
+// OpenRouterProvider talks to the OpenRouter Responses API.
+type OpenRouterProvider struct {
+	model  Model
+	url    string
+	header http.Header
+	client ClientHttpDo
+}
 
-func (o *OpenRouterConversationConverter) ToConversationElements(items []json.RawMessage) ([]ConversationElement, error) {
+const openRouterDefaultURL = "https://openrouter.ai/api/v1/responses"
+
+// NewOpenRouterProvider builds an OpenRouter provider. apiKey and model are required.
+// The HTTP client defaults to http.Client{}; override with WithHTTPClient.
+func NewOpenRouterProvider(apiKey string, model Model) (*OpenRouterProvider, error) {
+	if model == "" {
+		return nil, ErrEndpointMissingModelName
+	}
+	if apiKey == "" {
+		return nil, fmt.Errorf("missing API key for OpenRouter provider")
+	}
+	h := make(http.Header)
+	h.Set("Content-Type", "application/json")
+	h.Set("Authorization", "Bearer "+apiKey)
+	return &OpenRouterProvider{
+		model:  model,
+		url:    openRouterDefaultURL,
+		header: h,
+		client: &http.Client{},
+	}, nil
+}
+
+// WithHTTPClient injects a custom HTTP client (e.g. a test fake).
+func (p *OpenRouterProvider) WithHTTPClient(c ClientHttpDo) *OpenRouterProvider {
+	p.client = c
+	return p
+}
+
+// WithURL overrides the endpoint URL (used by tests / self-hosted gateways).
+func (p *OpenRouterProvider) WithURL(u string) *OpenRouterProvider {
+	p.url = u
+	return p
+}
+
+func (p *OpenRouterProvider) Model() Model        { return p.model }
+func (p *OpenRouterProvider) URL() string         { return p.url }
+func (p *OpenRouterProvider) Header() http.Header { return p.header }
+func (p *OpenRouterProvider) Do(r *http.Request) (*http.Response, error) {
+	return p.client.Do(r)
+}
+
+func (p *OpenRouterProvider) ToConversationElements(items []json.RawMessage) ([]ConversationElement, error) {
 	elements := make([]ConversationElement, 0, len(items))
 	for _, raw := range items {
 		var msg struct {
@@ -53,10 +100,10 @@ func (o *OpenRouterConversationConverter) ToConversationElements(items []json.Ra
 			}
 
 		case "message", "": // messages often lack an explicit type field; infer from role
-			elements = append(elements, o.parseMessage(raw, msg.Id, msg.Role, msg.Content))
+			elements = append(elements, p.parseMessage(raw, msg.Id, msg.Role, msg.Content))
 
 		case "reasoning":
-			elements = append(elements, o.parseReasoning(raw))
+			elements = append(elements, p.parseReasoning(raw))
 
 		case "image_generation_call":
 			elements = append(elements, parseImageGeneration(raw))
@@ -70,7 +117,7 @@ func (o *OpenRouterConversationConverter) ToConversationElements(items []json.Ra
 
 // parseMessage parses a message item into a role-typed message. Content is
 // normalized to []MessagePart; ToProviderRepresentation re-serializes per the type's shape rule.
-func (o *OpenRouterConversationConverter) parseMessage(raw json.RawMessage, id, role string, content json.RawMessage) ConversationElement {
+func (p *OpenRouterProvider) parseMessage(raw json.RawMessage, id, role string, content json.RawMessage) ConversationElement {
 	var statusInfo struct {
 		Status string `json:"status"`
 	}
@@ -90,8 +137,9 @@ func (o *OpenRouterConversationConverter) parseMessage(raw json.RawMessage, id, 
 }
 
 // marshalTextMessage serializes an assistant/system message for OpenRouter:
-// text-only content becomes a string, multimodal stays an array.
-func marshalTextMessage(mc messageContent) (json.RawMessage, error) {
+// text-only content becomes a string (matching the observed wire format,
+// which stringifies output_text parts too); multimodal stays an array.
+func (p *OpenRouterProvider) marshalTextMessage(mc messageContent) (json.RawMessage, error) {
 	payload := map[string]interface{}{
 		"role": mc.Role,
 		"type": "message",
@@ -104,16 +152,27 @@ func marshalTextMessage(mc messageContent) (json.RawMessage, error) {
 	}
 	if len(mc.Content) == 0 {
 		payload["content"] = ""
-	} else if isSimpleTextContent(mc.Content) {
-		payload["content"] = TextFromContent(mc.Content)
-	} else {
+	} else if hasImageParts(mc.Content) {
 		payload["content"] = mc.Content
+	} else {
+		payload["content"] = TextFromContent(mc.Content)
 	}
 	return json.Marshal(payload)
 }
 
+// hasImageParts reports whether any part carries an image (multimodal content
+// that must stay a structured array).
+func hasImageParts(parts []MessagePart) bool {
+	for _, p := range parts {
+		if p.ImageURL != nil {
+			return true
+		}
+	}
+	return false
+}
+
 // parseReasoning extracts reasoning text and summary from a raw item.
-func (o *OpenRouterConversationConverter) parseReasoning(raw json.RawMessage) ConversationElement {
+func (p *OpenRouterProvider) parseReasoning(raw json.RawMessage) ConversationElement {
 	var item struct {
 		Id      string                 `json:"id"`
 		Status  string                 `json:"status"`
@@ -140,7 +199,7 @@ func (o *OpenRouterConversationConverter) parseReasoning(raw json.RawMessage) Co
 	}
 }
 
-func (o *OpenRouterConversationConverter) ToProviderRepresentation(elements []ConversationElement) ([]json.RawMessage, error) {
+func (p *OpenRouterProvider) ToProviderRepresentation(elements []ConversationElement) ([]json.RawMessage, error) {
 	if len(elements) == 0 {
 		return nil, nil
 	}
@@ -166,14 +225,14 @@ func (o *OpenRouterConversationConverter) ToProviderRepresentation(elements []Co
 			raw = append(raw, b)
 
 		case *AssistantMessage:
-			b, err := marshalTextMessage(el.messageContent)
+			b, err := p.marshalTextMessage(el.messageContent)
 			if err != nil {
 				return nil, err
 			}
 			raw = append(raw, b)
 
 		case *SystemMessage:
-			b, err := marshalTextMessage(el.messageContent)
+			b, err := p.marshalTextMessage(el.messageContent)
 			if err != nil {
 				return nil, err
 			}
@@ -211,12 +270,18 @@ func (o *OpenRouterConversationConverter) ToProviderRepresentation(elements []Co
 			raw = append(raw, b)
 
 		case *Reasoning:
+			// OpenRouter drops reasoning items that carry no text (matches the
+			// observed wire format, which omits empty-content reasoning).
+			if el.Text == "" {
+				continue
+			}
 			r := map[string]interface{}{
 				"id":     el.Id,
 				"status": el.Status,
 				"type":   "reasoning",
 			}
-			if el.Summary != nil {
+			// OpenRouter omits an empty summary (matches observed wire format).
+			if len(el.Summary) > 0 {
 				r["summary"] = el.Summary
 			}
 			if el.Text != "" {
@@ -248,22 +313,9 @@ func (o *OpenRouterConversationConverter) ToProviderRepresentation(elements []Co
 	return raw, nil
 }
 
-var _ ConversationConverter = &OpenRouterConversationConverter{}
+var _ Provider = &OpenRouterProvider{}
 
-// NewOpenRouterEndpoint returns a configured endpoint for OpenRouter's API. apiKey and model are required.
-func NewOpenRouterEndpoint(apiKey string, model Model) (*Endpoint, error) {
-	if model == "" {
-		return nil, ErrEndpointMissingModelName
-	}
-	if apiKey == "" {
-		return nil, fmt.Errorf("missing API key for OpenRouter endpoint")
-	}
-	header := make(http.Header)
-	header.Set("Authorization", "Bearer "+apiKey)
-	return &Endpoint{
-		model:    model,
-		provider: Provider_OpenRouter,
-		rae:      &UniversalResponsesEndpoint{baseUrl: "https://router.openrouter.ai", responsesApiEndpoint: "/v1/responses", httpHeader: header},
-		client:   &http.Client{},
-	}, nil
+type ReasoningContentPart struct {
+	Type string `json:"type"`
+	Text string `json:"text,omitempty"`
 }

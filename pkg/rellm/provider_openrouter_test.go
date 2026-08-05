@@ -15,7 +15,7 @@ var goldenOrLongConv []byte
 var goldenImageResp []byte
 
 func TestOpenRouterToConversationElements_ImageGeneration(t *testing.T) {
-	p := &OpenRouterConversationConverter{}
+	p := &OpenRouterProvider{}
 	items := []json.RawMessage{
 		json.RawMessage(`{"id":"ig_tmp_vqotwoa5eg","type":"image_generation_call","status":"completed","result":"data:image/jpeg;base64,/9j/4AAQ"}`),
 	}
@@ -31,7 +31,7 @@ func TestOpenRouterToConversationElements_ImageGeneration(t *testing.T) {
 }
 
 func TestOpenRouterToProviderRepresentation_ImageGeneration(t *testing.T) {
-	p := &OpenRouterConversationConverter{}
+	p := &OpenRouterProvider{}
 	ig := ImageGeneration{Id: "ig_tmp_vqotwoa5eg", Status: "completed", Result: "data:image/jpeg;base64,/9j/4AAQ"}
 	raw, err := p.ToProviderRepresentation([]ConversationElement{&ig})
 	assert.NoError(t, err)
@@ -61,7 +61,7 @@ func TestOpenRouterRoundTrip_ImageGeneration_FromFile(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, resp.Output)
 
-	p := &OpenRouterConversationConverter{}
+	p := &OpenRouterProvider{}
 	elems, err := p.ToConversationElements(resp.Output)
 	assert.NoError(t, err)
 	assert.Len(t, elems, len(resp.Output))
@@ -76,7 +76,7 @@ func TestOpenRouterRoundTrip_ImageGeneration_FromFile(t *testing.T) {
 }
 
 func TestOpenRouterToConversationElements_AssistantMessage(t *testing.T) {
-	p := &OpenRouterConversationConverter{}
+	p := &OpenRouterProvider{}
 	items := []json.RawMessage{
 		json.RawMessage(`{"role":"assistant","content":[{"type":"input_text","text":"hello world"}]}`),
 	}
@@ -91,7 +91,7 @@ func TestOpenRouterToConversationElements_AssistantMessage(t *testing.T) {
 }
 
 func TestOpenRouterToConversationElements_FunctionCall(t *testing.T) {
-	p := &OpenRouterConversationConverter{}
+	p := &OpenRouterProvider{}
 	items := []json.RawMessage{
 		json.RawMessage(`{"type":"function_call","name":"search","call_id":"abc","arguments":{"query":"test"}}`),
 	}
@@ -106,7 +106,7 @@ func TestOpenRouterToConversationElements_FunctionCall(t *testing.T) {
 }
 
 func TestOpenRouterReasoningContentRoundTrip(t *testing.T) {
-	p := &OpenRouterConversationConverter{}
+	p := &OpenRouterProvider{}
 	items := []json.RawMessage{
 		json.RawMessage(`{"id":"rs-1","type":"reasoning","status":"completed","content":[{"type":"reasoning_text","text":"first"},{"type":"reasoning_text","text":"second"}],"summary":[],"signature":"not-replayed","format":"unknown"}`),
 	}
@@ -125,11 +125,12 @@ func TestOpenRouterReasoningContentRoundTrip(t *testing.T) {
 	wire, err := p.ToProviderRepresentation(elements)
 	assert.NoError(t, err)
 	assert.Len(t, wire, 1)
-	assert.JSONEq(t, `{"id":"rs-1","type":"reasoning","status":"completed","content":[{"type":"reasoning_text","text":"first second"}],"summary":[]}`, string(wire[0]))
+	// OpenRouter omits an empty summary (matches observed wire format).
+	assert.JSONEq(t, `{"id":"rs-1","type":"reasoning","status":"completed","content":[{"type":"reasoning_text","text":"first second"}]}`, string(wire[0]))
 }
 
 func TestOpenRouterToProviderRepresentation_AssistantMessage(t *testing.T) {
-	p := &OpenRouterConversationConverter{}
+	p := &OpenRouterProvider{}
 	msg := AssistantMessage{messageContent{Role: "assistant", Content: []MessagePart{{Type: "input_text", Text: "hello world"}}}}
 	raw, err := p.ToProviderRepresentation([]ConversationElement{&msg})
 	assert.NoError(t, err)
@@ -146,7 +147,7 @@ func TestOpenRouterToProviderRepresentation_AssistantMessage(t *testing.T) {
 }
 
 func TestOpenRouterToProviderRepresentation_UserStructuredContent(t *testing.T) {
-	p := &OpenRouterConversationConverter{}
+	p := &OpenRouterProvider{}
 	msg := UserMessage{messageContent{Role: "user", Content: []MessagePart{
 		{Type: "input_text", Text: "hello"},
 		{Type: "image_url", ImageURL: &ImageURL{URL: "https://example.com/img.png"}},
@@ -165,7 +166,7 @@ func TestOpenRouterToProviderRepresentation_UserStructuredContent(t *testing.T) 
 }
 
 func TestOpenRouterToProviderRepresentation_FunctionCall(t *testing.T) {
-	p := &OpenRouterConversationConverter{}
+	p := &OpenRouterProvider{}
 	fc := FunctionCall{
 		Id:     "fc-1",
 		Name:   "search",
@@ -188,28 +189,28 @@ func TestOpenRouterToProviderRepresentation_FunctionCall(t *testing.T) {
 }
 
 func TestOpenRouterToProviderRepresentation_EmptyElements(t *testing.T) {
-	p := &OpenRouterConversationConverter{}
+	p := &OpenRouterProvider{}
 	raw, err := p.ToProviderRepresentation(nil)
 	assert.NoError(t, err)
 	assert.Nil(t, raw)
 }
 
-func TestNewOpenRouterEndpoint_ValidArgs(t *testing.T) {
-	or, err := NewOpenRouterEndpoint("test-key", Model("test/model"))
+func TestNewOpenRouterProvider_ValidArgs(t *testing.T) {
+	or, err := NewOpenRouterProvider("test-key", Model("test/model"))
 	assert.NoError(t, err)
-	assert.Equal(t, Provider_OpenRouter, or.provider)
-	assert.Equal(t, "https://router.openrouter.ai/v1/responses", or.rae.GetUrl())
-	assert.Equal(t, "Bearer test-key", or.rae.GetHttpHeader().Get("Authorization"))
+	assert.Equal(t, Model("test/model"), or.Model())
+	assert.Equal(t, "https://openrouter.ai/api/v1/responses", or.URL())
+	assert.Equal(t, "Bearer test-key", or.Header().Get("Authorization"))
 }
 
-func TestNewOpenRouterEndpoint_EmptyModel(t *testing.T) {
-	_, err := NewOpenRouterEndpoint("test-key", "")
+func TestNewOpenRouterProvider_EmptyModel(t *testing.T) {
+	_, err := NewOpenRouterProvider("test-key", "")
 	assert.ErrorIs(t, err, ErrEndpointMissingModelName)
 }
 
-func TestNewOpenRouterEndpoint_EmptyApiKey(t *testing.T) {
-	_, err := NewOpenRouterEndpoint("", Model("test/model"))
-	assert.EqualError(t, err, "missing API key for OpenRouter endpoint")
+func TestNewOpenRouterProvider_EmptyApiKey(t *testing.T) {
+	_, err := NewOpenRouterProvider("", Model("test/model"))
+	assert.EqualError(t, err, "missing API key for OpenRouter provider")
 }
 
 // TestOpenRouterRoundTrip_FromFile verifies faithful ToConversationElements→ToProviderRepresentation round-trip
@@ -223,7 +224,7 @@ func TestOpenRouterRoundTrip_FromFile(t *testing.T) {
 	err := json.Unmarshal(goldenOrLongConv, &req)
 	assert.NoError(t, err)
 
-	p := &OpenRouterConversationConverter{}
+	p := &OpenRouterProvider{}
 	elements, err := p.ToConversationElements(req.Input)
 	assert.NoError(t, err)
 	assert.Len(t, elements, len(req.Input))
