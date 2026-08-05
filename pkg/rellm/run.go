@@ -54,7 +54,7 @@ func (a *Agent) run(msg string, params promptParams) (string, error) {
 	return msgRespFromLLM, nil
 }
 
-func (a *Agent) post(req *ResponsesApiReq) (*ResponsesApiResp, error) {
+func (a *Agent) post(req *ResponsesApiReq) (_ *ResponsesApiResp, err error) {
 	if a.inspectReq != nil {
 		a.inspectReq(req)
 	}
@@ -88,7 +88,8 @@ func (a *Agent) post(req *ResponsesApiReq) (*ResponsesApiResp, error) {
 	if resp.Body == nil {
 		return nil, errors.New("empty response body")
 	}
-	defer closeAndLogIfError_DEFER_ME(resp.Body)
+
+	defer closeWithError(&err, resp.Body)
 	rawBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err

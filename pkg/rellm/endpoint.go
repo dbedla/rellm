@@ -92,9 +92,6 @@ func unmarshall[K any](rawBody []byte) (K, error) {
 	return data, nil
 }
 
-func closeAndLogIfError_DEFER_ME(closeMe io.Closer) {
-	err := closeMe.Close()
-	if err != nil {
-		fmt.Printf("error closing: %s\n", err)
-	}
+func closeWithError(err *error, c io.Closer) {
+	*err = errors.Join(*err, c.Close())
 }
