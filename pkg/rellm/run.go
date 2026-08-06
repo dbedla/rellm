@@ -148,7 +148,14 @@ func (a *Agent) dispatchConversation(conversation []ConversationElement) (string
 
 	for _, conversationElement := range conversation {
 		switch el := conversationElement.(type) {
-		//case *SystemMessage:
+		case *SystemMessage:
+			continue
+		case *UserMessage:
+			continue
+		case *FunctionCallResp:
+			continue
+		case *Reasoning:
+			continue
 
 		case *FunctionCall:
 			fResp, err := a.handleFunctionCall(el)
@@ -158,15 +165,9 @@ func (a *Agent) dispatchConversation(conversation []ConversationElement) (string
 			if fResp != nil {
 				fnCallsResults = append(fnCallsResults, fResp)
 			}
-		//case *UserMessage:
 
 		case *AssistantMessage:
 			message.WriteString(messagesFromParts(el.Content))
-			continue
-
-		//case *FunctionCallResponse:
-
-		case *Reasoning:
 			continue
 
 		case *ImageGeneration:
@@ -178,7 +179,7 @@ func (a *Agent) dispatchConversation(conversation []ConversationElement) (string
 			continue
 
 		default:
-			continue // skip unknown types
+			return "", nil, false, ErrUnknownConversationElement
 		}
 	}
 
