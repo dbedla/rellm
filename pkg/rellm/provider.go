@@ -70,6 +70,7 @@ type Reasoning struct {
 // ImageGeneration is a generated image with its result note.
 type ImageGeneration struct {
 	Id     string `json:"id,omitempty"`
+	Type   string `json:"type"`
 	Status string `json:"status,omitempty"`
 	Result string `json:"result"` // user-visible identifier returned by the handler
 }

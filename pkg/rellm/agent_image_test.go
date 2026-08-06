@@ -52,7 +52,7 @@ func TestAgentPromptToGetImage(t *testing.T) {
 
 	conversation := agent.CurrentConversation()
 	lastMsg := conversation[len(conversation)-1]
-	var imageConversationRepresentation rellm.ImageGenerationConversationPlaceholder
+	var imageConversationRepresentation rellm.ImageGeneration
 	err = json.Unmarshal(lastMsg, &imageConversationRepresentation)
 	assert.NoError(t, err, "failed to unmarshal last message")
 
