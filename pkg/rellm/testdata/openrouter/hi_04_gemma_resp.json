@@ -1,0 +1,112 @@
+{
+  "id": "gen-1785841218-XUebxtgFr8746klE0Icn",
+  "object": "response",
+  "created_at": 1785841218,
+  "model": "google/gemma-4-26b-a4b-it",
+  "status": "completed",
+  "completed_at": 1785841220,
+  "output": [
+    {
+      "id": "rs_tmp_z7h3yzqm27",
+      "type": "reasoning",
+      "status": "completed",
+      "content": [
+        {
+          "type": "reasoning_text",
+          "text": "The user is asking \"what tool do you see?\". This is a question about my internal capabilities or the tools available to me in the current context.\n\nI have access to two tools:\n1. `GetDataFor`: Takes a string `input` and returns data for it.\n2. `GetStaticData`: Takes no arguments and returns static data.\n\nI should answer the user by listing the tools I have access to."
+        }
+      ],
+      "summary": [],
+      "format": "unknown"
+    },
+    {
+      "id": "msg_tmp_hmgps09k8dg",
+      "type": "message",
+      "role": "assistant",
+      "status": "completed",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "I have access to the following tools:\n\n1.  **`GetDataFor`**: This tool allows me to retrieve specific data based on an input string you provide.\n2.  **`GetStaticData`**: This tool allows me to retrieve pre-defined static data.",
+          "annotations": [],
+          "logprobs": []
+        }
+      ]
+    }
+  ],
+  "error": null,
+  "incomplete_details": null,
+  "tools": [
+    {
+      "type": "function",
+      "name": "GetDataFor",
+      "description": "Get data for a specific input",
+      "parameters": {
+        "properties": {
+          "input": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "type": "object"
+      },
+      "strict": false
+    },
+    {
+      "type": "function",
+      "name": "GetStaticData",
+      "description": "Get static data",
+      "parameters": {
+        "properties": {},
+        "type": "object"
+      },
+      "strict": false
+    }
+  ],
+  "tool_choice": "auto",
+  "parallel_tool_calls": true,
+  "max_output_tokens": null,
+  "temperature": 0.5,
+  "top_p": 1,
+  "presence_penalty": 0,
+  "frequency_penalty": 0,
+  "top_logprobs": 0,
+  "max_tool_calls": null,
+  "metadata": {},
+  "background": false,
+  "previous_response_id": null,
+  "service_tier": "auto",
+  "truncation": "disabled",
+  "store": false,
+  "instructions": null,
+  "text": {
+    "format": {
+      "type": "text"
+    }
+  },
+  "reasoning": {
+    "effort": "low"
+  },
+  "safety_identifier": null,
+  "prompt_cache_key": null,
+  "usage": {
+    "input_tokens": 115,
+    "input_tokens_details": {
+      "cached_tokens": 64
+    },
+    "output_tokens": 150,
+    "output_tokens_details": {
+      "reasoning_tokens": 94
+    },
+    "total_tokens": 265,
+    "cost": 0.00005432,
+    "is_byok": false,
+    "cost_details": {
+      "upstream_inference_cost": 0.00005432,
+      "upstream_inference_input_cost": 0.00000932,
+      "upstream_inference_output_cost": 0.000045
+    }
+  }
+}

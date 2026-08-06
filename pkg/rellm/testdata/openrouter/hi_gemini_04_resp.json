@@ -1,0 +1,106 @@
+{
+  "id": "gen-1785844051-Mdho0A1bGvU4THqsr6o6",
+  "object": "response",
+  "created_at": 1785844051,
+  "model": "google/gemini-3.1-flash-lite",
+  "status": "completed",
+  "completed_at": 1785844052,
+  "output": [
+    {
+      "id": "msg_tmp_oemxp9k9lak",
+      "type": "message",
+      "role": "assistant",
+      "status": "completed",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "I have access to the following tools:\n\n*   **`GetDataFor`**: This tool allows me to retrieve specific data based on an input you provide.\n*   **`GetStaticData`**: This tool allows me to retrieve general static information.\n\nHow can I help you use these today?",
+          "annotations": [],
+          "logprobs": []
+        }
+      ]
+    },
+    {
+      "id": "rs_tmp_dnziiyg7ce9",
+      "type": "reasoning",
+      "status": "completed",
+      "summary": [],
+      "signature": "AY89a1+Piomw1PzISNa8dIFR8GsfQB2Zf5oBN4EACHRvVYyjoyzyKX4Bm2VpGq/gUBmyO4FaJuTqvZA0Ii7qdsAhVzR7QylmFw4aCs7Dz5wFpdvinaKgURXRl7bdoa2DZ8zU++DQJ17o4yLMrD59lpHdkp3BB9Gam0d+guquevEh6g4mcIS8VCr97jbjhv0sC9bL6FxQJZ29Xv/e6FEdx7JdKHmZe/OIKwhPDWyBuK3XnTgY3ccSXvqJNTBh5T3t62sXrRASpSH61uY6hlL+NpVuupZthhP1Jgjh2q245nY2VImZvNTZ3Xas2S7GpFFqdWJ2u30gk9+bO7w8q8ixflGY0Zxg/Iz93OnZXFN7dE4g2xMSo4sL+th8RwSDft+8ibMPk34Quk5EcQwlDQBbV/NckDMUW+oTOTxm9JAynWwH9W+KIqscQwPhzWkrahsvxM/Uihb1bqlew5idwsk8zAttEObOifxs7/c/wR/4TL4zy3ssEfVDzIeNgof/tdWWw8Zd1QhxjxWNTFy7rmYX8/V0qFpWFRzeGHCZvZsKwtGJ3EOC0aJc9minjdmRHdlLvvaMaPxf0oMN6RtsujVfNMrX23pi3DEOPkjsMbQUbc83AVMdE94L6jbibHp21ruOoLwnrl3fNFxyx4IpxEgaqMYzi3Pksp5Z1qXqVe9ISiOgaeyZVcnMaXgzhc+5i7MA1PXASA7ECQ65kFnbYehz3x2amty62g=="
+    }
+  ],
+  "error": null,
+  "incomplete_details": null,
+  "tools": [
+    {
+      "type": "function",
+      "name": "GetDataFor",
+      "description": "Get data for a specific input",
+      "parameters": {
+        "properties": {
+          "input": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "type": "object"
+      },
+      "strict": false
+    },
+    {
+      "type": "function",
+      "name": "GetStaticData",
+      "description": "Get static data",
+      "parameters": {
+        "properties": {},
+        "type": "object"
+      },
+      "strict": false
+    }
+  ],
+  "tool_choice": "auto",
+  "parallel_tool_calls": true,
+  "max_output_tokens": null,
+  "temperature": 0.5,
+  "top_p": 1,
+  "presence_penalty": 0,
+  "frequency_penalty": 0,
+  "top_logprobs": 0,
+  "max_tool_calls": null,
+  "metadata": {},
+  "background": false,
+  "previous_response_id": null,
+  "service_tier": "default",
+  "truncation": "disabled",
+  "store": false,
+  "instructions": null,
+  "text": {
+    "format": {
+      "type": "text"
+    }
+  },
+  "reasoning": {
+    "effort": "low"
+  },
+  "safety_identifier": null,
+  "prompt_cache_key": null,
+  "usage": {
+    "input_tokens": 58,
+    "input_tokens_details": {
+      "cached_tokens": 0
+    },
+    "output_tokens": 168,
+    "output_tokens_details": {
+      "reasoning_tokens": 106
+    },
+    "total_tokens": 226,
+    "cost": 0.0002665,
+    "is_byok": false,
+    "cost_details": {
+      "upstream_inference_cost": 0.0002665,
+      "upstream_inference_input_cost": 0.0000145,
+      "upstream_inference_output_cost": 0.000252
+    }
+  }
+}

@@ -3,69 +3,11 @@ package rellm
 import (
 	"encoding/json"
 	"errors"
-	"net/http"
 	"path/filepath"
 	"rellm/pkg/rellm/conversation_storage"
 
 	"github.com/rs/zerolog"
 )
-
-type EndpointBuilder struct {
-	endpoint             Endpoint
-	useDefaultHttpClient bool
-	useClientHttpDo      bool
-}
-
-func NewEndpointBuilder() *EndpointBuilder {
-	return &EndpointBuilder{}
-}
-
-func (b *EndpointBuilder) WithClientHttpDo(c ClientHttpDo) *EndpointBuilder {
-	b.useClientHttpDo = true
-	b.endpoint.client = c
-	return b
-}
-
-func (b *EndpointBuilder) WithDefaultHttpClient() *EndpointBuilder {
-	b.useDefaultHttpClient = true
-	b.endpoint.client = &http.Client{}
-	return b
-}
-
-func (b *EndpointBuilder) WithModel(model Model) *EndpointBuilder {
-	b.endpoint.model = model
-	return b
-}
-
-func (b *EndpointBuilder) WithProvider(provider Provider) *EndpointBuilder {
-	b.endpoint.provider = provider
-	return b
-}
-
-func (b *EndpointBuilder) WithResponsesApiEndpoint(endpoint ResponsesApiEndpoint) *EndpointBuilder {
-	b.endpoint.rae = endpoint
-	return b
-}
-
-func (b *EndpointBuilder) Build() (*Endpoint, error) {
-
-	if !exactlyOneIsSet(b.useDefaultHttpClient, b.useClientHttpDo) {
-		return nil, ErrBuildNoHttpClient
-	}
-
-	if b.endpoint.model == "" {
-		return nil, ErrBuildNoModelName
-
-	}
-	if b.endpoint.rae == nil {
-		return nil, ErrBuildNoResponsesApiEndpoint
-	}
-	if b.endpoint.provider == "" {
-		return nil, ErrBuildNoLLMProvider
-	}
-
-	return &b.endpoint, nil
-}
 
 type AgentBuilder struct {
 	agent              Agent
@@ -80,8 +22,8 @@ func NewAgentBuilder() *AgentBuilder {
 	return &AgentBuilder{}
 }
 
-func (b *AgentBuilder) WithEndpoint(endpoint *Endpoint) *AgentBuilder {
-	b.agent.endpoint = endpoint
+func (b *AgentBuilder) WithProvider(provider Provider) *AgentBuilder {
+	b.agent.provider = provider
 	return b
 }
 
@@ -125,8 +67,9 @@ func (b *AgentBuilder) WithMaxToolsIterationWithoutReturnMessage(max uint64) *Ag
 	return b
 }
 
-func (b *AgentBuilder) WithHandleImage(handleImage HandleImage) *AgentBuilder {
-	b.agent.handleImage = handleImage
+// HandleImageGeneration
+func (b *AgentBuilder) WithHandleImageGeneration(handleImage HandleImageGeneration) *AgentBuilder {
+	b.agent.handleImageGeneration = handleImage
 	return b
 }
 
@@ -166,8 +109,8 @@ func (b *AgentBuilder) Build() (*Agent, error) {
 		return nil, ErrBuildNoWorkspaceDir
 	}
 
-	if b.agent.endpoint == nil {
-		return nil, ErrBuildNoEndpoint
+	if b.agent.provider == nil {
+		return nil, ErrBuildNoProvider
 	}
 
 	if b.agent.agentName == "" {

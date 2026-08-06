@@ -61,7 +61,7 @@ func scenario(fsAgent *rellm.Agent, dirs agentsDirs) {
 	if !strings.Contains(llmResp, f1Name) {
 		panicWithLog("missing expected file name '"+f1Name+"' in llm output", fmt.Errorf("missing file name"))
 	}
-	if !strings.Contains(llmResp, f1Name) {
+	if !strings.Contains(llmResp, f2Name) {
 		panicWithLog("missing expected file name '"+f2Name+"' in llm output", fmt.Errorf("missing file name"))
 	}
 
@@ -74,10 +74,10 @@ func scenario(fsAgent *rellm.Agent, dirs agentsDirs) {
 	}
 	color.Green(llmResp)
 
-	if !strings.Contains(llmResp, f1Name) {
+	if !strings.Contains(llmResp, f1Content) {
 		panicWithLog("missing expected file content '"+f1Content+"' in llm output", fmt.Errorf("missing file content"))
 	}
-	if !strings.Contains(llmResp, f1Name) {
+	if !strings.Contains(llmResp, f2Content) {
 		panicWithLog("missing expected file content '"+f2Content+"' in llm output", fmt.Errorf("missing file content"))
 	}
 
@@ -101,7 +101,7 @@ func scenario(fsAgent *rellm.Agent, dirs agentsDirs) {
 	if !strings.Contains(outputContent, f1Content) {
 		panicWithLog("missing expected output file content '"+f1Content+"'", fmt.Errorf("missing file content"))
 	}
-	if !strings.Contains(outputContent, f1Content) {
+	if !strings.Contains(outputContent, f2Content) {
 		panicWithLog("missing expected output file content '"+f2Content+"'", fmt.Errorf("missing file content"))
 	}
 }

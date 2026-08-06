@@ -2,7 +2,6 @@ package rellm
 
 import (
 	"encoding/json"
-	"errors"
 	"rellm/pkg/rellm/conversation_storage"
 
 	"github.com/rs/zerolog"
@@ -13,21 +12,8 @@ type Toolset interface {
 	DispatchTools(name string, callID string, arguments json.RawMessage) (FunctionCallResp, bool)
 }
 
-type FunctionCallResp struct {
-	Type   string `json:"type"`
-	CallId string `json:"call_id"`
-	Output string `json:"output"`
-}
-
-type ImageGenerationConversationPlaceholder struct {
-	Type   string `json:"type"`
-	Id     string `json:"id"`
-	Status string `json:"status"`
-	Result string `json:"result"`
-}
-
 type Agent struct {
-	endpoint                              *Endpoint
+	provider                              Provider
 	toolset                               Toolset
 	logger                                *zerolog.Logger
 	conversationStorage                   *conversation_storage.ConversationStorage
@@ -38,50 +24,16 @@ type Agent struct {
 	continueConversation                  bool
 	maxToolsIterationWithoutReturnMessage uint64
 
-	handleImage HandleImage
-	inspectReq  InspectEachRequest
-	inspectResp InspectEachResponse
+	handleImageGeneration HandleImageGeneration
+	inspectReq            InspectEachRequest
+	inspectResp           InspectEachResponse
 }
 
-// HandleImage used as a callback for image generation
-// returned string will be used as image identifier in conversation
-type HandleImage func(image OutputItem) (string, error)
+// HandleImageGeneration used as a callback for image generation
+// returned string will be used as image identifier and stored instead of original image content
+type HandleImageGeneration func(image *ImageGeneration) (string, error)
 type InspectEachRequest func(*ResponsesApiReq)
 type InspectEachResponse func(resp *ResponsesApiResp)
-
-func (a *Agent) run(msg string, params promptParams) (string, error) {
-	a.logger.Info().Msgf("question to agent: %s", string(msg))
-	defer a.logger.Info().Msg("question answered")
-
-	conversation := a.CurrentConversation()
-
-	userMsg, err := PromptMessageToConversation(msg, "user")
-	if err != nil {
-		return "", errors.Join(ErrUserMsgConversionFailed, err)
-	}
-
-	conversation = append(conversation, userMsg)
-
-	req := toBaseResponsesApiReq(params, a.endpoint.model, a.endpoint.provider, conversation)
-
-	if a.toolset != nil {
-		req.Tools = a.toolset.BuildTools()
-	}
-
-	newConversation, msgRespFromLLM, _, err := a.process(req)
-
-	if len(newConversation) > 0 {
-		a.inMemoryConversation = newConversation
-	}
-
-	if err != nil {
-		a.logger.Error().Err(err).Msgf("unable to process conversation %s", err.Error())
-		return "", err
-	}
-
-	a.logger.Info().Msgf("message: %s", msgRespFromLLM)
-	return msgRespFromLLM, nil
-}
 
 func (a *Agent) CurrentConversation() []json.RawMessage {
 	conversation := a.inMemoryConversation
@@ -143,25 +95,4 @@ func (a *Agent) Ask(question string) (string, error) {
 	}
 
 	return a.Execute(prompt)
-}
-
-func toBaseResponsesApiReq(params promptParams, model Model, provider Provider, conversation []json.RawMessage) *ResponsesApiReq {
-	normalizedConversation, err := normalizeConversationForProvider(provider, conversation)
-	if err != nil {
-		normalizedConversation = conversation
-	}
-
-	return &ResponsesApiReq{
-		Model:            string(model),
-		Input:            normalizedConversation,
-		Temperature:      params.Temperature,
-		Reasoning:        params.Reasoning,
-		MaxOutputTokens:  params.MaxOutputTokens,
-		TopP:             params.TopP,
-		PresencePenalty:  params.PresencePenalty,
-		FrequencyPenalty: params.FrequencyPenalty,
-		Seed:             params.Seed,
-		Logprobs:         params.Logprobs,
-		TopLogprobs:      params.TopLogprobs,
-	}
 }

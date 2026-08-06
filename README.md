@@ -38,7 +38,7 @@ See [the fs_agent example](e2e_tests/e2e_fs_agent) for more details.
 [Install LM Studio](https://lmstudio.ai/download) on your machine; it will be used to run local models.
 Then go to the root of this repository and execute the following commands:
 ```bash
-make lms-set-gemma-4-12b
+make lms-set-gemma-4-26b-a4b
 make go-build
 ./output/bin/lms_base_agent
 ```

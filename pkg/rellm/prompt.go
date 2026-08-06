@@ -113,14 +113,20 @@ func (b *PromptBuilder) Build() (*Prompt, error) {
 }
 
 func PromptMessageToConversation(prompt, role string) (json.RawMessage, error) {
-	input := UserMessage{
-		Role: role,
-		Content: []MessagePart{
-			{Type: "input_text", Text: prompt},
-		},
+	content := []MessagePart{{Type: "input_text", Text: prompt}}
+	var msg interface{}
+	switch role {
+	case "user":
+		msg = UserMessage{messageContent{Role: role, Content: content}}
+	case "system":
+		msg = SystemMessage{messageContent{Role: role, Content: content}}
+	case "assistant":
+		msg = AssistantMessage{messageContent{Role: role, Content: content}}
+	default:
+		return nil, fmt.Errorf("promptMessageToConversation: unknown role %q", role)
 	}
 
-	jsonInput, err := json.Marshal(input)
+	jsonInput, err := json.Marshal(msg)
 	if err != nil {
 		return nil, fmt.Errorf("promptMessageToConversation: %w", err)
 	}

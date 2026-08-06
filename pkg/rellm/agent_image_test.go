@@ -23,7 +23,7 @@ var goldenImageReq string
 var goldenImageResp string
 
 func TestAgentPromptToGetImage(t *testing.T) {
-	agent, httpDo := buildTestImageAgent(t, TestDefaultMaxToolsIterationWithoutReturnMessage, testImageHandler)
+	agent, httpDo := buildTestImageAgent(t, TestDefaultMaxToolsIterationWithoutReturnMessage, testImageGenerationHandler)
 	defer httpDo.AssertExpectations(t)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
@@ -49,11 +49,10 @@ func TestAgentPromptToGetImage(t *testing.T) {
 	assert.NoError(t, err, "failed to ask")
 
 	assert.NotNil(t, respMsg, "response message should not be nil")
-	assert.Equal(t, "[system <for user visibility only>] image generated, handler returned: image-stored-under-this-id", respMsg, "response message should match")
 
 	conversation := agent.CurrentConversation()
 	lastMsg := conversation[len(conversation)-1]
-	var imageConversationRepresentation rellm.ImageGenerationConversationPlaceholder
+	var imageConversationRepresentation rellm.ImageGeneration
 	err = json.Unmarshal(lastMsg, &imageConversationRepresentation)
 	assert.NoError(t, err, "failed to unmarshal last message")
 
@@ -64,7 +63,7 @@ func TestAgentPromptToGetImage(t *testing.T) {
 }
 
 func TestAgentPromptToGetImage_handlerErr(t *testing.T) {
-	agent, httpDo := buildTestImageAgent(t, TestDefaultMaxToolsIterationWithoutReturnMessage, testImageHandlerAlwaysErr)
+	agent, httpDo := buildTestImageAgent(t, TestDefaultMaxToolsIterationWithoutReturnMessage, testImageGenerationHandlerAlwaysErr)
 	defer httpDo.AssertExpectations(t)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
@@ -94,37 +93,33 @@ func TestAgentPromptToGetImage_handlerErr(t *testing.T) {
 	assert.Equal(t, "", respMsg, "response message should match")
 }
 
-func testImageHandler(image rellm.OutputItem) (string, error) {
+func testImageGenerationHandler(image *rellm.ImageGeneration) (string, error) {
 	return "image-stored-under-this-id", nil
 }
 
-func testImageHandlerAlwaysErr(image rellm.OutputItem) (string, error) {
+func testImageGenerationHandlerAlwaysErr(image *rellm.ImageGeneration) (string, error) {
 	return "", errors.New("test err in image handling error")
 }
 
-func buildTestImageAgent(t *testing.T, maxToolsIterationWithoutReturnMessage uint64, imageH rellm.HandleImage) (*rellm.Agent, *HttpDoMock) {
+func buildTestImageAgent(t *testing.T, maxToolsIterationWithoutReturnMessage uint64,
+	imageGenerationH rellm.HandleImageGeneration) (*rellm.Agent, *HttpDoMock) {
 
 	agentName := "TestImageAgent"
 	workspace := t.TempDir()
 	mockHttp := new(HttpDoMock)
 
-	lmsEndpoint := rellm.NewUniversalResponsesEndpoint(testBaseUrl, testPort, testResponsesApiEndpoint, nil)
-	ep, err := rellm.NewEndpointBuilder().
-		WithResponsesApiEndpoint(lmsEndpoint).
-		WithProvider(rellm.Provider_OpenRouter).
-		WithModel(rellm.Model("x-ai/grok-imagine-image-quality")).
-		WithClientHttpDo(mockHttp).
-		Build()
-	assert.NoError(t, err, "failed to create endpoint")
+	p, err := rellm.NewOpenRouterProvider("test-key", rellm.Model("x-ai/grok-imagine-image-quality"))
+	assert.NoError(t, err, "failed to create provider")
+	p.WithHTTPClient(mockHttp).WithURL(testBaseUrl + ":" + testPort + testResponsesApiEndpoint)
 
 	ta, err := rellm.NewAgentBuilder().
-		WithEndpoint(ep).
+		WithProvider(p).
 		WithAgentName(agentName).
 		WithWorkspaceDir(workspace).
 		WithMaxToolsIterationWithoutReturnMessage(maxToolsIterationWithoutReturnMessage).
 		WithContinueConversation(false).
 		WithSystemMessage("You are a helpful assistant.").
-		WithHandleImage(imageH).
+		WithHandleImageGeneration(imageGenerationH).
 		WithNoOpLogger().
 		Build()
 

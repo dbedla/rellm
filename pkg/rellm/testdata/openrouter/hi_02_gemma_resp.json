@@ -1,0 +1,112 @@
+{
+  "id": "gen-1785841211-Fi9d8GGKSbAZ4pRNUmSJ",
+  "object": "response",
+  "created_at": 1785841211,
+  "model": "google/gemma-4-26b-a4b-it",
+  "status": "completed",
+  "completed_at": 1785841212,
+  "output": [
+    {
+      "id": "rs_tmp_ib4lofq4dw",
+      "type": "reasoning",
+      "status": "completed",
+      "content": [
+        {
+          "type": "reasoning_text",
+          "text": "The user said \"hi\".\nThis is a simple greeting.\nThe appropriate response is a friendly greeting and an offer to help.\n\nPlan:\n1. Greet the user.\n2. Ask how I can assist them."
+        }
+      ],
+      "summary": [],
+      "format": "unknown"
+    },
+    {
+      "id": "msg_tmp_40o24xun0au",
+      "type": "message",
+      "role": "assistant",
+      "status": "completed",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "Hello! How can I help you today?",
+          "annotations": [],
+          "logprobs": []
+        }
+      ]
+    }
+  ],
+  "error": null,
+  "incomplete_details": null,
+  "tools": [
+    {
+      "type": "function",
+      "name": "GetDataFor",
+      "description": "Get data for a specific input",
+      "parameters": {
+        "properties": {
+          "input": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "type": "object"
+      },
+      "strict": false
+    },
+    {
+      "type": "function",
+      "name": "GetStaticData",
+      "description": "Get static data",
+      "parameters": {
+        "properties": {},
+        "type": "object"
+      },
+      "strict": false
+    }
+  ],
+  "tool_choice": "auto",
+  "parallel_tool_calls": true,
+  "max_output_tokens": null,
+  "temperature": 0.5,
+  "top_p": 1,
+  "presence_penalty": 0,
+  "frequency_penalty": 0,
+  "top_logprobs": 0,
+  "max_tool_calls": null,
+  "metadata": {},
+  "background": false,
+  "previous_response_id": null,
+  "service_tier": "auto",
+  "truncation": "disabled",
+  "store": false,
+  "instructions": null,
+  "text": {
+    "format": {
+      "type": "text"
+    }
+  },
+  "reasoning": {
+    "effort": "low"
+  },
+  "safety_identifier": null,
+  "prompt_cache_key": null,
+  "usage": {
+    "input_tokens": 90,
+    "input_tokens_details": {
+      "cached_tokens": 0
+    },
+    "output_tokens": 62,
+    "output_tokens_details": {
+      "reasoning_tokens": 45
+    },
+    "total_tokens": 152,
+    "cost": 0.0000294,
+    "is_byok": false,
+    "cost_details": {
+      "upstream_inference_cost": 0.0000294,
+      "upstream_inference_input_cost": 0.0000108,
+      "upstream_inference_output_cost": 0.0000186
+    }
+  }
+}

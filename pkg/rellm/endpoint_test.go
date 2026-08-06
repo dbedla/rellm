@@ -1,4 +1,4 @@
-package rellm_test
+package rellm
 
 import (
 	"encoding/json"
@@ -7,8 +7,6 @@ import (
 	"net/http"
 	"strings"
 	"testing"
-
-	"rellm/pkg/rellm"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -53,57 +51,40 @@ func TestEndpointPostMalformedJSONResponse(t *testing.T) {
 func assertHTTPStatusError(t *testing.T, err error, statusCode int, body string) {
 	t.Helper()
 
-	var statusErr *rellm.HTTPStatusError
+	var statusErr *HTTPStatusError
 	require.ErrorAs(t, err, &statusErr)
 	assert.Equal(t, statusCode, statusErr.StatusCode)
 	assert.Equal(t, body, statusErr.Body)
-	assert.Equal(t, "https://api.example.test/responses", statusErr.URL)
+	assert.Equal(t, testURL, statusErr.URL)
 	assert.Equal(t, "req_test", statusErr.RequestID)
-	assert.NotContains(t, err.Error(), "secret-token")
+	assert.NotContains(t, err.Error(), "test-key")
 }
 
-func postWithValidResponse(t *testing.T) (*rellm.ResponsesApiResp, error) {
+const testURL = "https://api.example.test/responses"
+
+func postWithValidResponse(t *testing.T) (*ResponsesApiResp, error) {
 	t.Helper()
 
-	req := &rellm.ResponsesApiReq{Model: "test-model", Input: []json.RawMessage{}}
-	return newTestEndpoint(t, http.StatusOK, `{"id":"resp_test"}`).Post(req, tNopInspectReq, tNopInspectResp)
+	req := &ResponsesApiReq{Model: "test-model", Input: []json.RawMessage{}}
+	return newTestAgent(t, http.StatusOK, `{"id":"resp_test"}`).post(req)
 }
 
 func postWithResponse(t *testing.T, statusCode int, body string) error {
 	t.Helper()
 
-	req := &rellm.ResponsesApiReq{Model: "test-model", Input: []json.RawMessage{}}
-	_, err := newTestEndpoint(t, statusCode, body).Post(req, tNopInspectReq, tNopInspectResp)
+	req := &ResponsesApiReq{Model: "test-model", Input: []json.RawMessage{}}
+	_, err := newTestAgent(t, statusCode, body).post(req)
 	return err
 }
 
-func newTestEndpoint(t *testing.T, statusCode int, body string) *rellm.Endpoint {
+func newTestAgent(t *testing.T, statusCode int, body string) *Agent {
 	t.Helper()
 
-	endpoint, err := rellm.NewEndpointBuilder().
-		WithResponsesApiEndpoint(newTestResponsesEndpoint()).
-		WithProvider(rellm.Provider_LMStudio).
-		WithModel(rellm.Model_LMS_Google_Gemma_4_26B_A4B).
-		WithClientHttpDo(testEndpointClient{statusCode: statusCode, body: body}).
-		Build()
+	p, err := NewOpenRouterProvider("test-key", Model_LMS_Google_Gemma_4_26B_A4B)
 	require.NoError(t, err)
-	return endpoint
-}
+	p.WithURL(testURL).WithHTTPClient(testEndpointClient{statusCode: statusCode, body: body})
 
-type testResponsesEndpoint struct{}
-
-func newTestResponsesEndpoint() testResponsesEndpoint {
-	return testResponsesEndpoint{}
-}
-
-func (e testResponsesEndpoint) GetUrl() string {
-	return "https://api.example.test/responses"
-}
-
-func (e testResponsesEndpoint) GetHttpHeader() http.Header {
-	header := make(http.Header)
-	header.Set("Authorization", "Bearer secret-token")
-	return header
+	return &Agent{provider: p}
 }
 
 type testEndpointClient struct {
@@ -120,6 +101,3 @@ func (c testEndpointClient) Do(req *http.Request) (*http.Response, error) {
 	header.Set("X-Request-ID", "req_test")
 	return &http.Response{StatusCode: c.statusCode, Header: header, Body: io.NopCloser(strings.NewReader(c.body))}, nil
 }
-
-func tNopInspectReq(*rellm.ResponsesApiReq)   {}
-func tNopInspectResp(*rellm.ResponsesApiResp) {}

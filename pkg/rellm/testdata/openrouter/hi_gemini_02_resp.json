@@ -1,0 +1,106 @@
+{
+  "id": "gen-1785844043-MPS3JK3yvk4l5zkeestc",
+  "object": "response",
+  "created_at": 1785844043,
+  "model": "google/gemini-3.1-flash-lite",
+  "status": "completed",
+  "completed_at": 1785844044,
+  "output": [
+    {
+      "id": "msg_tmp_crvebpc35w8",
+      "type": "message",
+      "role": "assistant",
+      "status": "completed",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "Hello! How can I help you today?",
+          "annotations": [],
+          "logprobs": []
+        }
+      ]
+    },
+    {
+      "id": "rs_tmp_g577rkkq6xk",
+      "type": "reasoning",
+      "status": "completed",
+      "summary": [],
+      "signature": "AY89a1/CRg/lzVTzjdrPSlp4xvpwSNRJ6GQgzIy0AdFabYY8ct0mowOpMy9YwfC9FQoq9+E+QP99mGKsqPlikHRK4lAz3mxLG34Ng6uDXfs6IRY6HW9hEgzTtLXIh0MizOWUFFQM7UWqpKKBlzXMhj/cwpaCWaTDCUQ7UThpfB2ZrBVlIdgPJw68hcZPArVVLTjWB487NPU4pcUQgI3ldsmPRVsDDRpJJ/d1AxQHMNqFZt1VrgbLvIcmHDsoAxGtjBTaQvoGF8OzNRf1XeLHG6gsR9a5ejyMywU/dHbEbYMgMydpOHmjXf+qGtoSk6N0rRpaubKOSAVK8GWLhYOhXBgaXXs1Wm0oFV+BkUYOE5su57lBM0T4qFcGwOJg2q9ttW5DkYlKfGUPGos1uCw8duT3+PGI+NY5qVrxZTCSDNU8KrZDV3xqJmUXNLQlLm5gJyN73BWFQRmgRMlHPkWtdP9hiah0p+nIf/nF95T9z+tWN+ID/KTa8g4vljLG3SccP5eyvXULig0RIePpvVZteIEwPtD60DQ0mo+wqI0OHlCR8sFSoB3wtaVetqox3EBLrEF0eMd/FWSt0cl0iEhhXwjiYy77cpILPXYu27kURmu1hsmSI+G0EP2Q/ZcAR2roY2bJ80HCINhDQAwXoRVhMS+wsuonaHOy22Y1J4MAx+apHlpZkpzTInC5qSd3tsqLU0vu4udH3dz3KpWYVR4="
+    }
+  ],
+  "error": null,
+  "incomplete_details": null,
+  "tools": [
+    {
+      "type": "function",
+      "name": "GetDataFor",
+      "description": "Get data for a specific input",
+      "parameters": {
+        "properties": {
+          "input": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "type": "object"
+      },
+      "strict": false
+    },
+    {
+      "type": "function",
+      "name": "GetStaticData",
+      "description": "Get static data",
+      "parameters": {
+        "properties": {},
+        "type": "object"
+      },
+      "strict": false
+    }
+  ],
+  "tool_choice": "auto",
+  "parallel_tool_calls": true,
+  "max_output_tokens": null,
+  "temperature": 0.5,
+  "top_p": 1,
+  "presence_penalty": 0,
+  "frequency_penalty": 0,
+  "top_logprobs": 0,
+  "max_tool_calls": null,
+  "metadata": {},
+  "background": false,
+  "previous_response_id": null,
+  "service_tier": "default",
+  "truncation": "disabled",
+  "store": false,
+  "instructions": null,
+  "text": {
+    "format": {
+      "type": "text"
+    }
+  },
+  "reasoning": {
+    "effort": "low"
+  },
+  "safety_identifier": null,
+  "prompt_cache_key": null,
+  "usage": {
+    "input_tokens": 43,
+    "input_tokens_details": {
+      "cached_tokens": 0
+    },
+    "output_tokens": 115,
+    "output_tokens_details": {
+      "reasoning_tokens": 106
+    },
+    "total_tokens": 158,
+    "cost": 0.00018325,
+    "is_byok": false,
+    "cost_details": {
+      "upstream_inference_cost": 0.00018325,
+      "upstream_inference_input_cost": 0.00001075,
+      "upstream_inference_output_cost": 0.0001725
+    }
+  }
+}

@@ -1,0 +1,135 @@
+package rellm
+
+import (
+	_ "embed"
+	"encoding/json"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+//go:embed testdata/lms/unknown_fn_call_03_req.json
+var goldenLMStudioRequest []byte
+
+func TestLMStudioToConversationElements_UserMessage(t *testing.T) {
+	p := &LMStudioProvider{}
+	items := []json.RawMessage{
+		json.RawMessage(`{"role":"user","content":[{"type":"input_text","text":"hi"}]}`),
+	}
+	elems, err := p.ToConversationElements(items)
+	assert.NoError(t, err)
+	assert.Len(t, elems, 1)
+
+	msg, ok := elems[0].(*UserMessage)
+	assert.True(t, ok)
+	assert.Equal(t, "user", msg.Role)
+	assert.Equal(t, "hi", TextFromContent(msg.Content))
+}
+
+func TestLMStudioToConversationElements_ImageGeneration(t *testing.T) {
+	p := &LMStudioProvider{}
+	items := []json.RawMessage{
+		json.RawMessage(`{"id":"ig_tmp_vqotwoa5eg","type":"image_generation_call","status":"completed","result":"data:image/jpeg;base64,/9j/4AAQ"}`),
+	}
+	elems, err := p.ToConversationElements(items)
+	assert.NoError(t, err)
+	assert.Len(t, elems, 1)
+
+	ig, ok := elems[0].(*ImageGeneration)
+	assert.True(t, ok)
+	assert.Equal(t, "ig_tmp_vqotwoa5eg", ig.Id)
+	assert.Equal(t, "completed", ig.Status)
+	assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQ", ig.Result)
+}
+
+func TestLMStudioToProviderRepresentation_ImageGeneration(t *testing.T) {
+	p := &LMStudioProvider{}
+	ig := ImageGeneration{Id: "ig_tmp_vqotwoa5eg", Status: "completed", Result: "data:image/jpeg;base64,/9j/4AAQ"}
+	raw, err := p.ToProviderRepresentation([]ConversationElement{&ig})
+	assert.NoError(t, err)
+	assert.Len(t, raw, 1)
+
+	var wire struct {
+		Id     string `json:"id"`
+		Type   string `json:"type"`
+		Status string `json:"status"`
+		Result string `json:"result"`
+	}
+	err = json.Unmarshal(raw[0], &wire)
+	assert.NoError(t, err)
+	assert.Equal(t, "ig_tmp_vqotwoa5eg", wire.Id)
+	assert.Equal(t, "image_generation_call", wire.Type)
+	assert.Equal(t, "completed", wire.Status)
+	assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQ", wire.Result)
+}
+
+func TestLMStudioToProviderRepresentation_UserMessage(t *testing.T) {
+	p := &LMStudioProvider{}
+	msg := UserMessage{messageContent{Role: "user", Content: []MessagePart{{Type: "input_text", Text: "hi"}}}}
+	raw, err := p.ToProviderRepresentation([]ConversationElement{&msg})
+	assert.NoError(t, err)
+	assert.Len(t, raw, 1)
+
+	var wire map[string]interface{}
+	err = json.Unmarshal(raw[0], &wire)
+	assert.NoError(t, err)
+	assert.Equal(t, "user", wire["role"])
+}
+
+func TestLMStudioToProviderRepresentation_EmptyElements(t *testing.T) {
+	p := &LMStudioProvider{}
+	raw, err := p.ToProviderRepresentation(nil)
+	assert.NoError(t, err)
+	assert.Nil(t, raw)
+}
+
+func TestNewLMStudioProvider_ValidArgs(t *testing.T) {
+	lm, err := NewLMStudioProvider(Model("local/model"), "http://localhost", "1234")
+	assert.NoError(t, err)
+	assert.Equal(t, Model("local/model"), lm.Model())
+	assert.Equal(t, "http://localhost:1234/v1/responses", lm.URL())
+}
+
+func TestNewLMStudioProvider_RemoteHost(t *testing.T) {
+	lm, err := NewLMStudioProvider(Model("local/model"), "http://192.168.1.50", "1234")
+	assert.NoError(t, err)
+	assert.Equal(t, "http://192.168.1.50:1234/v1/responses", lm.URL())
+}
+
+func TestNewLMStudioProvider_MissingModel(t *testing.T) {
+	_, err := NewLMStudioProvider("", "localhost", "1234")
+	assert.ErrorIs(t, err, ErrEndpointMissingModelName)
+}
+
+func TestNewLMStudioProvider_MissingHost(t *testing.T) {
+	_, err := NewLMStudioProvider(Model("local/model"), "", "1234")
+	assert.ErrorIs(t, err, ErrEndpointMissingHost)
+}
+
+func TestNewLMStudioProvider_MissingPort(t *testing.T) {
+	_, err := NewLMStudioProvider(Model("local/model"), "localhost", "")
+	assert.ErrorIs(t, err, ErrEndpointMissingPort)
+}
+
+func TestLMStudioRoundTrip_FromFile(t *testing.T) {
+	var req struct {
+		Input []json.RawMessage `json:"input"`
+	}
+	err := json.Unmarshal(goldenLMStudioRequest, &req)
+	assert.NoError(t, err)
+
+	p := &LMStudioProvider{}
+	elements, err := p.ToConversationElements(req.Input)
+	assert.NoError(t, err)
+	assert.Len(t, elements, len(req.Input))
+
+	wireBack, err := p.ToProviderRepresentation(elements)
+	assert.NoError(t, err)
+
+	// Round-trip should preserve all items.
+	assert.Equal(t, len(req.Input), len(wireBack))
+
+	for i, original := range req.Input {
+		assert.JSONEq(t, string(original), string(wireBack[i]), "item %d round-trip mismatch", i)
+	}
+}

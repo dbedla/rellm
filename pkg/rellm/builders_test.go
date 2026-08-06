@@ -1,7 +1,6 @@
 package rellm_test
 
 import (
-
 	"errors"
 	"testing"
 
@@ -9,55 +8,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 )
-
-func TestEndpointBuilder_Build(t *testing.T) {
-	mockHttp := new(HttpDoMock)
-	defer mockHttp.AssertExpectations(t)
-	lmsEndpoint := rellm.NewUniversalResponsesEndpoint(testBaseUrl, testPort, testResponsesApiEndpoint, nil)
-
-	t.Run("Successful build", func(t *testing.T) {
-		builder := rellm.NewEndpointBuilder().
-			WithModel(rellm.Model_LMS_Google_Gemma_4_26B_A4B).
-			WithProvider(rellm.Provider_LMStudio).
-			WithResponsesApiEndpoint(lmsEndpoint).
-			WithClientHttpDo(mockHttp)
-
-		endpoint, err := builder.Build()
-		assert.NoError(t, err)
-		assert.NotNil(t, endpoint)
-	})
-
-	t.Run("Missing model", func(t *testing.T) {
-		builder := rellm.NewEndpointBuilder().
-			WithResponsesApiEndpoint(lmsEndpoint).
-			WithClientHttpDo(mockHttp)
-
-		agent, err := builder.Build()
-		assert.Nil(t, agent)
-		assert.Error(t, err)
-		assert.Equal(t, rellm.ErrBuildNoModelName, err)
-	})
-
-	t.Run("Missing response api endpoint", func(t *testing.T) {
-		builder := rellm.NewEndpointBuilder().
-			WithModel(rellm.Model_LMS_Google_Gemma_4_26B_A4B).
-			WithClientHttpDo(mockHttp)
-
-		_, err := builder.Build()
-		assert.Error(t, err)
-		assert.Equal(t, err, rellm.ErrBuildNoResponsesApiEndpoint)
-	})
-
-	t.Run("Missing http client", func(t *testing.T) {
-		builder := rellm.NewEndpointBuilder().
-			WithModel(rellm.Model_LMS_Google_Gemma_4_26B_A4B).
-			WithResponsesApiEndpoint(lmsEndpoint)
-
-		_, err := builder.Build()
-		assert.Error(t, err)
-		assert.Equal(t, err, rellm.ErrBuildNoHttpClient)
-	})
-}
 
 func TestPromptBuilder_Validation_RejectsEmptyReasoning(t *testing.T) {
 	_, err := rellm.NewPromptBuilder().
@@ -97,23 +47,17 @@ func TestPromptBuilder_Build_EmptyMessage(t *testing.T) {
 }
 
 func TestAgentBuilder_Build(t *testing.T) {
-	mockHttp := new(HttpDoMock)
-	defer mockHttp.AssertExpectations(t)
-	lmsEndpoint := rellm.NewUniversalResponsesEndpoint(testBaseUrl, testPort, testResponsesApiEndpoint, nil)
-	// Setup a valid endpoint for AgentBuilder tests
-	endpoint, err := rellm.NewEndpointBuilder().
-		WithModel(rellm.Model_LMS_Google_Gemma_4_26B_A4B).
-		WithProvider(rellm.Provider_LMStudio).
-		WithResponsesApiEndpoint(lmsEndpoint).
-		WithClientHttpDo(mockHttp).
-		Build()
-	assert.NoError(t, err)
-
 	tmpDir := t.TempDir()
+
+	buildProvider := func() rellm.Provider {
+		p, err := rellm.NewLMStudioProvider(rellm.Model_LMS_Google_Gemma_4_26B_A4B, testBaseUrl, testPort)
+		assert.NoError(t, err)
+		return p
+	}
 
 	t.Run("Successful build", func(t *testing.T) {
 		builder := rellm.NewAgentBuilder().
-			WithEndpoint(endpoint).
+			WithProvider(buildProvider()).
 			WithWorkspaceDir(tmpDir).
 			WithAgentName("TestAgent").
 			WithStdoutLogger()
@@ -127,7 +71,7 @@ func TestAgentBuilder_Build(t *testing.T) {
 		builder := rellm.NewAgentBuilder().
 			WithAgentName("TestAgent").
 			WithNoOpLogger().
-			WithEndpoint(endpoint).
+			WithProvider(buildProvider()).
 			WithStdoutLogger()
 
 		_, err := builder.Build()
@@ -135,7 +79,7 @@ func TestAgentBuilder_Build(t *testing.T) {
 		assert.Equal(t, err, rellm.ErrBuildNoWorkspaceDir)
 	})
 
-	t.Run("Missing endpoint", func(t *testing.T) {
+	t.Run("Missing provider", func(t *testing.T) {
 		builder := rellm.NewAgentBuilder().
 			WithWorkspaceDir(tmpDir).
 			WithStdoutLogger().
@@ -143,12 +87,12 @@ func TestAgentBuilder_Build(t *testing.T) {
 
 		_, err := builder.Build()
 		assert.Error(t, err)
-		assert.Equal(t, err, rellm.ErrBuildNoEndpoint)
+		assert.Equal(t, err, rellm.ErrBuildNoProvider)
 	})
 
 	t.Run("Missing agent name", func(t *testing.T) {
 		builder := rellm.NewAgentBuilder().
-			WithEndpoint(endpoint).
+			WithProvider(buildProvider()).
 			WithWorkspaceDir(tmpDir).
 			WithStdoutLogger()
 
@@ -160,7 +104,7 @@ func TestAgentBuilder_Build(t *testing.T) {
 	t.Run("Multiple loggers configured", func(t *testing.T) {
 		builder := rellm.NewAgentBuilder().
 			WithAgentName("TestAgent").
-			WithEndpoint(endpoint).
+			WithProvider(buildProvider()).
 			WithWorkspaceDir(tmpDir).
 			WithStdoutLogger().
 			WithNoOpLogger()
@@ -172,7 +116,7 @@ func TestAgentBuilder_Build(t *testing.T) {
 
 	t.Run("No loggers configured", func(t *testing.T) {
 		builder := rellm.NewAgentBuilder().
-			WithEndpoint(endpoint).
+			WithProvider(buildProvider()).
 			WithWorkspaceDir(tmpDir).
 			WithAgentName("TestAgent")
 

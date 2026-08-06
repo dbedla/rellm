@@ -11,8 +11,8 @@ This document defines practical rules and conventions for writing maintainable, 
 - Inject dependencies via constructors or builders.
 
 ## 1.2 Builder Pattern
-- For complex objects like `Agent` or `Endpoint`, use the Builder pattern to provide a clean and flexible initialization API.
-- Example: `NewAgentBuilder().WithEndpoint(e).Build()`.
+- For complex objects like `Agent`, use the Builder pattern to provide a clean and flexible initialization API.
+- Example: `NewAgentBuilder().WithProvider(p).Build()`.
 
 ## 1.3 Repository/Storage Pattern
 - Abstract data persistence (e.g., `ConversationStorage`) behind interfaces or dedicated structs to decouple business logic from storage details.
