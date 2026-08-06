@@ -195,8 +195,6 @@ func messagesFromParts(parts []MessagePart) string {
 }
 
 func (a *Agent) handleImageGenerationCall(image *ImageGeneration) error {
-
-	// todo: return image as message or something?
 	if a.handleImageGeneration == nil {
 		return ErrNoImageHandler
 	}
