@@ -23,7 +23,7 @@ func buildProAgent(workspace string) (*rellm.Agent, error) {
 		WithAgentName(agentName).
 		WithWorkspaceDir(workspace).
 		WithMaxToolsIterationWithoutReturnMessage(20).
-		WithContinueConversation(false).
+		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage(proAgentSysPrompt).
 		WithToolset(&WeatherToolset{}).
 		WithWorkspaceLogger().

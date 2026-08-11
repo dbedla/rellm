@@ -15,7 +15,10 @@ func (a *Agent) run(msg string, params promptParams) (string, error) {
 	a.logger.Info().Msgf("question to agent: %s", string(msg))
 	defer a.logger.Info().Msg("question answered")
 
-	conversation := a.CurrentConversation()
+	conversation, err := a.CurrentConversation()
+	if err != nil {
+		return "", err
+	}
 
 	userMsg, err := PromptMessageToConversation(msg, "user")
 	if err != nil {
@@ -23,6 +26,9 @@ func (a *Agent) run(msg string, params promptParams) (string, error) {
 	}
 
 	conversation = append(conversation, userMsg)
+	if err := a.conversationStorage.Append([]json.RawMessage{userMsg}); err != nil {
+		return "", err
+	}
 
 	elements, err := a.provider.ToConversationElements(conversation)
 	if err != nil {
@@ -39,11 +45,11 @@ func (a *Agent) run(msg string, params promptParams) (string, error) {
 		req.Tools = a.toolset.BuildTools()
 	}
 
-	newConversation, msgRespFromLLM, _, err := a.process(req)
+	msgRespFromLLM, err := a.process(req)
 
-	if len(newConversation) > 0 {
-		a.inMemoryConversation = newConversation
-	}
+	//if len(newConversation) > 0 {
+	//	a.inMemoryConversation = newConversation
+	//}
 
 	if err != nil {
 		a.logger.Error().Err(err).Msgf("unable to process conversation %s", err.Error())
@@ -98,21 +104,21 @@ func (a *Agent) post(req *ResponsesApiReq) (_ *ResponsesApiResp, err error) {
 	return parseResponsesApiResponse(resp, rawBody, apiUrl.String(), a.inspectResp)
 }
 
-func (a *Agent) process(req *ResponsesApiReq) ([]json.RawMessage, string, *ResponsesApiResp, error) {
+func (a *Agent) process(req *ResponsesApiReq) (string, error) {
 	for i := uint64(0); i < a.maxToolsIterationWithoutReturnMessage; i++ {
 		conversationResponse, err := a.post(req)
 		if err != nil {
-			return nil, "", conversationResponse, err
+			return "", err
 		}
 
 		if conversationResponse.Error != nil {
 			a.logger.Error().Msgf("error in conversation response: %v", conversationResponse.Error.Message)
-			return nil, "", conversationResponse, errors.Join(ErrInConversationResponse, fmt.Errorf("err msg: %v", conversationResponse.Error.Message))
+			return "", errors.Join(ErrInConversationResponse, fmt.Errorf("err msg: %v", conversationResponse.Error.Message))
 		}
 
 		conversation, err := a.provider.ToConversationElements(conversationResponse.Output)
 		if err != nil {
-			return req.Input, "", conversationResponse, errors.Join(ErrConversationElementConversion, err)
+			return "", errors.Join(ErrConversationElementConversion, err)
 		}
 		msg, fnCallsResp, imageHandled, err := a.dispatchConversation(conversation)
 		for _, fResp := range fnCallsResp {
@@ -121,19 +127,22 @@ func (a *Agent) process(req *ResponsesApiReq) ([]json.RawMessage, string, *Respo
 		raw, errProviderRep := a.provider.ToProviderRepresentation(conversation)
 		req.Input = append(req.Input, raw...)
 		if errProviderRep != nil {
-			return req.Input, "", conversationResponse, errors.Join(ErrConversationElementConversion, errProviderRep)
+			return "", errors.Join(ErrConversationElementConversion, errProviderRep)
+		}
+		if err := a.conversationStorage.Append(raw); err != nil {
+			return "", err
 		}
 		if err != nil {
-			return req.Input, "", conversationResponse, err
+			return "", err
 		}
 		if imageHandled || msg != "" {
-			return req.Input, msg, conversationResponse, nil
+			return msg, nil
 		}
 
 	}
 
 	a.logger.Error().Msgf("max tool iterations (%d) reached without a return message", a.maxToolsIterationWithoutReturnMessage)
-	return req.Input, "", nil,
+	return "",
 		errors.Join(ErrMaxToolIterationsReached,
 			fmt.Errorf("exceeded %d iterations", a.maxToolsIterationWithoutReturnMessage))
 }

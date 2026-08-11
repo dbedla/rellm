@@ -60,11 +60,23 @@ func TestAgentBuilder_Build(t *testing.T) {
 			WithProvider(buildProvider()).
 			WithWorkspaceDir(tmpDir).
 			WithAgentName("TestAgent").
+			WithConversationStorage(rellm.NewInMemoryStorage()).
 			WithStdoutLogger()
 
 		agent, err := builder.Build()
 		assert.NoError(t, err)
 		assert.NotNil(t, agent)
+	})
+
+	t.Run("Missing conversation storage", func(t *testing.T) {
+		builder := rellm.NewAgentBuilder().
+			WithProvider(buildProvider()).
+			WithWorkspaceDir(tmpDir).
+			WithAgentName("TestAgent").
+			WithNoOpLogger()
+
+		_, err := builder.Build()
+		assert.ErrorIs(t, err, rellm.ErrBuildNoConversationStorage)
 	})
 
 	t.Run("Missing workspaceDir", func(t *testing.T) {

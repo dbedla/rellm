@@ -481,7 +481,7 @@ func buildTestProToolAgentLMS(t *testing.T, maxToolsIterationWithoutReturnMessag
 		WithAgentName(agentName).
 		WithWorkspaceDir(workspace).
 		WithMaxToolsIterationWithoutReturnMessage(maxToolsIterationWithoutReturnMessage).
-		WithContinueConversation(false).
+		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage("You are a helpful assistant.").
 		WithToolset(&agentsutils.DataSrcToolset{}).
 		WithNoOpLogger().
@@ -506,7 +506,7 @@ func buildTestProToolAgentOpenRouter(t *testing.T, model rellm.Model, maxToolsIt
 		WithAgentName(agentName).
 		WithWorkspaceDir(workspace).
 		WithMaxToolsIterationWithoutReturnMessage(maxToolsIterationWithoutReturnMessage).
-		WithContinueConversation(false).
+		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage("You are a helpful assistant.").
 		WithToolset(&agentsutils.DataSrcToolset{}).
 		WithNoOpLogger().

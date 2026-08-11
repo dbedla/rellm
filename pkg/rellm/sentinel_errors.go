@@ -7,6 +7,7 @@ var ErrBuildNoProvider = fmt.Errorf("missing provider")
 var ErrBuildNoAgentName = fmt.Errorf("missing agent name")
 var ErrBuildExactlyOneLogger = fmt.Errorf("exactly one logger must be configured")
 var ErrBuildLogger = fmt.Errorf("unable to create logger")
+var ErrBuildNoConversationStorage = fmt.Errorf("missing conversation storage")
 
 var ErrNoToolsetButToolCallRequested = fmt.Errorf("no toolset provided but request to call tool received")
 var ErrWhileDispatchToolCall = fmt.Errorf("unable to dispatch tool call")

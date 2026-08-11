@@ -1,10 +1,8 @@
 package rellm
 
 import (
-	"encoding/json"
 	"errors"
 	"path/filepath"
-	"rellm/pkg/rellm/conversation_storage"
 
 	"github.com/rs/zerolog"
 )
@@ -32,7 +30,7 @@ func (b *AgentBuilder) WithToolset(toolset Toolset) *AgentBuilder {
 	return b
 }
 
-func (b *AgentBuilder) WithConversationStorage(storage *conversation_storage.ConversationStorage) *AgentBuilder {
+func (b *AgentBuilder) WithConversationStorage(storage ConversationStorage) *AgentBuilder {
 	b.agent.conversationStorage = storage
 	return b
 }
@@ -49,16 +47,6 @@ func (b *AgentBuilder) WithWorkspaceDir(dir string) *AgentBuilder {
 
 func (b *AgentBuilder) WithSystemMessage(msg string) *AgentBuilder {
 	b.agent.sysMsg = msg
-	return b
-}
-
-func (b *AgentBuilder) WithInMemoryConversation(conv []json.RawMessage) *AgentBuilder {
-	b.agent.inMemoryConversation = conv
-	return b
-}
-
-func (b *AgentBuilder) WithContinueConversation(cont bool) *AgentBuilder {
-	b.agent.continueConversation = cont
 	return b
 }
 
@@ -128,7 +116,7 @@ func (b *AgentBuilder) Build() (*Agent, error) {
 	}
 
 	if b.agent.conversationStorage == nil {
-		b.agent.conversationStorage = conversation_storage.NewForAgent(b.agent.workspaceDir, b.agent.agentName)
+		return nil, ErrBuildNoConversationStorage
 	}
 
 	if b.inspectReq != nil {
