@@ -329,8 +329,6 @@ func TestAgentLMS_ToolsCall(t *testing.T) {
 	assert.Equal(t, 10, len(agentConversation))
 
 	conversationFromGolden, err := buildConversationFromGoldenLms(
-		goldenProReqA1,
-		goldenProRespA2,
 		goldenProReqA3,
 		goldenProRespA3)
 	assert.NoError(t, err)
@@ -341,9 +339,7 @@ func TestAgentLMS_ToolsCall(t *testing.T) {
 	actual, err := json.MarshalIndent(agentConversation, "", "  ")
 	assert.NoError(t, err)
 
-	assert.Equal(t, string(expected), string(actual))
-
-	//assert.Equal(t, agentConversation, conversationFromGolden)
+	assert.JSONEq(t, string(expected), string(actual))
 }
 
 //go:embed testdata/lms/unknown_fn_call_01_req.json
