@@ -47,10 +47,6 @@ func (a *Agent) run(msg string, params promptParams) (string, error) {
 
 	msgRespFromLLM, err := a.process(req)
 
-	//if len(newConversation) > 0 {
-	//	a.inMemoryConversation = newConversation
-	//}
-
 	if err != nil {
 		a.logger.Error().Err(err).Msgf("unable to process conversation %s", err.Error())
 		return "", err
@@ -129,12 +125,16 @@ func (a *Agent) process(req *ResponsesApiReq) (string, error) {
 		if errProviderRep != nil {
 			return "", errors.Join(ErrConversationElementConversion, errProviderRep)
 		}
-		if err := a.conversationStorage.Append(raw); err != nil {
-			return "", err
+
+		conversationErr := a.conversationStorage.Append(raw)
+		if conversationErr != nil {
+			return "", conversationErr
 		}
+
 		if err != nil {
 			return "", err
 		}
+
 		if imageHandled || msg != "" {
 			return msg, nil
 		}

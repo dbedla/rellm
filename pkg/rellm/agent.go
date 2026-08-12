@@ -18,9 +18,7 @@ type Agent struct {
 	agentName    string
 	workspaceDir string
 	sysMsg       string
-	//conversationStorage                   *conversation_storage.ConversationStorage
-	//inMemoryConversation                  []json.RawMessage
-	//continueConversation                  bool
+
 	conversationStorage                   ConversationStorage
 	maxToolsIterationWithoutReturnMessage uint64
 
@@ -51,16 +49,6 @@ func (a *Agent) CurrentConversation() ([]json.RawMessage, error) {
 	}
 	return a.conversationStorage.Load()
 }
-
-//func (a *Agent) StoreConversation() error {
-//	err := a.conversationStorage.Store(a.inMemoryConversation)
-//	if err != nil {
-//		a.logger.Error().Err(err).Msg("unable to store conversation")
-//		return err
-//	}
-//	a.logger.Debug().Msgf("conversation stored, check workspace folder: %s", a.workspaceDir)
-//	return nil
-//}
 
 func FuncResultToFunctionCallResp(callId string, funcResult any) FunctionCallResp {
 	b, err := json.Marshal(funcResult)

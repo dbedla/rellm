@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"rellm/pkg/agentsutils"
@@ -322,6 +323,27 @@ func TestAgentLMS_ToolsCall(t *testing.T) {
 
 	assert.NotNil(t, respMsg, "response message should not be nil")
 	assert.Equal(t, "The first tool call to `GetStaticData` returned the value `42`. The second tool call to `GetDataFor` with the input \"the meaning of 42\" returned a list containing `[\"abc\", \"def\"]`. Therefore, based on these specific tool outputs, the data associated with the value 42 is \"abc\" and \"def\".", respMsg, "response message should match")
+
+	agentConversation, err := agent.CurrentConversation()
+	assert.NoError(t, err)
+	assert.Equal(t, 10, len(agentConversation))
+
+	conversationFromGolden, err := buildConversationFromGoldenLms(
+		goldenProReqA1,
+		goldenProRespA2,
+		goldenProReqA3,
+		goldenProRespA3)
+	assert.NoError(t, err)
+
+	expected, err := json.MarshalIndent(conversationFromGolden, "", "  ")
+	assert.NoError(t, err)
+
+	actual, err := json.MarshalIndent(agentConversation, "", "  ")
+	assert.NoError(t, err)
+
+	assert.Equal(t, string(expected), string(actual))
+
+	//assert.Equal(t, agentConversation, conversationFromGolden)
 }
 
 //go:embed testdata/lms/unknown_fn_call_01_req.json
@@ -514,4 +536,56 @@ func buildTestProToolAgentOpenRouter(t *testing.T, model rellm.Model, maxToolsIt
 
 	assert.NoError(t, err, "failed to create agent")
 	return ta, mockHttp
+}
+
+func buildConversationFromGoldenLms(goldens ...string) ([]json.RawMessage, error) {
+	rawConversation, err := buildRawConversationFromGolden(goldens...)
+	if err != nil {
+		return nil, fmt.Errorf("build raw conversation from golden: %w", err)
+	}
+
+	return lmsNormalization(rawConversation)
+}
+
+func lmsNormalization(input []json.RawMessage) ([]json.RawMessage, error) {
+	lmsProvider := rellm.LMStudioProvider{}
+	return providerNormalization(input, &lmsProvider)
+}
+
+func openRouterNormalization(input []json.RawMessage) ([]json.RawMessage, error) {
+	lmsProvider := rellm.OpenRouterProvider{}
+	return providerNormalization(input, &lmsProvider)
+}
+
+func providerNormalization(input []json.RawMessage, provider rellm.Provider) ([]json.RawMessage, error) {
+	ce, err := provider.ToConversationElements(input)
+	if err != nil {
+		return nil, fmt.Errorf("convert input to conversation elements: %w", err)
+	}
+	lmsRepresentation, err := provider.ToProviderRepresentation(ce)
+	if err != nil {
+		return nil, fmt.Errorf("convert conversation elements to raw conversation: %w", err)
+	}
+	return lmsRepresentation, nil
+}
+
+func buildRawConversationFromGolden(goldens ...string) ([]json.RawMessage, error) {
+	type golden struct {
+		Input  []json.RawMessage `json:"input"`
+		Output []json.RawMessage `json:"output"`
+	}
+
+	var conversation []json.RawMessage
+
+	for _, data := range goldens {
+		var g golden
+		if err := json.Unmarshal([]byte(data), &g); err != nil {
+			return nil, fmt.Errorf("unmarshal golden: %w", err)
+		}
+
+		conversation = append(conversation, g.Input...)
+		conversation = append(conversation, g.Output...)
+	}
+
+	return conversation, nil
 }
