@@ -1,0 +1,239 @@
+package rellm_test
+
+import (
+	"bytes"
+	"encoding/json"
+	"io"
+	"net/http"
+	"rellm/pkg/rellm"
+	"strings"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+)
+
+func TestAgentAsk_ConversationBeforeAndAfter(t *testing.T) {
+	agent, httpDo := buildTestAgent(t)
+	defer httpDo.AssertExpectations(t)
+
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Run(func(args mock.Arguments) {
+			req := args.Get(0).(*http.Request)
+
+			b, err := io.ReadAll(req.Body)
+			assert.NoError(t, err, "failed to read request body")
+
+			req.Body = io.NopCloser(bytes.NewBuffer(b))
+
+			assert.JSONEq(t, goldenReqHi, string(b))
+		}).
+		Return(&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(goldenRespHi)),
+		}, nil)
+
+	conversationBeforeAskRaw, err := agent.CurrentConversation()
+	assert.NoError(t, err)
+	assert.Len(t, conversationBeforeAskRaw, 1)
+
+	conversationBeforeAsk, err := json.Marshal(conversationBeforeAskRaw)
+	assert.NoError(t, err)
+
+	assert.JSONEq(t, `[{"role":"system","content":[{"type":"input_text","text":"You are a helpful assistant with deep weather knowledge."}]}]`, string(conversationBeforeAsk))
+
+	respMsg, err := agent.Ask("Hi")
+	assert.NoError(t, err)
+	assert.NotNil(t, respMsg)
+	assert.Equal(t, "Hello! How can I help you today? \n\nIf you have any questions about the weather, meteorology, climate patterns, or even how certain atmospheric phenomena work, feel free to ask!", respMsg)
+
+	conversationFromGolden, err := buildConversationFromGoldenLms(
+		goldenReqHi,
+		goldenRespHi)
+	assert.NoError(t, err)
+
+	expectedAfterAsk, err := json.Marshal(conversationFromGolden)
+	assert.NoError(t, err)
+
+	conversationAfterAskRaw, err := agent.CurrentConversation()
+	assert.NoError(t, err)
+
+	conversationAfterAsk, err := json.Marshal(conversationAfterAskRaw)
+	assert.NoError(t, err)
+
+	assert.JSONEq(t, string(expectedAfterAsk), string(conversationAfterAsk))
+}
+
+func TestAgentLMS_ToolsCallWithConversationCheck(t *testing.T) {
+	agent, httpDo := buildTestProToolAgentLMS(t, TestDefaultMaxToolsIterationWithoutReturnMessage)
+	defer httpDo.AssertExpectations(t)
+
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Run(func(args mock.Arguments) {
+			req := args.Get(0).(*http.Request)
+
+			b, err := io.ReadAll(req.Body)
+			assert.NoError(t, err, "failed to read request body")
+
+			req.Body = io.NopCloser(bytes.NewBuffer(b))
+
+			assert.JSONEq(t, goldenProReqA1, string(b))
+		}).
+		Return(&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(goldenProRespA1)),
+		}, nil)
+
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Run(func(args mock.Arguments) {
+			req := args.Get(0).(*http.Request)
+
+			b, err := io.ReadAll(req.Body)
+			assert.NoError(t, err, "failed to read request body")
+
+			req.Body = io.NopCloser(bytes.NewBuffer(b))
+
+			assert.JSONEq(t, goldenProReqA2, string(b))
+		}).
+		Return(&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(goldenProRespA2)),
+		}, nil)
+
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Run(func(args mock.Arguments) {
+			req := args.Get(0).(*http.Request)
+
+			b, err := io.ReadAll(req.Body)
+			assert.NoError(t, err, "failed to read request body")
+
+			req.Body = io.NopCloser(bytes.NewBuffer(b))
+
+			assert.JSONEq(t, goldenProReqA3, string(b))
+		}).
+		Return(&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(goldenProRespA3)),
+		}, nil)
+
+	q := "call one tool, check output, then call second tool, check output, provide conclusion"
+	prompt, err := rellm.NewPromptBuilder().
+		WithMessage(q).
+		WithReasoning(testReasoningEffort).
+		WithTemperature(testTemperature).
+		Build()
+	assert.NoError(t, err)
+
+	respMsg, err := agent.Execute(prompt)
+	assert.NoError(t, err, "failed to ask")
+
+	assert.NotNil(t, respMsg, "response message should not be nil")
+	assert.Equal(t, "The first tool call to `GetStaticData` returned the value `42`. The second tool call to `GetDataFor` with the input \"the meaning of 42\" returned a list containing `[\"abc\", \"def\"]`. Therefore, based on these specific tool outputs, the data associated with the value 42 is \"abc\" and \"def\".", respMsg, "response message should match")
+
+	agentConversation, err := agent.CurrentConversation()
+	assert.NoError(t, err)
+	assert.Equal(t, 10, len(agentConversation))
+
+	conversationFromGolden, err := buildConversationFromGoldenLms(
+		goldenProReqA3,
+		goldenProRespA3)
+	assert.NoError(t, err)
+
+	expected, err := json.Marshal(conversationFromGolden)
+	assert.NoError(t, err)
+
+	actual, err := json.Marshal(agentConversation)
+	assert.NoError(t, err)
+
+	assert.JSONEq(t, string(expected), string(actual))
+}
+
+func TestAgentLMS_ToolsCallWithConversationCheck_SecondRespFail(t *testing.T) {
+	agent, httpDo := buildTestProToolAgentLMS(t, TestDefaultMaxToolsIterationWithoutReturnMessage)
+	defer httpDo.AssertExpectations(t)
+
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Run(func(args mock.Arguments) {
+			req := args.Get(0).(*http.Request)
+
+			b, err := io.ReadAll(req.Body)
+			assert.NoError(t, err, "failed to read request body")
+
+			req.Body = io.NopCloser(bytes.NewBuffer(b))
+
+			assert.JSONEq(t, goldenProReqA1, string(b))
+		}).
+		Return(&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(goldenProRespA1)),
+		}, nil)
+
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Run(func(args mock.Arguments) {
+			req := args.Get(0).(*http.Request)
+
+			b, err := io.ReadAll(req.Body)
+			assert.NoError(t, err, "failed to read request body")
+
+			req.Body = io.NopCloser(bytes.NewBuffer(b))
+
+			assert.JSONEq(t, goldenProReqA2, string(b))
+		}).
+		Return(&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(goldenProRespA2)),
+		}, nil)
+
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Run(func(args mock.Arguments) {
+			req := args.Get(0).(*http.Request)
+
+			b, err := io.ReadAll(req.Body)
+			assert.NoError(t, err, "failed to read request body")
+
+			req.Body = io.NopCloser(bytes.NewBuffer(b))
+
+			assert.JSONEq(t, goldenProReqA3, string(b))
+		}).
+		Return(&http.Response{
+			StatusCode: http.StatusInternalServerError,
+			Body:       nil,
+		}, nil)
+
+	q := "call one tool, check output, then call second tool, check output, provide conclusion"
+	prompt, err := rellm.NewPromptBuilder().
+		WithMessage(q).
+		WithReasoning(testReasoningEffort).
+		WithTemperature(testTemperature).
+		Build()
+	assert.NoError(t, err)
+
+	respMsg, err := agent.Execute(prompt)
+	assert.Error(t, err)
+	assert.ErrorIs(t, err, rellm.ErrEndpointNilBodyInResponse)
+
+	assert.Empty(t, respMsg)
+
+	agentConversation, err := agent.CurrentConversation()
+	assert.NoError(t, err)
+	assert.Equal(t, 8, len(agentConversation))
+
+	conversationFromGolden, err := buildConversationFromGoldenLms(
+		goldenProReqA3)
+	assert.NoError(t, err)
+
+	expected, err := json.Marshal(conversationFromGolden)
+	assert.NoError(t, err)
+
+	actual, err := json.Marshal(agentConversation)
+	assert.NoError(t, err)
+
+	assert.JSONEq(t, string(expected), string(actual))
+}

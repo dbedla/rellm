@@ -8,11 +8,6 @@ import (
 	"path/filepath"
 )
 
-type ConversationStorage interface {
-	Load() ([]json.RawMessage, error)
-	Append([]json.RawMessage) error
-}
-
 type InMemoryStorage struct {
 	Messages []json.RawMessage
 }

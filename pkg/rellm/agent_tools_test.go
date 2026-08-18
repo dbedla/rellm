@@ -323,23 +323,6 @@ func TestAgentLMS_ToolsCall(t *testing.T) {
 
 	assert.NotNil(t, respMsg, "response message should not be nil")
 	assert.Equal(t, "The first tool call to `GetStaticData` returned the value `42`. The second tool call to `GetDataFor` with the input \"the meaning of 42\" returned a list containing `[\"abc\", \"def\"]`. Therefore, based on these specific tool outputs, the data associated with the value 42 is \"abc\" and \"def\".", respMsg, "response message should match")
-
-	agentConversation, err := agent.CurrentConversation()
-	assert.NoError(t, err)
-	assert.Equal(t, 10, len(agentConversation))
-
-	conversationFromGolden, err := buildConversationFromGoldenLms(
-		goldenProReqA3,
-		goldenProRespA3)
-	assert.NoError(t, err)
-
-	expected, err := json.MarshalIndent(conversationFromGolden, "", "  ")
-	assert.NoError(t, err)
-
-	actual, err := json.MarshalIndent(agentConversation, "", "  ")
-	assert.NoError(t, err)
-
-	assert.JSONEq(t, string(expected), string(actual))
 }
 
 //go:embed testdata/lms/unknown_fn_call_01_req.json
@@ -549,8 +532,8 @@ func lmsNormalization(input []json.RawMessage) ([]json.RawMessage, error) {
 }
 
 func openRouterNormalization(input []json.RawMessage) ([]json.RawMessage, error) {
-	lmsProvider := rellm.OpenRouterProvider{}
-	return providerNormalization(input, &lmsProvider)
+	orProvider := rellm.OpenRouterProvider{}
+	return providerNormalization(input, &orProvider)
 }
 
 func providerNormalization(input []json.RawMessage, provider rellm.Provider) ([]json.RawMessage, error) {

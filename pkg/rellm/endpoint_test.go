@@ -44,7 +44,7 @@ func TestEndpointPostMalformedJSONResponse(t *testing.T) {
 	err := postWithResponse(t, http.StatusOK, `{"id":`)
 
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "error unmarshalling")
+	assert.Contains(t, err.Error(), "error unmarshaling")
 	assert.Contains(t, err.Error(), `{"id":`)
 }
 

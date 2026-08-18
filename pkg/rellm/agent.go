@@ -11,6 +11,11 @@ type Toolset interface {
 	DispatchTools(name string, callID string, arguments json.RawMessage) (FunctionCallResp, bool)
 }
 
+type ConversationStorage interface {
+	Load() ([]json.RawMessage, error)
+	Append([]json.RawMessage) error
+}
+
 type Agent struct {
 	provider     Provider
 	toolset      Toolset
@@ -35,8 +40,12 @@ type InspectEachResponse func(resp *ResponsesApiResp)
 
 func (a *Agent) CurrentConversation() ([]json.RawMessage, error) {
 	conversation, err := a.conversationStorage.Load()
-	if err != nil || len(conversation) != 0 {
-		return conversation, err
+	if err != nil {
+		return nil, err
+	}
+
+	if len(conversation) != 0 {
+		return conversation, nil
 	}
 
 	systemMessage, err := PromptMessageToConversation(a.sysMsg, "system")

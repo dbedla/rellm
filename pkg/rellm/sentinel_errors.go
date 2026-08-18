@@ -17,6 +17,10 @@ var ErrModelReturnedUnproductiveOutput = fmt.Errorf("model returned output but n
 var ErrConversationElementConversion = fmt.Errorf("error converting conversation element")
 var ErrUnknownConversationElement = fmt.Errorf("unknown conversation element")
 
+var ErrEndpointNilResponse = fmt.Errorf("endpoint returned nil response")
+var ErrEndpointNilBodyInResponse = fmt.Errorf("endpoint returned nil body in response")
+var ErrUnableToReadResponseBody = fmt.Errorf("unable to read response body")
+
 var ErrEmptyPrompt = fmt.Errorf("prompt message is empty")
 var ErrEmptyReasoningEffort = fmt.Errorf("reasoning effort cannot be empty")
 

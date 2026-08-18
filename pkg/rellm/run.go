@@ -84,17 +84,21 @@ func (a *Agent) post(req *ResponsesApiReq) (_ *ResponsesApiResp, err error) {
 	}
 
 	if resp == nil {
-		return nil, errors.New("nil response")
+		return nil, ErrEndpointNilResponse
 	}
 
 	if resp.Body == nil {
-		return nil, errors.New("empty response body")
+		return nil, errors.Join(ErrEndpointNilBodyInResponse, fmt.Errorf("response status: %s", resp.Status))
 	}
 
 	defer closeWithError(&err, resp.Body)
 	rawBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, errors.Join(err, ErrUnableToReadResponseBody, fmt.Errorf("response status: %s", resp.Status))
+	}
+
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		return nil, newHTTPStatusError(resp, rawBody, apiUrl.String())
 	}
 
 	return parseResponsesApiResponse(resp, rawBody, apiUrl.String(), a.inspectResp)
@@ -121,10 +125,10 @@ func (a *Agent) process(req *ResponsesApiReq) (string, error) {
 			conversation = append(conversation, fResp)
 		}
 		raw, errProviderRep := a.provider.ToProviderRepresentation(conversation)
-		req.Input = append(req.Input, raw...)
 		if errProviderRep != nil {
 			return "", errors.Join(ErrConversationElementConversion, errProviderRep)
 		}
+		req.Input = append(req.Input, raw...)
 
 		conversationErr := a.conversationStorage.Append(raw)
 		if conversationErr != nil {
