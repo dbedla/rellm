@@ -296,7 +296,7 @@ func TestAgentOpenRouterGemma_ConversationCheck(t *testing.T) {
 
 	respMsg, err = agent.Execute(secondPrompt)
 	assert.NoError(t, err)
-	assert.Equal(t, "I have access to the following tools:\n\n1.  **`GetDataFor`**: This tool allows me to retrieve specific data based on an input string you provide.\n2.  **`GetStaticData`**: This tool allows me to retrieve predefined static information.", respMsg)
+	assert.Equal(t, "I have access to the following tools:\n\n1.  **`GetDataFor`**: This tool allows me to retrieve specific data based on an input string you provide.\n2.  **`GetStaticData`**: This tool allows me to retrieve pre-defined static data.", respMsg)
 
 	agentConversation, err := agent.CurrentConversation()
 	assert.NoError(t, err)
@@ -374,7 +374,7 @@ func TestAgentOpenRouterGemini_ConversationCheck(t *testing.T) {
 
 	respMsg, err = agent.Execute(secondPrompt)
 	assert.NoError(t, err, "failed to ask with reasoning in conversation")
-	assert.Equal(t, "I have access to the following tools:\n\n*   **`GetDataFor`**: This tool allows me to retrieve specific data based on an input string you provide.\n*   **`GetStaticData`**: This tool allows me to retrieve general static information.\n\nHow can I help you use these today?", respMsg)
+	assert.Equal(t, "I have access to the following tools:\n\n*   **`GetDataFor`**: This tool allows me to retrieve specific data based on an input you provide.\n*   **`GetStaticData`**: This tool allows me to retrieve general static information.\n\nHow can I help you use these today?", respMsg)
 
 	agentConversation, err := agent.CurrentConversation()
 	assert.NoError(t, err)

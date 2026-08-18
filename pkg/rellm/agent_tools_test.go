@@ -523,7 +523,8 @@ func buildConversationFromGoldenLms(goldens ...string) ([]json.RawMessage, error
 		return nil, fmt.Errorf("build raw conversation from golden: %w", err)
 	}
 
-	return lmsNormalization(rawConversation)
+	lmsProvider := rellm.LMStudioProvider{}
+	return providerNormalization(rawConversation, &lmsProvider)
 }
 
 func buildConversationFromGoldenOpenRouter(goldens ...string) ([]json.RawMessage, error) {
@@ -532,18 +533,38 @@ func buildConversationFromGoldenOpenRouter(goldens ...string) ([]json.RawMessage
 		return nil, fmt.Errorf("build raw conversation from golden: %w", err)
 	}
 
-	return openRouterNormalization(rawConversation)
-}
-
-func lmsNormalization(input []json.RawMessage) ([]json.RawMessage, error) {
-	lmsProvider := rellm.LMStudioProvider{}
-	return providerNormalization(input, &lmsProvider)
-}
-
-func openRouterNormalization(input []json.RawMessage) ([]json.RawMessage, error) {
 	orProvider := rellm.OpenRouterProvider{}
-	return providerNormalization(input, &orProvider)
+	ce, err := orProvider.ToConversationElements(rawConversation)
+	if err != nil {
+		return nil, fmt.Errorf("convert input to conversation elements: %w", err)
+	}
+
+	var normalized []json.RawMessage
+	for _, e := range ce {
+		switch el := e.(type) {
+		case *rellm.SystemMessage:
+			msg, err := rellm.PromptMessageToConversation(rellm.TextFromContent(el.Content), "system")
+			if err != nil {
+				return nil, err
+			}
+			normalized = append(normalized, msg)
+		case *rellm.UserMessage:
+			msg, err := rellm.PromptMessageToConversation(rellm.TextFromContent(el.Content), "user")
+			if err != nil {
+				return nil, err
+			}
+			normalized = append(normalized, msg)
+		default:
+			raw, err := orProvider.ToProviderRepresentation([]rellm.ConversationElement{el})
+			if err != nil {
+				return nil, err
+			}
+			normalized = append(normalized, raw...)
+		}
+	}
+	return normalized, nil
 }
+
 
 func providerNormalization(input []json.RawMessage, provider rellm.Provider) ([]json.RawMessage, error) {
 	ce, err := provider.ToConversationElements(input)
