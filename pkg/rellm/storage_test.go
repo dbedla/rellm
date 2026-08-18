@@ -102,15 +102,13 @@ func TestFilesystemStorage_AppendMultiple(t *testing.T) {
 	assert.Equal(t, append(first, second...), msgs)
 }
 
-func TestFilesystemStorage_LoadSkipsMalformedLine(t *testing.T) {
+func TestFilesystemStorage_LoadMalformedLineReturnsError(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "conv.jsonl")
 	content := `{"role":"user","content":"hi"}` + "\n" + `{broken` + "\n"
 	assert.NoError(t, os.WriteFile(path, []byte(content), 0644))
 	s := NewFilesystemStorage(path)
-	msgs, err := s.Load()
-	assert.NoError(t, err)
-	assert.Len(t, msgs, 1)
-	assert.Equal(t, json.RawMessage(`{"role":"user","content":"hi"}`), msgs[0])
+	_, err := s.Load()
+	assert.ErrorIs(t, err, ErrMalformedConversationStorage)
 }
 
 func TestFilesystemStorage_AppendEmpty(t *testing.T) {

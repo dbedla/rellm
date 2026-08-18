@@ -3,6 +3,8 @@ package rellm
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -43,13 +45,13 @@ func (s *FilesystemStorage) Load() ([]json.RawMessage, error) {
 		return nil, err
 	}
 	messages := []json.RawMessage{}
-	for _, line := range bytes.Split(data, []byte("\n")) {
+	for lineNum, line := range bytes.Split(data, []byte("\n")) {
 		line = bytes.TrimSpace(line)
 		if len(line) == 0 {
 			continue
 		}
 		if !json.Valid(line) {
-			continue
+			return nil, errors.Join(ErrMalformedConversationStorage, fmt.Errorf("file: %s, line: %d", s.path, lineNum+1))
 		}
 		messages = append(messages, json.RawMessage(line))
 	}
