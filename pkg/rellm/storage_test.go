@@ -124,6 +124,26 @@ func TestFilesystemStorage_AppendEmpty(t *testing.T) {
 	assert.Empty(t, msgs)
 }
 
+func TestFilesystemStorage_AppendMultilineJSONCompacts(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "conv.jsonl")
+	s := NewFilesystemStorage(path)
+	delta := []json.RawMessage{
+		json.RawMessage("{\n  \"role\": \"user\",\n  \"content\": \"hello world\"\n}"),
+	}
+	err := s.Append(delta)
+	assert.NoError(t, err)
+
+	content, err := os.ReadFile(path)
+	assert.NoError(t, err)
+	expected := `{"role":"user","content":"hello world"}` + "\n"
+	assert.Equal(t, expected, string(content))
+
+	msgs, err := s.Load()
+	assert.NoError(t, err)
+	assert.Len(t, msgs, 1)
+	assert.JSONEq(t, `{"role":"user","content":"hello world"}`, string(msgs[0]))
+}
+
 func TestFilesystemStorage_AppendCreatesParentDir(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "sub", "conv.jsonl")
 	s := NewFilesystemStorage(path)

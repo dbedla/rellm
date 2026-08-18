@@ -1,7 +1,6 @@
 package rellm
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/json"
 	"os"
@@ -66,19 +65,18 @@ func (s *FilesystemStorage) Append(delta []json.RawMessage) (err error) {
 			return err
 		}
 	}
+	var buf bytes.Buffer
+	for _, m := range delta {
+		if err := json.Compact(&buf, m); err != nil {
+			return err
+		}
+		buf.WriteByte('\n')
+	}
 	f, err := os.OpenFile(s.path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}
 	defer closeWithError(&err, f)
-	w := bufio.NewWriter(f)
-	for _, m := range delta {
-		if _, err := w.Write(m); err != nil {
-			return err
-		}
-		if err := w.WriteByte('\n'); err != nil {
-			return err
-		}
-	}
-	return w.Flush()
+	_, err = f.Write(buf.Bytes())
+	return err
 }
