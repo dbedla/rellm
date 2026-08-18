@@ -526,6 +526,15 @@ func buildConversationFromGoldenLms(goldens ...string) ([]json.RawMessage, error
 	return lmsNormalization(rawConversation)
 }
 
+func buildConversationFromGoldenOpenRouter(goldens ...string) ([]json.RawMessage, error) {
+	rawConversation, err := buildRawConversationFromGolden(goldens...)
+	if err != nil {
+		return nil, fmt.Errorf("build raw conversation from golden: %w", err)
+	}
+
+	return openRouterNormalization(rawConversation)
+}
+
 func lmsNormalization(input []json.RawMessage) ([]json.RawMessage, error) {
 	lmsProvider := rellm.LMStudioProvider{}
 	return providerNormalization(input, &lmsProvider)

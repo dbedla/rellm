@@ -237,3 +237,159 @@ func TestAgentLMS_ToolsCallWithConversationCheck_SecondRespFail(t *testing.T) {
 
 	assert.JSONEq(t, string(expected), string(actual))
 }
+
+func TestAgentOpenRouterGemma_ConversationCheck(t *testing.T) {
+	agent, httpDo := buildTestProToolAgentOpenRouter(t, rellm.Model_OpenRouter_Google_Gemma_4_26b_A4b_It, TestDefaultMaxToolsIterationWithoutReturnMessage)
+	defer httpDo.AssertExpectations(t)
+
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Run(func(args mock.Arguments) {
+			req := args.Get(0).(*http.Request)
+
+			b, err := io.ReadAll(req.Body)
+			assert.NoError(t, err, "failed to read request body")
+
+			req.Body = io.NopCloser(bytes.NewBuffer(b))
+
+			assert.JSONEq(t, goldenOR_Hi_01_req, string(b))
+		}).
+		Return(&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(goldenOR_Hi_02_resp)),
+		}, nil)
+
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Run(func(args mock.Arguments) {
+			req := args.Get(0).(*http.Request)
+
+			b, err := io.ReadAll(req.Body)
+			assert.NoError(t, err, "failed to read request body")
+
+			req.Body = io.NopCloser(bytes.NewBuffer(b))
+
+			assert.JSONEq(t, goldenOR_Hi_03_req, string(b))
+		}).
+		Return(&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(goldenOR_Hi_04_resp)),
+		}, nil)
+
+	prompt, err := rellm.NewPromptBuilder().
+		WithMessage("hi").
+		WithReasoning(testReasoningEffort).
+		WithTemperature(testTemperature).
+		Build()
+	assert.NoError(t, err)
+
+	respMsg, err := agent.Execute(prompt)
+	assert.NoError(t, err)
+	assert.Equal(t, "Hello! How can I help you today?", respMsg)
+
+	secondPrompt, err := rellm.NewPromptBuilder().
+		WithMessage("what tool do you see?").
+		WithReasoning(testReasoningEffort).
+		WithTemperature(testTemperature).
+		Build()
+	assert.NoError(t, err)
+
+	respMsg, err = agent.Execute(secondPrompt)
+	assert.NoError(t, err)
+	assert.Equal(t, "I have access to the following tools:\n\n1.  **`GetDataFor`**: This tool allows me to retrieve specific data based on an input string you provide.\n2.  **`GetStaticData`**: This tool allows me to retrieve predefined static information.", respMsg)
+
+	agentConversation, err := agent.CurrentConversation()
+	assert.NoError(t, err)
+
+	conversationFromGolden, err := buildConversationFromGoldenOpenRouter(
+		goldenOR_Hi_03_req,
+		goldenOR_Hi_04_resp,
+	)
+	assert.NoError(t, err)
+
+	expected, err := json.Marshal(conversationFromGolden)
+	assert.NoError(t, err)
+
+	actual, err := json.Marshal(agentConversation)
+	assert.NoError(t, err)
+
+	assert.JSONEq(t, string(expected), string(actual))
+}
+
+func TestAgentOpenRouterGemini_ConversationCheck(t *testing.T) {
+	agent, httpDo := buildTestProToolAgentOpenRouter(t, rellm.Model_OpenRouter_Google_Gemini_3_1_Flash_Lite, TestDefaultMaxToolsIterationWithoutReturnMessage)
+	defer httpDo.AssertExpectations(t)
+
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Run(func(args mock.Arguments) {
+			req := args.Get(0).(*http.Request)
+
+			b, err := io.ReadAll(req.Body)
+			assert.NoError(t, err, "failed to read request body")
+
+			req.Body = io.NopCloser(bytes.NewBuffer(b))
+
+			assert.JSONEq(t, goldenOR_Hi_gemini_01_req, string(b))
+		}).
+		Return(&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(goldenOR_Hi_gemini_02_resp)),
+		}, nil)
+
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Run(func(args mock.Arguments) {
+			req := args.Get(0).(*http.Request)
+
+			b, err := io.ReadAll(req.Body)
+			assert.NoError(t, err, "failed to read request body")
+
+			req.Body = io.NopCloser(bytes.NewBuffer(b))
+
+			assert.JSONEq(t, goldenOR_Hi_gemini_03_req, string(b))
+		}).
+		Return(&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(goldenOR_Hi_gemini_04_resp)),
+		}, nil)
+
+	prompt, err := rellm.NewPromptBuilder().
+		WithMessage("hi").
+		WithReasoning(testReasoningEffort).
+		WithTemperature(testTemperature).
+		Build()
+	assert.NoError(t, err)
+
+	respMsg, err := agent.Execute(prompt)
+	assert.NoError(t, err)
+	assert.Equal(t, "Hello! How can I help you today?", respMsg)
+
+	secondPrompt, err := rellm.NewPromptBuilder().
+		WithMessage("what tools do you see?").
+		WithReasoning(testReasoningEffort).
+		WithTemperature(testTemperature).
+		Build()
+	assert.NoError(t, err)
+
+	respMsg, err = agent.Execute(secondPrompt)
+	assert.NoError(t, err, "failed to ask with reasoning in conversation")
+	assert.Equal(t, "I have access to the following tools:\n\n*   **`GetDataFor`**: This tool allows me to retrieve specific data based on an input string you provide.\n*   **`GetStaticData`**: This tool allows me to retrieve general static information.\n\nHow can I help you use these today?", respMsg)
+
+	agentConversation, err := agent.CurrentConversation()
+	assert.NoError(t, err)
+
+	conversationFromGolden, err := buildConversationFromGoldenOpenRouter(
+		goldenOR_Hi_gemini_03_req,
+		goldenOR_Hi_gemini_04_resp,
+	)
+	assert.NoError(t, err)
+
+	expected, err := json.Marshal(conversationFromGolden)
+	assert.NoError(t, err)
+
+	actual, err := json.Marshal(agentConversation)
+	assert.NoError(t, err)
+
+	assert.JSONEq(t, string(expected), string(actual))
+}
