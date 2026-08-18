@@ -101,7 +101,7 @@ func (a *Agent) post(req *ResponsesApiReq) (_ *ResponsesApiResp, err error) {
 		return nil, newHTTPStatusError(resp, rawBody, apiUrl.String())
 	}
 
-	return parseResponsesApiResponse(resp, rawBody, apiUrl.String(), a.inspectResp)
+	return parseResponsesApiResponse(rawBody, a.inspectResp)
 }
 
 func (a *Agent) process(req *ResponsesApiReq) (string, error) {

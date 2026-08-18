@@ -43,7 +43,7 @@ const (
 	ReasoningEffort_XHigh  ReasoningEffort = "xhigh"
 )
 
-func parseResponsesApiResponse(resp *http.Response, rawBody []byte, apiURL string, inspectResp InspectEachResponse) (*ResponsesApiResp, error) {
+func parseResponsesApiResponse(rawBody []byte, inspectResp InspectEachResponse) (*ResponsesApiResp, error) {
 
 	conversationResponse, err := unmarshal[ResponsesApiResp](rawBody)
 	if err != nil {
