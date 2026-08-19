@@ -26,7 +26,6 @@ func buildProAgent(workspace string) (*rellm.Agent, error) {
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage(proAgentSysPrompt).
 		WithToolset(&WeatherToolset{}).
-		WithWorkspaceLogger().
 		WithInspectEachRequest(agentsutils.InspectWithReqLog).
 		WithInspectEachResponse(agentsutils.InspectWithRespLog).
 		Build()

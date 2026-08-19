@@ -12,9 +12,6 @@ import (
 )
 
 func (a *Agent) run(msg string, params promptParams) (string, error) {
-	a.logger.Info().Msgf("question to agent: %s", string(msg))
-	defer a.logger.Info().Msg("question answered")
-
 	conversation, err := a.CurrentConversation()
 	if err != nil {
 		return "", err
@@ -48,11 +45,9 @@ func (a *Agent) run(msg string, params promptParams) (string, error) {
 	msgRespFromLLM, err := a.process(req)
 
 	if err != nil {
-		a.logger.Error().Err(err).Msgf("unable to process conversation %s", err.Error())
 		return "", err
 	}
 
-	a.logger.Info().Msgf("message: %s", msgRespFromLLM)
 	return msgRespFromLLM, nil
 }
 
@@ -112,7 +107,6 @@ func (a *Agent) process(req *ResponsesApiReq) (string, error) {
 		}
 
 		if conversationResponse.Error != nil {
-			a.logger.Error().Msgf("error in conversation response: %v", conversationResponse.Error.Message)
 			return "", errors.Join(ErrInConversationResponse, fmt.Errorf("err msg: %v", conversationResponse.Error.Message))
 		}
 
@@ -145,7 +139,6 @@ func (a *Agent) process(req *ResponsesApiReq) (string, error) {
 
 	}
 
-	a.logger.Error().Msgf("max tool iterations (%d) reached without a return message", a.maxToolsIterationWithoutReturnMessage)
 	return "",
 		errors.Join(ErrMaxToolIterationsReached,
 			fmt.Errorf("exceeded %d iterations", a.maxToolsIterationWithoutReturnMessage))
@@ -224,7 +217,6 @@ func (a *Agent) handleImageGenerationCall(image *ImageGeneration) error {
 
 func (a *Agent) handleFunctionCall(fn *FunctionCall) (*FunctionCallResp, error) {
 	if a.toolset == nil {
-		a.logger.Warn().Msgf("tool call (%s) but no tools provided)", fn.Name)
 		return nil, ErrNoToolsetButToolCallRequested
 	}
 

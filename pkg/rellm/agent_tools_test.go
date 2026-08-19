@@ -485,7 +485,6 @@ func buildTestProToolAgentLMS(t *testing.T, maxToolsIterationWithoutReturnMessag
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage("You are a helpful assistant.").
 		WithToolset(&agentsutils.DataSrcToolset{}).
-		WithNoOpLogger().
 		Build()
 
 	assert.NoError(t, err, "failed to create agent")
@@ -510,7 +509,6 @@ func buildTestProToolAgentOpenRouter(t *testing.T, model rellm.Model, maxToolsIt
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage("You are a helpful assistant.").
 		WithToolset(&agentsutils.DataSrcToolset{}).
-		WithNoOpLogger().
 		Build()
 
 	assert.NoError(t, err, "failed to create agent")
@@ -564,7 +562,6 @@ func buildConversationFromGoldenOpenRouter(goldens ...string) ([]json.RawMessage
 	}
 	return normalized, nil
 }
-
 
 func providerNormalization(input []json.RawMessage, provider rellm.Provider) ([]json.RawMessage, error) {
 	ce, err := provider.ToConversationElements(input)

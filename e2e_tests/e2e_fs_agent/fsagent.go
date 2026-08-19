@@ -32,7 +32,6 @@ func buildFSAgent(p rellm.Provider, dirs agentsDirs) (*rellm.Agent, error) {
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithToolset(fsToolset).
 		WithSystemMessage(fsAgentSysPrompt).
-		WithWorkspaceLogger().
 		WithInspectEachRequest(agentsutils.InspectWithReqLog).
 		WithInspectEachResponse(agentsutils.InspectWithRespLog).
 		Build()

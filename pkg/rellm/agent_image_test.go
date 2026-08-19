@@ -121,7 +121,6 @@ func buildTestImageAgent(t *testing.T, maxToolsIterationWithoutReturnMessage uin
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage("You are a helpful assistant.").
 		WithHandleImageGeneration(imageGenerationH).
-		WithNoOpLogger().
 		Build()
 
 	assert.NoError(t, err, "failed to create agent")

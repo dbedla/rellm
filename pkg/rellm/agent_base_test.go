@@ -184,7 +184,6 @@ func buildTestAgent(t *testing.T) (*rellm.Agent, *HttpDoMock) {
 		WithMaxToolsIterationWithoutReturnMessage(20).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage("You are a helpful assistant with deep weather knowledge.").
-		WithNoOpLogger().
 		Build()
 
 	assert.NoError(t, err, "failed to create agent")

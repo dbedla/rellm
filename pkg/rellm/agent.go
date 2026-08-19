@@ -2,8 +2,6 @@ package rellm
 
 import (
 	"encoding/json"
-
-	"github.com/rs/zerolog"
 )
 
 type Toolset interface {
@@ -19,7 +17,6 @@ type ConversationStorage interface {
 type Agent struct {
 	provider     Provider
 	toolset      Toolset
-	logger       *zerolog.Logger
 	agentName    string
 	workspaceDir string
 	sysMsg       string
