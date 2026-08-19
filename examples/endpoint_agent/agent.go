@@ -13,7 +13,7 @@ const (
 	sysprompt = `You are a helpful assistant.`
 )
 
-func buildLMSAgent(workspace string) (*rellm.Agent, error) {
+func buildLMSAgent() (*rellm.Agent, error) {
 
 	agentName := "TestEndpointAgent"
 
@@ -25,18 +25,16 @@ func buildLMSAgent(workspace string) (*rellm.Agent, error) {
 	return rellm.NewAgentBuilder().
 		WithProvider(p).
 		WithAgentName(agentName).
-		WithWorkspaceDir(workspace).
 		WithMaxToolsIterationWithoutReturnMessage(20).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage(sysprompt).
 		WithToolset(&agentsutils.DataSrcToolset{}).
-		WithWorkspaceLogger().
 		WithInspectEachRequest(agentsutils.InspectWithReqLog).
 		WithInspectEachResponse(agentsutils.InspectWithRespLog).
 		Build()
 }
 
-func buildLOpenRouterAgent(workspace string, model rellm.Model) (*rellm.Agent, error) {
+func buildLOpenRouterAgent(model rellm.Model) (*rellm.Agent, error) {
 
 	agentName := "OpenRouterImageAgent"
 
@@ -48,11 +46,9 @@ func buildLOpenRouterAgent(workspace string, model rellm.Model) (*rellm.Agent, e
 	return rellm.NewAgentBuilder().
 		WithProvider(p).
 		WithAgentName(agentName).
-		WithWorkspaceDir(workspace).
 		WithMaxToolsIterationWithoutReturnMessage(20).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage(sysprompt).
-		WithWorkspaceLogger().
 		WithToolset(&agentsutils.DataSrcToolset{}).
 		WithInspectEachRequest(agentsutils.InspectWithReqLog).
 		WithInspectEachResponse(agentsutils.InspectWithRespLog).

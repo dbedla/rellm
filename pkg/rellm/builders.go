@@ -1,19 +1,9 @@
 package rellm
 
-import (
-	"errors"
-	"path/filepath"
-
-	"github.com/rs/zerolog"
-)
-
 type AgentBuilder struct {
-	agent              Agent
-	useWorkspaceLogger bool
-	useStdoutLogger    bool
-	useNoOpLogger      bool
-	inspectReq         InspectEachRequest
-	inspectResp        InspectEachResponse
+	agent       Agent
+	inspectReq  InspectEachRequest
+	inspectResp InspectEachResponse
 }
 
 func NewAgentBuilder() *AgentBuilder {
@@ -40,11 +30,6 @@ func (b *AgentBuilder) WithAgentName(name string) *AgentBuilder {
 	return b
 }
 
-func (b *AgentBuilder) WithWorkspaceDir(dir string) *AgentBuilder {
-	b.agent.workspaceDir = dir
-	return b
-}
-
 func (b *AgentBuilder) WithSystemMessage(msg string) *AgentBuilder {
 	b.agent.sysMsg = msg
 	return b
@@ -61,26 +46,6 @@ func (b *AgentBuilder) WithHandleImageGeneration(handleImage HandleImageGenerati
 	return b
 }
 
-func (b *AgentBuilder) WithCustomLogger(logger *zerolog.Logger) *AgentBuilder {
-	b.agent.logger = logger
-	return b
-}
-
-func (b *AgentBuilder) WithWorkspaceLogger() *AgentBuilder {
-	b.useWorkspaceLogger = true
-	return b
-}
-
-func (b *AgentBuilder) WithStdoutLogger() *AgentBuilder {
-	b.useStdoutLogger = true
-	return b
-}
-
-func (b *AgentBuilder) WithNoOpLogger() *AgentBuilder {
-	b.useNoOpLogger = true
-	return b
-}
-
 func (b *AgentBuilder) WithInspectEachRequest(inspect InspectEachRequest) *AgentBuilder {
 	b.inspectReq = inspect
 	return b
@@ -92,11 +57,6 @@ func (b *AgentBuilder) WithInspectEachResponse(inspect InspectEachResponse) *Age
 }
 
 func (b *AgentBuilder) Build() (*Agent, error) {
-
-	if b.agent.workspaceDir == "" {
-		return nil, ErrBuildNoWorkspaceDir
-	}
-
 	if b.agent.provider == nil {
 		return nil, ErrBuildNoProvider
 	}
@@ -104,12 +64,6 @@ func (b *AgentBuilder) Build() (*Agent, error) {
 	if b.agent.agentName == "" {
 		return nil, ErrBuildNoAgentName
 	}
-
-	l, err := b.buildLogger()
-	if err != nil {
-		return nil, err
-	}
-	b.agent.logger = l
 
 	if b.agent.maxToolsIterationWithoutReturnMessage == 0 {
 		b.agent.maxToolsIterationWithoutReturnMessage = defaultMaxToolsIterationWithoutReturnMessage
@@ -127,56 +81,7 @@ func (b *AgentBuilder) Build() (*Agent, error) {
 		b.agent.inspectResp = b.inspectResp
 	}
 
-	b.agent.logger.Info().Msgf("===== New agent %s ready to action =====", b.agent.agentName)
-
 	return &b.agent, nil
-}
-
-func (b *AgentBuilder) buildLogger() (*zerolog.Logger, error) {
-	multipleLoggerConfig := !exactlyOneIsSet(b.useStdoutLogger, b.useWorkspaceLogger, b.useNoOpLogger, b.agent.logger != nil)
-	if multipleLoggerConfig {
-		return nil, ErrBuildExactlyOneLogger
-	}
-
-	if b.useStdoutLogger {
-		l := NewBaseStdOutLogger()
-		return &l, nil
-	}
-
-	if b.useWorkspaceLogger {
-		return b.buildWorkspaceLogger()
-	}
-
-	if b.useNoOpLogger {
-		l := NewNoOpLogger()
-		return &l, nil
-	}
-
-	return b.agent.logger, nil
-}
-
-func (b *AgentBuilder) buildWorkspaceLogger() (*zerolog.Logger, error) {
-	if b.agent.workspaceDir == "" {
-		return nil, ErrBuildNoWorkspaceDir
-	}
-
-	fp := filepath.Join(b.agent.workspaceDir, b.agent.agentName+".log")
-	fl, err := NewBaseFileLogger(fp)
-	if err != nil {
-		return nil, errors.Join(ErrBuildLogger, err)
-	}
-	l := NewComponentLogger(fl, b.agent.agentName)
-	return &l, nil
-}
-
-func exactlyOneIsSet(flags ...bool) bool {
-	count := 0
-	for _, f := range flags {
-		if f {
-			count++
-		}
-	}
-	return count == 1
 }
 
 const (

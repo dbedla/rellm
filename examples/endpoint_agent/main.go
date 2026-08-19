@@ -17,14 +17,7 @@ func main() {
 		return
 	}
 
-	agentLogDir, err := agentsutils.CreateDirInSysTmp("agent-log")
-	if err != nil {
-		panic(err)
-	}
-
-	color.Red("Agent log dir: %s", agentLogDir)
-
-	agent, err := agentForProvider(agentLogDir, os.Args[1])
+	agent, err := agentForProvider(os.Args[1])
 	if err != nil {
 		panic(err)
 	}
@@ -63,14 +56,14 @@ func main() {
 	}
 }
 
-func agentForProvider(agentDir string, provider string) (*rellm.Agent, error) {
+func agentForProvider(provider string) (*rellm.Agent, error) {
 	switch provider {
 	case "--or-gemma":
-		return buildLOpenRouterAgent(agentDir, rellm.Model_OpenRouter_Google_Gemma_4_26b_A4b_It)
+		return buildLOpenRouterAgent(rellm.Model_OpenRouter_Google_Gemma_4_26b_A4b_It)
 	case "--or-gemini":
-		return buildLOpenRouterAgent(agentDir, rellm.Model_OpenRouter_Google_Gemini_3_1_Flash_Lite)
+		return buildLOpenRouterAgent(rellm.Model_OpenRouter_Google_Gemini_3_1_Flash_Lite)
 	case "--lms":
-		return buildLMSAgent(agentDir)
+		return buildLMSAgent()
 	default:
 		return nil, fmt.Errorf("provider %s not supported, available options: --or-gemma, --or-gemini, --lms", provider)
 	}

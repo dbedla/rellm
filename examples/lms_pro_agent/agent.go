@@ -9,7 +9,7 @@ const (
 	proAgentSysPrompt = `You are a helpful assistant with deep weather knowledge.`
 )
 
-func buildProAgent(workspace string) (*rellm.Agent, error) {
+func buildProAgent() (*rellm.Agent, error) {
 
 	agentName := "ProAgent"
 
@@ -21,12 +21,10 @@ func buildProAgent(workspace string) (*rellm.Agent, error) {
 	return rellm.NewAgentBuilder().
 		WithProvider(p).
 		WithAgentName(agentName).
-		WithWorkspaceDir(workspace).
 		WithMaxToolsIterationWithoutReturnMessage(20).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage(proAgentSysPrompt).
 		WithToolset(&WeatherToolset{}).
-		WithWorkspaceLogger().
 		WithInspectEachRequest(agentsutils.InspectWithReqLog).
 		WithInspectEachResponse(agentsutils.InspectWithRespLog).
 		Build()

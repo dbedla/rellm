@@ -470,7 +470,6 @@ func TestFuncResultToFunctionCallRespSerializesOutputAsString(t *testing.T) {
 func buildTestProToolAgentLMS(t *testing.T, maxToolsIterationWithoutReturnMessage uint64) (*rellm.Agent, *HttpDoMock) {
 
 	agentName := "TestProAgent"
-	workspace := t.TempDir()
 	mockHttp := new(HttpDoMock)
 
 	p, err := rellm.NewLMStudioProvider(rellm.Model_LMS_Google_Gemma_4_26B_A4B, testBaseUrl, testPort)
@@ -480,12 +479,10 @@ func buildTestProToolAgentLMS(t *testing.T, maxToolsIterationWithoutReturnMessag
 	ta, err := rellm.NewAgentBuilder().
 		WithProvider(p).
 		WithAgentName(agentName).
-		WithWorkspaceDir(workspace).
 		WithMaxToolsIterationWithoutReturnMessage(maxToolsIterationWithoutReturnMessage).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage("You are a helpful assistant.").
 		WithToolset(&agentsutils.DataSrcToolset{}).
-		WithNoOpLogger().
 		Build()
 
 	assert.NoError(t, err, "failed to create agent")
@@ -495,7 +492,6 @@ func buildTestProToolAgentLMS(t *testing.T, maxToolsIterationWithoutReturnMessag
 func buildTestProToolAgentOpenRouter(t *testing.T, model rellm.Model, maxToolsIterationWithoutReturnMessage uint64) (*rellm.Agent, *HttpDoMock) {
 
 	agentName := "TestProAgent"
-	workspace := t.TempDir()
 	mockHttp := new(HttpDoMock)
 
 	p, err := rellm.NewOpenRouterProvider("test-key", model)
@@ -505,12 +501,10 @@ func buildTestProToolAgentOpenRouter(t *testing.T, model rellm.Model, maxToolsIt
 	ta, err := rellm.NewAgentBuilder().
 		WithProvider(p).
 		WithAgentName(agentName).
-		WithWorkspaceDir(workspace).
 		WithMaxToolsIterationWithoutReturnMessage(maxToolsIterationWithoutReturnMessage).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage("You are a helpful assistant.").
 		WithToolset(&agentsutils.DataSrcToolset{}).
-		WithNoOpLogger().
 		Build()
 
 	assert.NoError(t, err, "failed to create agent")
@@ -564,7 +558,6 @@ func buildConversationFromGoldenOpenRouter(goldens ...string) ([]json.RawMessage
 	}
 	return normalized, nil
 }
-
 
 func providerNormalization(input []json.RawMessage, provider rellm.Provider) ([]json.RawMessage, error) {
 	ce, err := provider.ToConversationElements(input)

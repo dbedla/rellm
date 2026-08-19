@@ -27,12 +27,10 @@ func buildFSAgent(p rellm.Provider, dirs agentsDirs) (*rellm.Agent, error) {
 	return rellm.NewAgentBuilder().
 		WithProvider(p).
 		WithAgentName(agentName).
-		WithWorkspaceDir(dirs.logDir).
 		WithMaxToolsIterationWithoutReturnMessage(20).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithToolset(fsToolset).
 		WithSystemMessage(fsAgentSysPrompt).
-		WithWorkspaceLogger().
 		WithInspectEachRequest(agentsutils.InspectWithReqLog).
 		WithInspectEachResponse(agentsutils.InspectWithRespLog).
 		Build()
@@ -82,15 +80,9 @@ func buildFsPath() (agentsDirs, error) {
 		return agentsDirs{}, err
 	}
 
-	logDir, err := agentsutils.CreateSubDir(workspace, "logs")
-	if err != nil {
-		return agentsDirs{}, err
-	}
-
 	dirs := agentsDirs{
 		readOnlyDir: readOnlyDir,
 		outputDir:   outputDir,
-		logDir:      logDir,
 		workspace:   workspace,
 	}
 
@@ -101,7 +93,6 @@ type agentsDirs struct {
 	workspace   string
 	readOnlyDir string
 	outputDir   string
-	logDir      string
 }
 
 func setup(fl flag) (agentsDirs, *rellm.Agent, error) {

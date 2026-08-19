@@ -47,7 +47,6 @@ func TestPromptBuilder_Build_EmptyMessage(t *testing.T) {
 }
 
 func TestAgentBuilder_Build(t *testing.T) {
-	tmpDir := t.TempDir()
 
 	buildProvider := func() rellm.Provider {
 		p, err := rellm.NewLMStudioProvider(rellm.Model_LMS_Google_Gemma_4_26B_A4B, testBaseUrl, testPort)
@@ -58,10 +57,8 @@ func TestAgentBuilder_Build(t *testing.T) {
 	t.Run("Successful build", func(t *testing.T) {
 		builder := rellm.NewAgentBuilder().
 			WithProvider(buildProvider()).
-			WithWorkspaceDir(tmpDir).
 			WithAgentName("TestAgent").
-			WithConversationStorage(rellm.NewInMemoryStorage()).
-			WithStdoutLogger()
+			WithConversationStorage(rellm.NewInMemoryStorage())
 
 		agent, err := builder.Build()
 		assert.NoError(t, err)
@@ -71,30 +68,14 @@ func TestAgentBuilder_Build(t *testing.T) {
 	t.Run("Missing conversation storage", func(t *testing.T) {
 		builder := rellm.NewAgentBuilder().
 			WithProvider(buildProvider()).
-			WithWorkspaceDir(tmpDir).
-			WithAgentName("TestAgent").
-			WithNoOpLogger()
+			WithAgentName("TestAgent")
 
 		_, err := builder.Build()
 		assert.ErrorIs(t, err, rellm.ErrBuildNoConversationStorage)
 	})
 
-	t.Run("Missing workspaceDir", func(t *testing.T) {
-		builder := rellm.NewAgentBuilder().
-			WithAgentName("TestAgent").
-			WithNoOpLogger().
-			WithProvider(buildProvider()).
-			WithStdoutLogger()
-
-		_, err := builder.Build()
-		assert.Error(t, err)
-		assert.Equal(t, err, rellm.ErrBuildNoWorkspaceDir)
-	})
-
 	t.Run("Missing provider", func(t *testing.T) {
 		builder := rellm.NewAgentBuilder().
-			WithWorkspaceDir(tmpDir).
-			WithStdoutLogger().
 			WithAgentName("TestAgent")
 
 		_, err := builder.Build()
@@ -104,36 +85,11 @@ func TestAgentBuilder_Build(t *testing.T) {
 
 	t.Run("Missing agent name", func(t *testing.T) {
 		builder := rellm.NewAgentBuilder().
-			WithProvider(buildProvider()).
-			WithWorkspaceDir(tmpDir).
-			WithStdoutLogger()
+			WithProvider(buildProvider())
 
 		_, err := builder.Build()
 		assert.Error(t, err)
 		assert.Equal(t, err, rellm.ErrBuildNoAgentName)
 	})
 
-	t.Run("Multiple loggers configured", func(t *testing.T) {
-		builder := rellm.NewAgentBuilder().
-			WithAgentName("TestAgent").
-			WithProvider(buildProvider()).
-			WithWorkspaceDir(tmpDir).
-			WithStdoutLogger().
-			WithNoOpLogger()
-
-		_, err := builder.Build()
-		assert.Error(t, err)
-		assert.Equal(t, err, rellm.ErrBuildExactlyOneLogger)
-	})
-
-	t.Run("No loggers configured", func(t *testing.T) {
-		builder := rellm.NewAgentBuilder().
-			WithProvider(buildProvider()).
-			WithWorkspaceDir(tmpDir).
-			WithAgentName("TestAgent")
-
-		_, err := builder.Build()
-		assert.Error(t, err)
-		assert.Equal(t, err, rellm.ErrBuildExactlyOneLogger)
-	})
 }
