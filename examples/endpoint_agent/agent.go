@@ -13,7 +13,7 @@ const (
 	sysprompt = `You are a helpful assistant.`
 )
 
-func buildLMSAgent(workspace string) (*rellm.Agent, error) {
+func buildLMSAgent() (*rellm.Agent, error) {
 
 	agentName := "TestEndpointAgent"
 
@@ -34,7 +34,7 @@ func buildLMSAgent(workspace string) (*rellm.Agent, error) {
 		Build()
 }
 
-func buildLOpenRouterAgent(workspace string, model rellm.Model) (*rellm.Agent, error) {
+func buildLOpenRouterAgent(model rellm.Model) (*rellm.Agent, error) {
 
 	agentName := "OpenRouterImageAgent"
 

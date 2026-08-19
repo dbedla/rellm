@@ -5,7 +5,6 @@ go 1.26.4
 require (
 	github.com/fatih/color v1.19.0
 	github.com/joho/godotenv v1.5.1
-	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
 )
 
