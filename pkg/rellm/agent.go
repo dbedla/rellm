@@ -2,7 +2,6 @@ package rellm
 
 import (
 	"encoding/json"
-	"rellm/pkg/rellm/conversation_storage"
 
 	"github.com/rs/zerolog"
 )
@@ -12,16 +11,20 @@ type Toolset interface {
 	DispatchTools(name string, callID string, arguments json.RawMessage) (FunctionCallResp, bool)
 }
 
+type ConversationStorage interface {
+	Load() ([]json.RawMessage, error)
+	Append([]json.RawMessage) error
+}
+
 type Agent struct {
-	provider                              Provider
-	toolset                               Toolset
-	logger                                *zerolog.Logger
-	conversationStorage                   *conversation_storage.ConversationStorage
-	agentName                             string
-	workspaceDir                          string
-	sysMsg                                string
-	inMemoryConversation                  []json.RawMessage
-	continueConversation                  bool
+	provider     Provider
+	toolset      Toolset
+	logger       *zerolog.Logger
+	agentName    string
+	workspaceDir string
+	sysMsg       string
+
+	conversationStorage                   ConversationStorage
 	maxToolsIterationWithoutReturnMessage uint64
 
 	handleImageGeneration HandleImageGeneration
@@ -35,37 +38,25 @@ type HandleImageGeneration func(image *ImageGeneration) (string, error)
 type InspectEachRequest func(*ResponsesApiReq)
 type InspectEachResponse func(resp *ResponsesApiResp)
 
-func (a *Agent) CurrentConversation() []json.RawMessage {
-	conversation := a.inMemoryConversation
-
-	if len(conversation) == 0 && a.continueConversation {
-		restoredConversation, err := a.conversationStorage.RestoreLatest()
-		if err != nil {
-			a.logger.Error().Err(err).Msg("unable to restore conversation from workspace")
-		}
-		a.logger.Info().Msgf("from workspace conv len: %d", len(restoredConversation))
-		conversation = restoredConversation
-	}
-	if len(conversation) == 0 {
-		brandNewConversation, err := PromptMessageToConversation(a.sysMsg, "system")
-		if err != nil {
-			a.logger.Error().Err(err).Msg("unable to build conversation")
-		}
-		a.logger.Info().Msgf("brand new conversation started")
-		conversation = []json.RawMessage{brandNewConversation}
-	}
-
-	return conversation
-}
-
-func (a *Agent) StoreConversation() error {
-	err := a.conversationStorage.Store(a.inMemoryConversation)
+func (a *Agent) CurrentConversation() ([]json.RawMessage, error) {
+	conversation, err := a.conversationStorage.Load()
 	if err != nil {
-		a.logger.Error().Err(err).Msg("unable to store conversation")
-		return err
+		return nil, err
 	}
-	a.logger.Debug().Msgf("conversation stored, check workspace folder: %s", a.workspaceDir)
-	return nil
+
+	if len(conversation) != 0 {
+		return conversation, nil
+	}
+
+	systemMessage, err := PromptMessageToConversation(a.sysMsg, "system")
+	if err != nil {
+		return nil, err
+	}
+	err = a.conversationStorage.Append([]json.RawMessage{systemMessage})
+	if err != nil {
+		return nil, err
+	}
+	return a.conversationStorage.Load()
 }
 
 func FuncResultToFunctionCallResp(callId string, funcResult any) FunctionCallResp {

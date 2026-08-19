@@ -15,7 +15,10 @@ func (a *Agent) run(msg string, params promptParams) (string, error) {
 	a.logger.Info().Msgf("question to agent: %s", string(msg))
 	defer a.logger.Info().Msg("question answered")
 
-	conversation := a.CurrentConversation()
+	conversation, err := a.CurrentConversation()
+	if err != nil {
+		return "", err
+	}
 
 	userMsg, err := PromptMessageToConversation(msg, "user")
 	if err != nil {
@@ -23,6 +26,9 @@ func (a *Agent) run(msg string, params promptParams) (string, error) {
 	}
 
 	conversation = append(conversation, userMsg)
+	if err := a.conversationStorage.Append([]json.RawMessage{userMsg}); err != nil {
+		return "", err
+	}
 
 	elements, err := a.provider.ToConversationElements(conversation)
 	if err != nil {
@@ -39,11 +45,7 @@ func (a *Agent) run(msg string, params promptParams) (string, error) {
 		req.Tools = a.toolset.BuildTools()
 	}
 
-	newConversation, msgRespFromLLM, _, err := a.process(req)
-
-	if len(newConversation) > 0 {
-		a.inMemoryConversation = newConversation
-	}
+	msgRespFromLLM, err := a.process(req)
 
 	if err != nil {
 		a.logger.Error().Err(err).Msgf("unable to process conversation %s", err.Error())
@@ -82,58 +84,69 @@ func (a *Agent) post(req *ResponsesApiReq) (_ *ResponsesApiResp, err error) {
 	}
 
 	if resp == nil {
-		return nil, errors.New("nil response")
+		return nil, ErrEndpointNilResponse
 	}
 
 	if resp.Body == nil {
-		return nil, errors.New("empty response body")
+		return nil, errors.Join(ErrEndpointNilBodyInResponse, fmt.Errorf("response status: %s", resp.Status))
 	}
 
 	defer closeWithError(&err, resp.Body)
 	rawBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, errors.Join(err, ErrUnableToReadResponseBody, fmt.Errorf("response status: %s", resp.Status))
 	}
 
-	return parseResponsesApiResponse(resp, rawBody, apiUrl.String(), a.inspectResp)
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		return nil, newHTTPStatusError(resp, rawBody, apiUrl.String())
+	}
+
+	return parseResponsesApiResponse(rawBody, a.inspectResp)
 }
 
-func (a *Agent) process(req *ResponsesApiReq) ([]json.RawMessage, string, *ResponsesApiResp, error) {
+func (a *Agent) process(req *ResponsesApiReq) (string, error) {
 	for i := uint64(0); i < a.maxToolsIterationWithoutReturnMessage; i++ {
 		conversationResponse, err := a.post(req)
 		if err != nil {
-			return nil, "", conversationResponse, err
+			return "", err
 		}
 
 		if conversationResponse.Error != nil {
 			a.logger.Error().Msgf("error in conversation response: %v", conversationResponse.Error.Message)
-			return nil, "", conversationResponse, errors.Join(ErrInConversationResponse, fmt.Errorf("err msg: %v", conversationResponse.Error.Message))
+			return "", errors.Join(ErrInConversationResponse, fmt.Errorf("err msg: %v", conversationResponse.Error.Message))
 		}
 
 		conversation, err := a.provider.ToConversationElements(conversationResponse.Output)
 		if err != nil {
-			return req.Input, "", conversationResponse, errors.Join(ErrConversationElementConversion, err)
+			return "", errors.Join(ErrConversationElementConversion, err)
 		}
 		msg, fnCallsResp, imageHandled, err := a.dispatchConversation(conversation)
 		for _, fResp := range fnCallsResp {
 			conversation = append(conversation, fResp)
 		}
 		raw, errProviderRep := a.provider.ToProviderRepresentation(conversation)
-		req.Input = append(req.Input, raw...)
 		if errProviderRep != nil {
-			return req.Input, "", conversationResponse, errors.Join(ErrConversationElementConversion, errProviderRep)
+			return "", errors.Join(ErrConversationElementConversion, errProviderRep)
 		}
+		req.Input = append(req.Input, raw...)
+
+		conversationErr := a.conversationStorage.Append(raw)
+		if conversationErr != nil {
+			return "", conversationErr
+		}
+
 		if err != nil {
-			return req.Input, "", conversationResponse, err
+			return "", err
 		}
+
 		if imageHandled || msg != "" {
-			return req.Input, msg, conversationResponse, nil
+			return msg, nil
 		}
 
 	}
 
 	a.logger.Error().Msgf("max tool iterations (%d) reached without a return message", a.maxToolsIterationWithoutReturnMessage)
-	return req.Input, "", nil,
+	return "",
 		errors.Join(ErrMaxToolIterationsReached,
 			fmt.Errorf("exceeded %d iterations", a.maxToolsIterationWithoutReturnMessage))
 }

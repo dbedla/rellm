@@ -7,6 +7,8 @@ var ErrBuildNoProvider = fmt.Errorf("missing provider")
 var ErrBuildNoAgentName = fmt.Errorf("missing agent name")
 var ErrBuildExactlyOneLogger = fmt.Errorf("exactly one logger must be configured")
 var ErrBuildLogger = fmt.Errorf("unable to create logger")
+var ErrBuildNoConversationStorage = fmt.Errorf("missing conversation storage")
+var ErrMalformedConversationStorage = fmt.Errorf("malformed conversation storage line")
 
 var ErrNoToolsetButToolCallRequested = fmt.Errorf("no toolset provided but request to call tool received")
 var ErrWhileDispatchToolCall = fmt.Errorf("unable to dispatch tool call")
@@ -15,6 +17,10 @@ var ErrMaxToolIterationsReached = fmt.Errorf("max tool iterations reached withou
 var ErrModelReturnedUnproductiveOutput = fmt.Errorf("model returned output but no function call and no text message")
 var ErrConversationElementConversion = fmt.Errorf("error converting conversation element")
 var ErrUnknownConversationElement = fmt.Errorf("unknown conversation element")
+
+var ErrEndpointNilResponse = fmt.Errorf("endpoint returned nil response")
+var ErrEndpointNilBodyInResponse = fmt.Errorf("endpoint returned nil body in response")
+var ErrUnableToReadResponseBody = fmt.Errorf("unable to read response body")
 
 var ErrEmptyPrompt = fmt.Errorf("prompt message is empty")
 var ErrEmptyReasoningEffort = fmt.Errorf("reasoning effort cannot be empty")

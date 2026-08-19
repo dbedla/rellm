@@ -29,7 +29,7 @@ func buildFSAgent(p rellm.Provider, dirs agentsDirs) (*rellm.Agent, error) {
 		WithAgentName(agentName).
 		WithWorkspaceDir(dirs.logDir).
 		WithMaxToolsIterationWithoutReturnMessage(20).
-		WithContinueConversation(true).
+		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithToolset(fsToolset).
 		WithSystemMessage(fsAgentSysPrompt).
 		WithWorkspaceLogger().

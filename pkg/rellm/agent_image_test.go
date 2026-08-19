@@ -46,15 +46,16 @@ func TestAgentPromptToGetImage(t *testing.T) {
 	q := "A clean, minimalist flat vector illustration of a tic-tac-toe board. White background, bold black grid lines. Three bright blue \"O\" symbols are aligned horizontally in the middle row, indicating a win. Minimalist aesthetic, high contrast, simple and modern graphic design."
 
 	respMsg, err := agent.Ask(q)
-	assert.NoError(t, err, "failed to ask")
+	assert.NoError(t, err)
 
 	assert.NotNil(t, respMsg, "response message should not be nil")
 
-	conversation := agent.CurrentConversation()
+	conversation, err := agent.CurrentConversation()
+	assert.NoError(t, err)
 	lastMsg := conversation[len(conversation)-1]
 	var imageConversationRepresentation rellm.ImageGeneration
 	err = json.Unmarshal(lastMsg, &imageConversationRepresentation)
-	assert.NoError(t, err, "failed to unmarshal last message")
+	assert.NoError(t, err)
 
 	assert.Equal(t, "image-stored-under-this-id", imageConversationRepresentation.Result)
 	assert.Equal(t, "image_generation_call", imageConversationRepresentation.Type)
@@ -117,7 +118,7 @@ func buildTestImageAgent(t *testing.T, maxToolsIterationWithoutReturnMessage uin
 		WithAgentName(agentName).
 		WithWorkspaceDir(workspace).
 		WithMaxToolsIterationWithoutReturnMessage(maxToolsIterationWithoutReturnMessage).
-		WithContinueConversation(false).
+		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage("You are a helpful assistant.").
 		WithHandleImageGeneration(imageGenerationH).
 		WithNoOpLogger().

@@ -24,13 +24,6 @@ func main() {
 	}
 	color.Red("Agent space dir: %s", dirs.workspace)
 
-	defer func() {
-		err := fsAgent.StoreConversation()
-		if err != nil {
-			color.Red("unable to store conversation: %s", err)
-		}
-	}()
-
 	scenario(fsAgent, dirs)
 }
 

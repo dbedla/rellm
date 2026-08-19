@@ -182,7 +182,7 @@ func buildTestAgent(t *testing.T) (*rellm.Agent, *HttpDoMock) {
 		WithAgentName(agentName).
 		WithWorkspaceDir(workspace).
 		WithMaxToolsIterationWithoutReturnMessage(20).
-		WithContinueConversation(false).
+		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage("You are a helpful assistant with deep weather knowledge.").
 		WithNoOpLogger().
 		Build()

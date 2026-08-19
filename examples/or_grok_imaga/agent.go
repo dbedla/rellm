@@ -27,7 +27,7 @@ func buildLBaseAgent(workspace string) (*rellm.Agent, error) {
 		WithAgentName(agentName).
 		WithWorkspaceDir(workspace).
 		WithMaxToolsIterationWithoutReturnMessage(20).
-		WithContinueConversation(false).
+		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage(baseAgentSysPrompt).
 		WithWorkspaceLogger().
 		WithHandleImageGeneration(testHandleImage).

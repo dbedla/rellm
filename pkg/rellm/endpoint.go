@@ -43,12 +43,9 @@ const (
 	ReasoningEffort_XHigh  ReasoningEffort = "xhigh"
 )
 
-func parseResponsesApiResponse(resp *http.Response, rawBody []byte, apiURL string, inspectResp InspectEachResponse) (*ResponsesApiResp, error) {
-	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
-		return nil, newHTTPStatusError(resp, rawBody, apiURL)
-	}
+func parseResponsesApiResponse(rawBody []byte, inspectResp InspectEachResponse) (*ResponsesApiResp, error) {
 
-	conversationResponse, err := unmarshall[ResponsesApiResp](rawBody)
+	conversationResponse, err := unmarshal[ResponsesApiResp](rawBody)
 	if err != nil {
 		return nil, errors.Join(err, fmt.Errorf("%s", string(rawBody)))
 	}
@@ -82,11 +79,11 @@ func bodySnippet(rawBody []byte) string {
 	return body[:maxBodySnippetLength] + "..."
 }
 
-func unmarshall[K any](rawBody []byte) (K, error) {
+func unmarshal[K any](rawBody []byte) (K, error) {
 	var data K
 	err := json.Unmarshal(rawBody, &data)
 	if err != nil {
-		return *new(K), fmt.Errorf("error unmarshalling: %s; unmarshaling type %T; raw: %s", err, data, string(rawBody))
+		return *new(K), fmt.Errorf("error unmarshaling: %s; unmarshaling type %T; raw: %s", err, data, string(rawBody))
 	}
 
 	return data, nil

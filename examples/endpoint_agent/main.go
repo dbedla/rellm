@@ -29,13 +29,6 @@ func main() {
 		panic(err)
 	}
 
-	defer func() {
-		err := agent.StoreConversation()
-		if err != nil {
-			color.Red("unable to store conversation: %s", err)
-		}
-	}()
-
 	for {
 		msg, err := agentsutils.ReadConsoleInput()
 		if err != nil {

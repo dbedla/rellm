@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"rellm/pkg/agentsutils"
@@ -481,7 +482,7 @@ func buildTestProToolAgentLMS(t *testing.T, maxToolsIterationWithoutReturnMessag
 		WithAgentName(agentName).
 		WithWorkspaceDir(workspace).
 		WithMaxToolsIterationWithoutReturnMessage(maxToolsIterationWithoutReturnMessage).
-		WithContinueConversation(false).
+		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage("You are a helpful assistant.").
 		WithToolset(&agentsutils.DataSrcToolset{}).
 		WithNoOpLogger().
@@ -506,7 +507,7 @@ func buildTestProToolAgentOpenRouter(t *testing.T, model rellm.Model, maxToolsIt
 		WithAgentName(agentName).
 		WithWorkspaceDir(workspace).
 		WithMaxToolsIterationWithoutReturnMessage(maxToolsIterationWithoutReturnMessage).
-		WithContinueConversation(false).
+		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage("You are a helpful assistant.").
 		WithToolset(&agentsutils.DataSrcToolset{}).
 		WithNoOpLogger().
@@ -514,4 +515,86 @@ func buildTestProToolAgentOpenRouter(t *testing.T, model rellm.Model, maxToolsIt
 
 	assert.NoError(t, err, "failed to create agent")
 	return ta, mockHttp
+}
+
+func buildConversationFromGoldenLms(goldens ...string) ([]json.RawMessage, error) {
+	rawConversation, err := buildRawConversationFromGolden(goldens...)
+	if err != nil {
+		return nil, fmt.Errorf("build raw conversation from golden: %w", err)
+	}
+
+	lmsProvider := rellm.LMStudioProvider{}
+	return providerNormalization(rawConversation, &lmsProvider)
+}
+
+func buildConversationFromGoldenOpenRouter(goldens ...string) ([]json.RawMessage, error) {
+	rawConversation, err := buildRawConversationFromGolden(goldens...)
+	if err != nil {
+		return nil, fmt.Errorf("build raw conversation from golden: %w", err)
+	}
+
+	orProvider := rellm.OpenRouterProvider{}
+	ce, err := orProvider.ToConversationElements(rawConversation)
+	if err != nil {
+		return nil, fmt.Errorf("convert input to conversation elements: %w", err)
+	}
+
+	var normalized []json.RawMessage
+	for _, e := range ce {
+		switch el := e.(type) {
+		case *rellm.SystemMessage:
+			msg, err := rellm.PromptMessageToConversation(rellm.TextFromContent(el.Content), "system")
+			if err != nil {
+				return nil, err
+			}
+			normalized = append(normalized, msg)
+		case *rellm.UserMessage:
+			msg, err := rellm.PromptMessageToConversation(rellm.TextFromContent(el.Content), "user")
+			if err != nil {
+				return nil, err
+			}
+			normalized = append(normalized, msg)
+		default:
+			raw, err := orProvider.ToProviderRepresentation([]rellm.ConversationElement{el})
+			if err != nil {
+				return nil, err
+			}
+			normalized = append(normalized, raw...)
+		}
+	}
+	return normalized, nil
+}
+
+
+func providerNormalization(input []json.RawMessage, provider rellm.Provider) ([]json.RawMessage, error) {
+	ce, err := provider.ToConversationElements(input)
+	if err != nil {
+		return nil, fmt.Errorf("convert input to conversation elements: %w", err)
+	}
+	lmsRepresentation, err := provider.ToProviderRepresentation(ce)
+	if err != nil {
+		return nil, fmt.Errorf("convert conversation elements to raw conversation: %w", err)
+	}
+	return lmsRepresentation, nil
+}
+
+func buildRawConversationFromGolden(goldens ...string) ([]json.RawMessage, error) {
+	type golden struct {
+		Input  []json.RawMessage `json:"input"`
+		Output []json.RawMessage `json:"output"`
+	}
+
+	var conversation []json.RawMessage
+
+	for _, data := range goldens {
+		var g golden
+		if err := json.Unmarshal([]byte(data), &g); err != nil {
+			return nil, fmt.Errorf("unmarshal golden: %w", err)
+		}
+
+		conversation = append(conversation, g.Input...)
+		conversation = append(conversation, g.Output...)
+	}
+
+	return conversation, nil
 }
