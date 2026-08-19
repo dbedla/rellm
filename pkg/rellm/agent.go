@@ -15,11 +15,10 @@ type ConversationStorage interface {
 }
 
 type Agent struct {
-	provider     Provider
-	toolset      Toolset
-	agentName    string
-	workspaceDir string
-	sysMsg       string
+	provider  Provider
+	toolset   Toolset
+	agentName string
+	sysMsg    string
 
 	conversationStorage                   ConversationStorage
 	maxToolsIterationWithoutReturnMessage uint64

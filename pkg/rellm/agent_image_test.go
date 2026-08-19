@@ -106,7 +106,6 @@ func buildTestImageAgent(t *testing.T, maxToolsIterationWithoutReturnMessage uin
 	imageGenerationH rellm.HandleImageGeneration) (*rellm.Agent, *HttpDoMock) {
 
 	agentName := "TestImageAgent"
-	workspace := t.TempDir()
 	mockHttp := new(HttpDoMock)
 
 	p, err := rellm.NewOpenRouterProvider("test-key", rellm.Model("x-ai/grok-imagine-image-quality"))
@@ -116,7 +115,6 @@ func buildTestImageAgent(t *testing.T, maxToolsIterationWithoutReturnMessage uin
 	ta, err := rellm.NewAgentBuilder().
 		WithProvider(p).
 		WithAgentName(agentName).
-		WithWorkspaceDir(workspace).
 		WithMaxToolsIterationWithoutReturnMessage(maxToolsIterationWithoutReturnMessage).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage("You are a helpful assistant.").

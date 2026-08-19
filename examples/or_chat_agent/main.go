@@ -8,14 +8,7 @@ import (
 )
 
 func main() {
-	agentLogDir, err := agentsutils.CreateDirInSysTmp("agent-log")
-	if err != nil {
-		panic(err)
-	}
-
-	color.Red("Agent log dir: %s", agentLogDir)
-
-	agent, err := buildLBaseAgent(agentLogDir)
+	agent, err := buildLBaseAgent()
 	if err != nil {
 		panic(err)
 	}

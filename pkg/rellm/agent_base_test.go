@@ -170,7 +170,6 @@ func TestAgentAskStatusInternalServerError(t *testing.T) {
 func buildTestAgent(t *testing.T) (*rellm.Agent, *HttpDoMock) {
 
 	agentName := "TestAgent"
-	workspace := t.TempDir()
 	mockHttp := new(HttpDoMock)
 
 	p, err := rellm.NewLMStudioProvider(rellm.Model_LMS_Google_Gemma_4_26B_A4B, testBaseUrl, testPort)
@@ -180,7 +179,6 @@ func buildTestAgent(t *testing.T) (*rellm.Agent, *HttpDoMock) {
 	ta, err := rellm.NewAgentBuilder().
 		WithProvider(p).
 		WithAgentName(agentName).
-		WithWorkspaceDir(workspace).
 		WithMaxToolsIterationWithoutReturnMessage(20).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage("You are a helpful assistant with deep weather knowledge.").

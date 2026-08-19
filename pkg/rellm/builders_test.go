@@ -47,7 +47,6 @@ func TestPromptBuilder_Build_EmptyMessage(t *testing.T) {
 }
 
 func TestAgentBuilder_Build(t *testing.T) {
-	tmpDir := t.TempDir()
 
 	buildProvider := func() rellm.Provider {
 		p, err := rellm.NewLMStudioProvider(rellm.Model_LMS_Google_Gemma_4_26B_A4B, testBaseUrl, testPort)
@@ -58,7 +57,6 @@ func TestAgentBuilder_Build(t *testing.T) {
 	t.Run("Successful build", func(t *testing.T) {
 		builder := rellm.NewAgentBuilder().
 			WithProvider(buildProvider()).
-			WithWorkspaceDir(tmpDir).
 			WithAgentName("TestAgent").
 			WithConversationStorage(rellm.NewInMemoryStorage())
 
@@ -70,7 +68,6 @@ func TestAgentBuilder_Build(t *testing.T) {
 	t.Run("Missing conversation storage", func(t *testing.T) {
 		builder := rellm.NewAgentBuilder().
 			WithProvider(buildProvider()).
-			WithWorkspaceDir(tmpDir).
 			WithAgentName("TestAgent")
 
 		_, err := builder.Build()
@@ -79,7 +76,6 @@ func TestAgentBuilder_Build(t *testing.T) {
 
 	t.Run("Missing provider", func(t *testing.T) {
 		builder := rellm.NewAgentBuilder().
-			WithWorkspaceDir(tmpDir).
 			WithAgentName("TestAgent")
 
 		_, err := builder.Build()
@@ -89,8 +85,7 @@ func TestAgentBuilder_Build(t *testing.T) {
 
 	t.Run("Missing agent name", func(t *testing.T) {
 		builder := rellm.NewAgentBuilder().
-			WithProvider(buildProvider()).
-			WithWorkspaceDir(tmpDir)
+			WithProvider(buildProvider())
 
 		_, err := builder.Build()
 		assert.Error(t, err)

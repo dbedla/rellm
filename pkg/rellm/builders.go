@@ -30,11 +30,6 @@ func (b *AgentBuilder) WithAgentName(name string) *AgentBuilder {
 	return b
 }
 
-func (b *AgentBuilder) WithWorkspaceDir(dir string) *AgentBuilder {
-	b.agent.workspaceDir = dir
-	return b
-}
-
 func (b *AgentBuilder) WithSystemMessage(msg string) *AgentBuilder {
 	b.agent.sysMsg = msg
 	return b
@@ -62,11 +57,6 @@ func (b *AgentBuilder) WithInspectEachResponse(inspect InspectEachResponse) *Age
 }
 
 func (b *AgentBuilder) Build() (*Agent, error) {
-
-	if b.agent.workspaceDir == "" {
-		return nil, ErrBuildNoWorkspaceDir
-	}
-
 	if b.agent.provider == nil {
 		return nil, ErrBuildNoProvider
 	}

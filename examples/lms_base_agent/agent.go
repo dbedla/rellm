@@ -9,7 +9,7 @@ const (
 	baseAgentSysPrompt = `You are a helpful assistant.`
 )
 
-func buildLBaseAgent(workspace string) (*rellm.Agent, error) {
+func buildLBaseAgent() (*rellm.Agent, error) {
 
 	agentName := "BaseAgent"
 
@@ -21,7 +21,6 @@ func buildLBaseAgent(workspace string) (*rellm.Agent, error) {
 	return rellm.NewAgentBuilder().
 		WithProvider(p).
 		WithAgentName(agentName).
-		WithWorkspaceDir(workspace).
 		WithMaxToolsIterationWithoutReturnMessage(20).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage(baseAgentSysPrompt).
