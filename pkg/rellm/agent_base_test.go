@@ -167,6 +167,35 @@ func TestAgentAskStatusInternalServerError(t *testing.T) {
 	assert.Equal(t, "", respMsg, "response message should match")
 }
 
+func TestAgentAsk_RetryAfterProviderFailedMessageStaysInConversation(t *testing.T) {
+	agent, httpDo := buildTestAgent(t)
+	defer httpDo.AssertExpectations(t)
+
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Return(&http.Response{
+			StatusCode: http.StatusInternalServerError,
+			Body:       io.NopCloser(strings.NewReader(goldenRespHi)),
+		}, nil)
+
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Return(&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(goldenRespHi)),
+		}, nil)
+
+	_, err := agent.Ask("Hi")
+	assert.Error(t, err)
+
+	_, err = agent.Ask("Hi")
+	assert.NoError(t, err)
+
+	conversation, err := agent.CurrentConversation()
+	assert.NoError(t, err)
+	assert.Len(t, conversation, 5)
+}
+
 func buildTestAgent(t *testing.T) (*rellm.Agent, *HttpDoMock) {
 
 	agentName := "TestAgent"
