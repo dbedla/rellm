@@ -92,4 +92,19 @@ func TestAgentBuilder_Build(t *testing.T) {
 		assert.Equal(t, err, rellm.ErrBuildNoAgentName)
 	})
 
+	t.Run("Build twice does not alias the builder state", func(t *testing.T) {
+		builder := rellm.NewAgentBuilder().
+			WithProvider(buildProvider()).
+			WithAgentName("FirstAgent").
+			WithConversationStorage(rellm.NewInMemoryStorage())
+
+		agent1, err := builder.Build()
+		assert.NoError(t, err)
+
+		agent2, err := builder.WithAgentName("SecondAgent").Build()
+		assert.NoError(t, err)
+
+		assert.NotSame(t, agent1, agent2, "Build must return independent agents")
+	})
+
 }
