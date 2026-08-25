@@ -2,7 +2,9 @@ package rellm
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
@@ -26,11 +28,20 @@ func NewLMStudioProvider(model Model, host, port string) (*LMStudioProvider, err
 	if port == "" {
 		return nil, ErrEndpointMissingPort
 	}
+
+	if !strings.HasPrefix(host, "http://") && !strings.HasPrefix(host, "https://") {
+		host = "http://" + host
+	}
+	baseURL := fmt.Sprintf("%s:%s/v1/responses", strings.TrimRight(host, "/"), port)
+	if _, err := url.ParseRequestURI(baseURL); err != nil {
+		return nil, fmt.Errorf("invalid LM Studio URL %q: %w", baseURL, err)
+	}
+
 	h := make(http.Header)
 	h.Set("Content-Type", "application/json")
 	return &LMStudioProvider{
 		model:  model,
-		url:    host + ":" + port + "/v1/responses",
+		url:    baseURL,
 		header: h,
 		client: &http.Client{},
 	}, nil
