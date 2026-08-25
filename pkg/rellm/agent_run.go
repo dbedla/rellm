@@ -104,6 +104,11 @@ func (a *Agent) post(ctx context.Context, req *ResponsesApiReq) (_ *ResponsesApi
 
 func (a *Agent) process(ctx context.Context, req *ResponsesApiReq) (string, error) {
 	for i := uint64(0); i < a.maxToolsIterationWithoutReturnMessage; i++ {
+
+		if ctx.Err() != nil {
+			return "", ctx.Err()
+		}
+
 		conversationResponse, err := a.post(ctx, req)
 		if err != nil {
 			return "", err
