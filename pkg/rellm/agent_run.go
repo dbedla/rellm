@@ -103,7 +103,7 @@ func (a *Agent) post(ctx context.Context, req *ResponsesApiReq) (_ *ResponsesApi
 }
 
 func (a *Agent) process(ctx context.Context, req *ResponsesApiReq) (string, error) {
-	for i := uint64(0); i < a.maxToolsIterationWithoutReturnMessage; i++ {
+	for i := uint64(0); i < a.maxAgentSteps; i++ {
 
 		err := ctx.Err()
 		if err != nil {
@@ -149,8 +149,8 @@ func (a *Agent) process(ctx context.Context, req *ResponsesApiReq) (string, erro
 	}
 
 	return "",
-		errors.Join(ErrMaxToolIterationsReached,
-			fmt.Errorf("exceeded %d iterations", a.maxToolsIterationWithoutReturnMessage))
+		errors.Join(ErrMaxAgentStepsReached,
+			fmt.Errorf("exceeded %d iterations", a.maxAgentSteps))
 }
 
 func (a *Agent) dispatchConversation(ctx context.Context, conversation []ConversationElement) (string, []*FunctionCallResp, bool, error) {

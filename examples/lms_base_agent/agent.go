@@ -21,7 +21,7 @@ func buildLBaseAgent() (*rellm.Agent, error) {
 	return rellm.NewAgentBuilder().
 		WithProvider(p).
 		WithAgentName(agentName).
-		WithMaxToolsIterationWithoutReturnMessage(20).
+		WithMaxAgentSteps(20).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage(baseAgentSysPrompt).
 		WithInspectEachRequest(examplesutils.InspectWithReqLog).

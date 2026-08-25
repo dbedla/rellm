@@ -21,8 +21,8 @@ type Agent struct {
 	agentName string
 	sysMsg    string
 
-	conversationStorage                   ConversationStorage
-	maxToolsIterationWithoutReturnMessage uint64
+	conversationStorage ConversationStorage
+	maxAgentSteps       uint64
 
 	handleImageGeneration HandleImageGeneration
 	inspectReq            InspectEachRequest

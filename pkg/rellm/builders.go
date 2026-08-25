@@ -35,8 +35,8 @@ func (b *AgentBuilder) WithSystemMessage(msg string) *AgentBuilder {
 	return b
 }
 
-func (b *AgentBuilder) WithMaxToolsIterationWithoutReturnMessage(max uint64) *AgentBuilder {
-	b.agent.maxToolsIterationWithoutReturnMessage = max
+func (b *AgentBuilder) WithMaxAgentSteps(max uint64) *AgentBuilder {
+	b.agent.maxAgentSteps = max
 	return b
 }
 
@@ -65,8 +65,8 @@ func (b *AgentBuilder) Build() (*Agent, error) {
 		return nil, ErrBuildNoAgentName
 	}
 
-	if b.agent.maxToolsIterationWithoutReturnMessage == 0 {
-		b.agent.maxToolsIterationWithoutReturnMessage = defaultMaxToolsIterationWithoutReturnMessage
+	if b.agent.maxAgentSteps == 0 {
+		b.agent.maxAgentSteps = DefaultMaxAgentSteps
 	}
 
 	if b.agent.conversationStorage == nil {
@@ -85,6 +85,5 @@ func (b *AgentBuilder) Build() (*Agent, error) {
 }
 
 const (
-	//todo: max steps rename
-	defaultMaxToolsIterationWithoutReturnMessage = 5
+	DefaultMaxAgentSteps = 5
 )

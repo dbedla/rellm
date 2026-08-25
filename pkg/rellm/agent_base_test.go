@@ -229,7 +229,7 @@ func buildTestAgent(t *testing.T) (*rellm.Agent, *HttpDoMock) {
 	ta, err := rellm.NewAgentBuilder().
 		WithProvider(p).
 		WithAgentName(agentName).
-		WithMaxToolsIterationWithoutReturnMessage(20).
+		WithMaxAgentSteps(20).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage("You are a helpful assistant with deep weather knowledge.").
 		Build()

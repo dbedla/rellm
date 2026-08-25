@@ -118,7 +118,7 @@ func buildTestImageAgent(t *testing.T, maxToolsIterationWithoutReturnMessage uin
 	ta, err := rellm.NewAgentBuilder().
 		WithProvider(p).
 		WithAgentName(agentName).
-		WithMaxToolsIterationWithoutReturnMessage(maxToolsIterationWithoutReturnMessage).
+		WithMaxAgentSteps(maxToolsIterationWithoutReturnMessage).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage("You are a helpful assistant.").
 		WithHandleImageGeneration(imageGenerationH).

@@ -10,7 +10,7 @@ var ErrMalformedConversationStorage = fmt.Errorf("malformed conversation storage
 var ErrNoToolsetButToolCallRequested = fmt.Errorf("no toolset provided but request to call tool received")
 var ErrWhileDispatchToolCall = fmt.Errorf("unable to dispatch tool call")
 var ErrInConversationResponse = fmt.Errorf("error in conversation response")
-var ErrMaxToolIterationsReached = fmt.Errorf("max tool iterations reached without a text response")
+var ErrMaxAgentStepsReached = fmt.Errorf("max agent steps for single prompt reached")
 var ErrConversationElementConversion = fmt.Errorf("error converting conversation element")
 var ErrUnknownConversationElement = fmt.Errorf("unknown conversation element")
 
