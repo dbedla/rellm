@@ -133,3 +133,24 @@ func TestLMStudioRoundTrip_FromFile(t *testing.T) {
 		assert.JSONEq(t, string(original), string(wireBack[i]), "item %d round-trip mismatch", i)
 	}
 }
+
+func TestNewLMStudioProviderHttpHost(t *testing.T) {
+	p, err := NewLMStudioProvider(Model_LMS_Google_Gemma_4_26B_A4B, "http://127.0.0.1", "1234")
+	assert.NoError(t, err)
+	url := p.URL()
+	assert.Equal(t, "http://127.0.0.1:1234/v1/responses", url)
+}
+
+func TestNewLMStudioProviderHttpsHost(t *testing.T) {
+	p, err := NewLMStudioProvider(Model_LMS_Google_Gemma_4_26B_A4B, "https://127.0.0.1", "1234")
+	assert.NoError(t, err)
+	url := p.URL()
+	assert.Equal(t, "https://127.0.0.1:1234/v1/responses", url)
+}
+
+func TestNewLMStudioProviderNoHttpHost(t *testing.T) {
+	p, err := NewLMStudioProvider(Model_LMS_Google_Gemma_4_26B_A4B, "127.0.0.1", "1234")
+	assert.NoError(t, err)
+	url := p.URL()
+	assert.Equal(t, "http://127.0.0.1:1234/v1/responses", url)
+}
