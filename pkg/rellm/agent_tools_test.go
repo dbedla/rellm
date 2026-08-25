@@ -526,7 +526,7 @@ func TestAgentLMSTooManyFunctionCall(t *testing.T) {
 	ctx := context.Background()
 	_, err = agent.Execute(ctx, prompt)
 	assert.Error(t, err, "expected error when tool iteration budget is exceeded")
-	assert.True(t, errors.Is(err, rellm.ErrMaxAgentStepsReached), "error should wrap ErrMaxToolIterationsReached")
+	assert.True(t, errors.Is(err, rellm.ErrMaxAgentStepsReached))
 }
 
 func TestFuncResultToFunctionCallRespSerializesOutputAsString(t *testing.T) {
