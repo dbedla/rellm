@@ -222,9 +222,8 @@ func buildTestAgent(t *testing.T) (*rellm.Agent, *HttpDoMock) {
 	agentName := "TestAgent"
 	mockHttp := new(HttpDoMock)
 
-	p, err := rellm.NewLMStudioProvider("google/gemma-4-26b-a4b", testBaseUrl, testPort)
+	p, err := rellm.NewLMStudioProviderWithHTTPCLient("google/gemma-4-26b-a4b", testBaseUrl, testPort, mockHttp)
 	assert.NoError(t, err, "failed to create provider")
-	p.WithHTTPClient(mockHttp)
 
 	ta, err := rellm.NewAgentBuilder().
 		WithProvider(p).
