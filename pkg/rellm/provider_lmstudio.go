@@ -46,7 +46,7 @@ func NewLMStudioProvider(model Model, host, port string) (*LMStudioProvider, err
 	}, nil
 }
 
-func NewLMStudioProviderWithHTTPCLient(model Model, host, port string, c ClientHttpDo) (*LMStudioProvider, error) {
+func NewLMStudioProviderWithHTTPClient(model Model, host, port string, c ClientHttpDo) (*LMStudioProvider, error) {
 	if c == nil {
 		return nil, ErrMissingHttpClientForProvider
 	}

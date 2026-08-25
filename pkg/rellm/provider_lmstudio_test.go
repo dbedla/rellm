@@ -156,6 +156,6 @@ func TestNewLMStudioProviderNoHttpHost(t *testing.T) {
 }
 
 func TestNewLMStudioProvider_MissingClient(t *testing.T) {
-	_, err := NewLMStudioProviderWithHTTPCLient(Model("local/model"), "localhost", "123", nil)
+	_, err := NewLMStudioProviderWithHTTPClient(Model("local/model"), "localhost", "123", nil)
 	assert.ErrorIs(t, err, ErrMissingHttpClientForProvider)
 }
