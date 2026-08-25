@@ -17,7 +17,6 @@ type OpenRouterProvider struct {
 const openRouterDefaultURL = "https://openrouter.ai/api/v1/responses"
 
 // NewOpenRouterProvider builds an OpenRouter provider. apiKey and model are required.
-// The HTTP client defaults to http.Client{}; override with WithHTTPClient.
 func NewOpenRouterProvider(apiKey string, model Model) (*OpenRouterProvider, error) {
 	if model == "" {
 		return nil, ErrEndpointMissingModelName

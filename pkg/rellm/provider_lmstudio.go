@@ -17,7 +17,6 @@ type LMStudioProvider struct {
 }
 
 // NewLMStudioProvider builds an LM Studio provider. model, host and port are required.
-// The HTTP client defaults to http.Client{}; override with WithHTTPClient.
 func NewLMStudioProvider(model Model, host, port string) (*LMStudioProvider, error) {
 	if model == "" {
 		return nil, ErrEndpointMissingModelName

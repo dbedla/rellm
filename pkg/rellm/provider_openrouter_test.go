@@ -253,3 +253,8 @@ func TestOpenRouterRoundTrip_FromFile(t *testing.T) {
 		assert.JSONEq(t, string(original), string(wireBack[i]), "item %d round-trip mismatch", i)
 	}
 }
+
+func TestNewOpenRouterProvider_MissingClient(t *testing.T) {
+	_, err := NewOpenRouterProviderWithHTTPClient("test-key", "test/model", nil)
+	assert.ErrorIs(t, err, ErrMissingHttpClientForProvider)
+}
