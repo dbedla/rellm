@@ -1,33 +1,35 @@
 package rellm
 
-import "fmt"
+import (
+	"errors"
+)
 
-var ErrBuildNoProvider = fmt.Errorf("missing provider")
-var ErrBuildNoAgentName = fmt.Errorf("missing agent name")
-var ErrBuildNoConversationStorage = fmt.Errorf("missing conversation storage")
-var ErrMalformedConversationStorage = fmt.Errorf("malformed conversation storage line")
+var ErrBuildNoProvider = errors.New("missing provider")
+var ErrBuildNoAgentName = errors.New("missing agent name")
+var ErrBuildNoConversationStorage = errors.New("missing conversation storage")
+var ErrMalformedConversationStorage = errors.New("malformed conversation storage line")
 
-var ErrNoToolsetButToolCallRequested = fmt.Errorf("no toolset provided but request to call tool received")
-var ErrWhileDispatchToolCall = fmt.Errorf("unable to dispatch tool call")
-var ErrInConversationResponse = fmt.Errorf("error in conversation response")
-var ErrMaxToolIterationsReached = fmt.Errorf("max tool iterations reached without a text response")
-var ErrConversationElementConversion = fmt.Errorf("error converting conversation element")
-var ErrUnknownConversationElement = fmt.Errorf("unknown conversation element")
+var ErrNoToolsetButToolCallRequested = errors.New("no toolset provided but request to call tool received")
+var ErrWhileDispatchToolCall = errors.New("unable to dispatch tool call")
+var ErrInConversationResponse = errors.New("error in conversation response")
+var ErrMaxAgentStepsReached = errors.New("max agent steps for single prompt reached")
+var ErrConversationElementConversion = errors.New("error converting conversation element")
+var ErrUnknownConversationElement = errors.New("unknown conversation element")
 
-var ErrEndpointNilResponse = fmt.Errorf("endpoint returned nil response")
-var ErrEndpointNilBodyInResponse = fmt.Errorf("endpoint returned nil body in response")
-var ErrUnableToReadResponseBody = fmt.Errorf("unable to read response body")
+var ErrEndpointNilResponse = errors.New("endpoint returned nil response")
+var ErrEndpointNilBodyInResponse = errors.New("endpoint returned nil body in response")
+var ErrUnableToReadResponseBody = errors.New("unable to read response body")
 
-var ErrEmptyPrompt = fmt.Errorf("prompt message is empty")
-var ErrEmptyReasoningEffort = fmt.Errorf("reasoning effort cannot be empty")
+var ErrEmptyPrompt = errors.New("prompt message is empty")
+var ErrEmptyReasoningEffort = errors.New("reasoning effort cannot be empty")
 
-var ErrNoImageHandler = fmt.Errorf("image handler not provided")
-var ErrCustomImageHandlerFailed = fmt.Errorf("custom image handler failed")
-var ErrImageParsingFailed = fmt.Errorf("error converting image generation element")
-var ErrReasoningParsingFailed = fmt.Errorf("error parsing reasoning element")
+var ErrNoImageHandler = errors.New("image handler not provided")
+var ErrCustomImageHandlerFailed = errors.New("custom image handler failed")
+var ErrImageParsingFailed = errors.New("error converting image generation element")
+var ErrReasoningParsingFailed = errors.New("error parsing reasoning element")
 
-var ErrUserMsgConversionFailed = fmt.Errorf("user message conversion failed")
+var ErrUserMsgConversionFailed = errors.New("user message conversion failed")
 
-var ErrEndpointMissingModelName = fmt.Errorf("missing model name for provider")
-var ErrEndpointMissingHost = fmt.Errorf("missing host (e.g. localhost or IP) for provider")
-var ErrEndpointMissingPort = fmt.Errorf("missing port for provider")
+var ErrEndpointMissingModelName = errors.New("missing model name for provider")
+var ErrEndpointMissingHost = errors.New("missing host (e.g. localhost or IP) for provider")
+var ErrEndpointMissingPort = errors.New("missing port for provider")

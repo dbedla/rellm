@@ -24,7 +24,7 @@ var goldenImageReq string
 var goldenImageResp string
 
 func TestAgentPromptToGetImage(t *testing.T) {
-	agent, httpDo := buildTestImageAgent(t, TestDefaultMaxToolsIterationWithoutReturnMessage, testImageGenerationHandler)
+	agent, httpDo := buildTestImageAgent(t, testDefaultMaxAgentSteps, testImageGenerationHandler)
 	defer httpDo.AssertExpectations(t)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
@@ -66,7 +66,7 @@ func TestAgentPromptToGetImage(t *testing.T) {
 }
 
 func TestAgentPromptToGetImage_handlerErr(t *testing.T) {
-	agent, httpDo := buildTestImageAgent(t, TestDefaultMaxToolsIterationWithoutReturnMessage, testImageGenerationHandlerAlwaysErr)
+	agent, httpDo := buildTestImageAgent(t, testDefaultMaxAgentSteps, testImageGenerationHandlerAlwaysErr)
 	defer httpDo.AssertExpectations(t)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
@@ -105,7 +105,7 @@ func testImageGenerationHandlerAlwaysErr(_ context.Context, image *rellm.ImageGe
 	return "", errors.New("test err in image handling error")
 }
 
-func buildTestImageAgent(t *testing.T, maxToolsIterationWithoutReturnMessage uint64,
+func buildTestImageAgent(t *testing.T, maxAgentSteps uint64,
 	imageGenerationH rellm.HandleImageGeneration) (*rellm.Agent, *HttpDoMock) {
 
 	agentName := "TestImageAgent"
@@ -118,7 +118,7 @@ func buildTestImageAgent(t *testing.T, maxToolsIterationWithoutReturnMessage uin
 	ta, err := rellm.NewAgentBuilder().
 		WithProvider(p).
 		WithAgentName(agentName).
-		WithMaxToolsIterationWithoutReturnMessage(maxToolsIterationWithoutReturnMessage).
+		WithMaxAgentSteps(maxAgentSteps).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage("You are a helpful assistant.").
 		WithHandleImageGeneration(imageGenerationH).

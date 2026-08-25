@@ -25,7 +25,7 @@ func buildLMSAgent() (*rellm.Agent, error) {
 	return rellm.NewAgentBuilder().
 		WithProvider(p).
 		WithAgentName(agentName).
-		WithMaxToolsIterationWithoutReturnMessage(20).
+		WithMaxAgentSteps(20).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage(sysprompt).
 		WithToolset(&examplesutils2.DataSrcToolset{}).
@@ -46,7 +46,7 @@ func buildLOpenRouterAgent(model rellm.Model) (*rellm.Agent, error) {
 	return rellm.NewAgentBuilder().
 		WithProvider(p).
 		WithAgentName(agentName).
-		WithMaxToolsIterationWithoutReturnMessage(20).
+		WithMaxAgentSteps(20).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage(sysprompt).
 		WithToolset(&examplesutils2.DataSrcToolset{}).

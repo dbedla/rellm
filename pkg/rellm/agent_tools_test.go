@@ -31,7 +31,7 @@ var goldenLMS_Hi_03_req string
 var goldenLMS_Hi_04_resp string
 
 func TestLMSAgentHiWithToolsNoCall(t *testing.T) {
-	agent, httpDo := buildTestProToolAgentLMS(t, TestDefaultMaxToolsIterationWithoutReturnMessage)
+	agent, httpDo := buildTestProToolAgentLMS(t, testDefaultMaxAgentSteps)
 	defer httpDo.AssertExpectations(t)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
@@ -106,7 +106,7 @@ var goldenOR_Hi_03_req string
 var goldenOR_Hi_04_resp string
 
 func TestOpenRouterAgentHiWithToolsNoCallGemma(t *testing.T) {
-	agent, httpDo := buildTestProToolAgentOpenRouter(t, "google/gemma-4-26b-a4b-it", TestDefaultMaxToolsIterationWithoutReturnMessage)
+	agent, httpDo := buildTestProToolAgentOpenRouter(t, "google/gemma-4-26b-a4b-it", testDefaultMaxAgentSteps)
 	defer httpDo.AssertExpectations(t)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
@@ -180,7 +180,7 @@ var goldenOR_Hi_gemini_03_req string
 var goldenOR_Hi_gemini_04_resp string
 
 func TestOpenRouterAgentHiWithToolsNoCallGemini(t *testing.T) {
-	agent, httpDo := buildTestProToolAgentOpenRouter(t, "google/gemini-3.1-flash-lite", TestDefaultMaxToolsIterationWithoutReturnMessage)
+	agent, httpDo := buildTestProToolAgentOpenRouter(t, "google/gemini-3.1-flash-lite", testDefaultMaxAgentSteps)
 	defer httpDo.AssertExpectations(t)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
@@ -260,7 +260,7 @@ var goldenProReqA3 string
 var goldenProRespA3 string
 
 func TestAgentLMS_ToolsCall(t *testing.T) {
-	agent, httpDo := buildTestProToolAgentLMS(t, TestDefaultMaxToolsIterationWithoutReturnMessage)
+	agent, httpDo := buildTestProToolAgentLMS(t, testDefaultMaxAgentSteps)
 	defer httpDo.AssertExpectations(t)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
@@ -343,7 +343,7 @@ var goldenLMS_UnknownFnCall_req_03 string
 var goldenLMS_UnknownFnCall_resp_04 string
 
 func TestAgentLMS_UnknownFnCall(t *testing.T) {
-	agent, httpDo := buildTestProToolAgentLMS(t, TestDefaultMaxToolsIterationWithoutReturnMessage)
+	agent, httpDo := buildTestProToolAgentLMS(t, testDefaultMaxAgentSteps)
 	defer httpDo.AssertExpectations(t)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
@@ -414,7 +414,7 @@ func TestAgentLMS_UnknownFnCall(t *testing.T) {
 }
 
 func TestAgentLMS_DispatchFailurePersistsPartialToolResults(t *testing.T) {
-	agent, httpDo := buildTestProToolAgentLMS(t, TestDefaultMaxToolsIterationWithoutReturnMessage)
+	agent, httpDo := buildTestProToolAgentLMS(t, testDefaultMaxAgentSteps)
 	defer httpDo.AssertExpectations(t)
 
 	const response = `{
@@ -526,7 +526,7 @@ func TestAgentLMSTooManyFunctionCall(t *testing.T) {
 	ctx := context.Background()
 	_, err = agent.Execute(ctx, prompt)
 	assert.Error(t, err, "expected error when tool iteration budget is exceeded")
-	assert.True(t, errors.Is(err, rellm.ErrMaxToolIterationsReached), "error should wrap ErrMaxToolIterationsReached")
+	assert.True(t, errors.Is(err, rellm.ErrMaxAgentStepsReached))
 }
 
 func TestFuncResultToFunctionCallRespSerializesOutputAsString(t *testing.T) {
@@ -537,7 +537,7 @@ func TestFuncResultToFunctionCallRespSerializesOutputAsString(t *testing.T) {
 	assert.JSONEq(t, `{"type":"function_call_output","call_id":"call_123","output":"42"}`, string(jsonResp))
 }
 
-func buildTestProToolAgentLMS(t *testing.T, maxToolsIterationWithoutReturnMessage uint64) (*rellm.Agent, *HttpDoMock) {
+func buildTestProToolAgentLMS(t *testing.T, maxAgentSteps uint64) (*rellm.Agent, *HttpDoMock) {
 
 	agentName := "TestProAgent"
 	mockHttp := new(HttpDoMock)
@@ -549,7 +549,7 @@ func buildTestProToolAgentLMS(t *testing.T, maxToolsIterationWithoutReturnMessag
 	ta, err := rellm.NewAgentBuilder().
 		WithProvider(p).
 		WithAgentName(agentName).
-		WithMaxToolsIterationWithoutReturnMessage(maxToolsIterationWithoutReturnMessage).
+		WithMaxAgentSteps(maxAgentSteps).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage("You are a helpful assistant.").
 		WithToolset(&examplesutils.DataSrcToolset{}).
@@ -559,7 +559,7 @@ func buildTestProToolAgentLMS(t *testing.T, maxToolsIterationWithoutReturnMessag
 	return ta, mockHttp
 }
 
-func buildTestProToolAgentOpenRouter(t *testing.T, model rellm.Model, maxToolsIterationWithoutReturnMessage uint64) (*rellm.Agent, *HttpDoMock) {
+func buildTestProToolAgentOpenRouter(t *testing.T, model rellm.Model, maxAgentSteps uint64) (*rellm.Agent, *HttpDoMock) {
 
 	agentName := "TestProAgent"
 	mockHttp := new(HttpDoMock)
@@ -571,7 +571,7 @@ func buildTestProToolAgentOpenRouter(t *testing.T, model rellm.Model, maxToolsIt
 	ta, err := rellm.NewAgentBuilder().
 		WithProvider(p).
 		WithAgentName(agentName).
-		WithMaxToolsIterationWithoutReturnMessage(maxToolsIterationWithoutReturnMessage).
+		WithMaxAgentSteps(maxAgentSteps).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage("You are a helpful assistant.").
 		WithToolset(&examplesutils.DataSrcToolset{}).
