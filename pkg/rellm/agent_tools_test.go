@@ -564,9 +564,8 @@ func buildTestProToolAgentOpenRouter(t *testing.T, model rellm.Model, maxAgentSt
 	agentName := "TestProAgent"
 	mockHttp := new(HttpDoMock)
 
-	p, err := rellm.NewOpenRouterProvider("test-key", model)
-	assert.NoError(t, err, "failed to create provider")
-	p.WithHTTPClient(mockHttp).WithURL(testBaseUrl + ":" + testPort + testResponsesApiEndpoint)
+	p, err := rellm.NewOpenRouterProviderWithHTTPClient("test-key", model, mockHttp)
+	assert.NoError(t, err)
 
 	ta, err := rellm.NewAgentBuilder().
 		WithProvider(p).

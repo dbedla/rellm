@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"rellm/internal/examplesutils"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -78,16 +79,16 @@ func postWithResponse(t *testing.T, statusCode int, body string) error {
 	return err
 }
 
-func newTestAgent(t *testing.T, statusCode int, body string) (*Agent, *HttpDoMock) {
-	t.Helper()
-
-
-	httpDoMock := HttpDoMock{}
-	p, err := NewOpenRouterProviderWithHTTPClient("test-key", "google/gemma-4-26b-a4b", &httpDoMock)
-	assert.NoError(t, err)
-
-	return , &httpDoMock
-}
+//func newTestAgent(t *testing.T, statusCode int, body string) (*Agent, *HttpDoMock) {
+//	t.Helper()
+//
+//
+//	httpDoMock := HttpDoMock{}
+//	p, err := NewOpenRouterProviderWithHTTPClient("test-key", "google/gemma-4-26b-a4b", &httpDoMock)
+//	assert.NoError(t, err)
+//
+//	return , &httpDoMock
+//}
 
 type HttpDoMock struct {
 	mock.Mock
@@ -98,4 +99,23 @@ func (h *HttpDoMock) Do(req *http.Request) (*http.Response, error) {
 	return args.Get(0).(*http.Response), args.Error(1)
 }
 
+func buildTestProToolAgentOpenRouter(t *testing.T, model Model, maxAgentSteps uint64) (*Agent, *HttpDoMock) {
 
+	agentName := "TestProAgent"
+	mockHttp := new(HttpDoMock)
+
+	p, err := NewOpenRouterProviderWithHTTPClient("test-key", model, mockHttp)
+	assert.NoError(t, err)
+
+	ta, err := NewAgentBuilder().
+		WithProvider(p).
+		WithAgentName(agentName).
+		WithMaxAgentSteps(maxAgentSteps).
+		WithConversationStorage(NewInMemoryStorage()).
+		WithSystemMessage("You are a helpful assistant.").
+		WithToolset(&examplesutils.DataSrcToolset{}).
+		Build()
+
+	assert.NoError(t, err, "failed to create agent")
+	return ta, mockHttp
+}
