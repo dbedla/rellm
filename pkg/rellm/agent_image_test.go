@@ -105,7 +105,7 @@ func testImageGenerationHandlerAlwaysErr(_ context.Context, image *rellm.ImageGe
 	return "", errors.New("test err in image handling error")
 }
 
-func buildTestImageAgent(t *testing.T, maxToolsIterationWithoutReturnMessage uint64,
+func buildTestImageAgent(t *testing.T, maxAgentSteps uint64,
 	imageGenerationH rellm.HandleImageGeneration) (*rellm.Agent, *HttpDoMock) {
 
 	agentName := "TestImageAgent"
@@ -118,7 +118,7 @@ func buildTestImageAgent(t *testing.T, maxToolsIterationWithoutReturnMessage uin
 	ta, err := rellm.NewAgentBuilder().
 		WithProvider(p).
 		WithAgentName(agentName).
-		WithMaxAgentSteps(maxToolsIterationWithoutReturnMessage).
+		WithMaxAgentSteps(maxAgentSteps).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage("You are a helpful assistant.").
 		WithHandleImageGeneration(imageGenerationH).
