@@ -2,6 +2,7 @@ package rellm
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 )
@@ -149,16 +150,16 @@ func parseMessageContent(content json.RawMessage) []MessagePart {
 
 // parseImageGeneration parses an image_generation_call wire item into an
 // ImageGeneration element.
-func parseImageGeneration(raw json.RawMessage) ConversationElement {
+func parseImageGeneration(raw json.RawMessage) (ConversationElement, error) {
 	var ig struct {
 		Id     string `json:"id"`
 		Status string `json:"status"`
 		Result string `json:"result"`
 	}
 	if err := json.Unmarshal(raw, &ig); err != nil {
-		return nil // skip malformed items
+		return nil, errors.Join(ErrImageParsingFailed, err)
 	}
-	return &ImageGeneration{Id: ig.Id, Status: ig.Status, Result: ig.Result}
+	return &ImageGeneration{Id: ig.Id, Status: ig.Status, Result: ig.Result}, nil
 }
 
 type ImageURL struct {

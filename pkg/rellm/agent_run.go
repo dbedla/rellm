@@ -233,7 +233,7 @@ func invalidFunctionCallResp(fn *FunctionCall) FunctionCallResp {
 	return FunctionCallResp{
 		Type:   "function_call_output",
 		CallId: fn.CallId,
-		Output: "invalid function call (function not found)" + fn.Name,
+		Output: "invalid function call (function not found) " + fn.Name,
 	}
 
 }

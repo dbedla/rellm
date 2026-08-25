@@ -466,7 +466,7 @@ func TestAgentLMS_DispatchFailurePersistsPartialToolResults(t *testing.T) {
 	}
 
 	assert.Equal(t, "42", outputsByCallID["call_success"], "successful tool result should have been persisted despite the dispatch error")
-	assert.Equal(t, "invalid function call (function not found)UnknownTool", outputsByCallID["call_failure"])
+	assert.Equal(t, "invalid function call (function not found) UnknownTool", outputsByCallID["call_failure"])
 }
 
 func TestAgentLMSTooManyFunctionCall(t *testing.T) {
