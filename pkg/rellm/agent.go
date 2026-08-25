@@ -1,6 +1,7 @@
 package rellm
 
 import (
+	"context"
 	"encoding/json"
 )
 
@@ -67,19 +68,19 @@ func FuncResultToFunctionCallResp(callId string, funcResult any) FunctionCallRes
 
 // Execute builds the user message, packages inference params, and hands both to
 // agent.run() which owns conversation history, HTTP req assembly, and tool-loop.
-func (a *Agent) Execute(p *Prompt) (string, error) {
+func (a *Agent) Execute(ctx context.Context, p *Prompt) (string, error) {
 	if p == nil || p.msg == "" {
 		return "", ErrEmptyPrompt
 	}
-	return a.run(p.msg, p.params)
+	return a.run(ctx, p.msg, p.params)
 }
 
 // Ask is the simple entry point for quick questions — no builder needed.
-func (a *Agent) Ask(question string) (string, error) {
+func (a *Agent) Ask(ctx context.Context, question string) (string, error) {
 	prompt, err := NewPromptBuilder().WithMessage(question).Build()
 	if err != nil {
 		return "", err
 	}
 
-	return a.Execute(prompt)
+	return a.Execute(ctx, prompt)
 }

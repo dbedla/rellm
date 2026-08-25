@@ -2,6 +2,7 @@ package rellm_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -42,7 +43,8 @@ func TestAgentAsk(t *testing.T) {
 			Body:       io.NopCloser(strings.NewReader(goldenRespHi)),
 		}, nil)
 
-	respMsg, err := agent.Ask("Hi")
+	ctx := context.Background()
+	respMsg, err := agent.Ask(ctx, "Hi")
 	assert.NoError(t, err, "failed to ask")
 	assert.NotNil(t, respMsg, "response message should not be nil")
 	assert.Equal(t, "Hello! How can I help you today? \n\nIf you have any questions about the weather, meteorology, climate patterns, or even how certain atmospheric phenomena work, feel free to ask!", respMsg, "response message should match")
@@ -68,7 +70,8 @@ func TestAgentAsk_HTTP200EmptyBody(t *testing.T) {
 			StatusCode: http.StatusOK,
 		}, nil)
 
-	respMsg, err := agent.Ask("Hi")
+	ctx := context.Background()
+	respMsg, err := agent.Ask(ctx, "Hi")
 	assert.Error(t, err)
 	assert.NotNil(t, respMsg, "response message should not be nil")
 	assert.Equal(t, "", respMsg, "response message should match")
@@ -78,7 +81,8 @@ func TestAgentAsk_EmptyString(t *testing.T) {
 	agent, httpDo := buildTestAgent(t)
 	defer httpDo.AssertExpectations(t)
 
-	_, err := agent.Ask("")
+	ctx := context.Background()
+	_, err := agent.Ask(ctx, "")
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, rellm.ErrEmptyPrompt)
 }
@@ -87,7 +91,8 @@ func TestAgentExecute_NilPrompt(t *testing.T) {
 	agent, httpDo := buildTestAgent(t)
 	defer httpDo.AssertExpectations(t)
 
-	_, err := agent.Execute(nil)
+	ctx := context.Background()
+	_, err := agent.Execute(ctx, nil)
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, rellm.ErrEmptyPrompt)
 }
@@ -136,7 +141,8 @@ func TestPromptBuilder_AllFields(t *testing.T) {
 		Build()
 	assert.NoError(t, err)
 
-	_, err = agent.Execute(prompt)
+	ctx := context.Background()
+	_, err = agent.Execute(ctx, prompt)
 	assert.NoError(t, err)
 }
 
@@ -161,7 +167,8 @@ func TestAgentAskStatusInternalServerError(t *testing.T) {
 			Body:       io.NopCloser(strings.NewReader(goldenRespHi)),
 		}, nil)
 
-	respMsg, err := agent.Ask("Hi")
+	ctx := context.Background()
+	respMsg, err := agent.Ask(ctx, "Hi")
 	assert.Error(t, err)
 	assert.NotNil(t, respMsg, "response message should not be nil")
 	assert.Equal(t, "", respMsg, "response message should match")
@@ -185,10 +192,11 @@ func TestAgentAsk_RetryAfterProviderFailedMessageStaysInConversation(t *testing.
 			Body:       io.NopCloser(strings.NewReader(goldenRespHi)),
 		}, nil)
 
-	_, err := agent.Ask("Hi")
+	ctx := context.Background()
+	_, err := agent.Ask(ctx, "Hi")
 	assert.Error(t, err)
 
-	_, err = agent.Ask("Hi")
+	_, err = agent.Ask(ctx, "Hi")
 	assert.NoError(t, err)
 
 	conversation, err := agent.CurrentConversation()

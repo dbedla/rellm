@@ -2,6 +2,7 @@ package rellm_test
 
 import (
 	"bytes"
+	"context"
 	_ "embed"
 	"encoding/json"
 	"errors"
@@ -73,7 +74,8 @@ func TestLMSAgentHiWithToolsNoCall(t *testing.T) {
 		Build()
 	assert.NoError(t, err)
 
-	respMsg, err := agent.Execute(promptFirst)
+	ctx := context.Background()
+	respMsg, err := agent.Execute(ctx, promptFirst)
 	assert.NoError(t, err, "failed to ask")
 
 	assert.NotNil(t, respMsg, "response message should not be nil")
@@ -86,7 +88,7 @@ func TestLMSAgentHiWithToolsNoCall(t *testing.T) {
 		Build()
 	assert.NoError(t, err)
 
-	respMsg, err = agent.Execute(promptReasoning)
+	respMsg, err = agent.Execute(ctx, promptReasoning)
 	assert.NoError(t, err, "failed to ask with reasoning in conversation")
 	assert.Equal(t, "I have access to the following tools:\n\n1.  **`GetDataFor`**: This tool allows me to retrieve specific data based on an input string you provide.\n2.  **`GetStaticData`**: This tool allows me to retrieve predefined static information.", respMsg)
 }
@@ -148,7 +150,8 @@ func TestOpenRouterAgentHiWithToolsNoCallGemma(t *testing.T) {
 		Build()
 	assert.NoError(t, err)
 
-	respMsg, err := agent.Execute(prompt)
+	ctx := context.Background()
+	respMsg, err := agent.Execute(ctx, prompt)
 	assert.NoError(t, err)
 	assert.Equal(t, "Hello! How can I help you today?", respMsg)
 
@@ -159,7 +162,7 @@ func TestOpenRouterAgentHiWithToolsNoCallGemma(t *testing.T) {
 		Build()
 	assert.NoError(t, err)
 
-	respMsg, err = agent.Execute(secondPrompt)
+	respMsg, err = agent.Execute(ctx, secondPrompt)
 	assert.NoError(t, err, "failed to ask with reasoning in conversation")
 	assert.Equal(t, "I have access to the following tools:\n\n1.  **`GetDataFor`**: This tool allows me to retrieve specific data based on an input string you provide.\n2.  **`GetStaticData`**: This tool allows me to retrieve pre-defined static data.", respMsg)
 }
@@ -221,7 +224,8 @@ func TestOpenRouterAgentHiWithToolsNoCallGemini(t *testing.T) {
 		Build()
 	assert.NoError(t, err)
 
-	respMsg, err := agent.Execute(prompt)
+	ctx := context.Background()
+	respMsg, err := agent.Execute(ctx, prompt)
 	assert.NoError(t, err)
 	assert.Equal(t, "Hello! How can I help you today?", respMsg)
 
@@ -232,7 +236,7 @@ func TestOpenRouterAgentHiWithToolsNoCallGemini(t *testing.T) {
 		Build()
 	assert.NoError(t, err)
 
-	respMsg, err = agent.Execute(secondPrompt)
+	respMsg, err = agent.Execute(ctx, secondPrompt)
 	assert.NoError(t, err, "failed to ask with reasoning in conversation")
 	assert.Equal(t, "I have access to the following tools:\n\n*   **`GetDataFor`**: This tool allows me to retrieve specific data based on an input you provide.\n*   **`GetStaticData`**: This tool allows me to retrieve general static information.\n\nHow can I help you use these today?", respMsg)
 }
@@ -318,7 +322,8 @@ func TestAgentLMS_ToolsCall(t *testing.T) {
 		Build()
 	assert.NoError(t, err)
 
-	respMsg, err := agent.Execute(prompt)
+	ctx := context.Background()
+	respMsg, err := agent.Execute(ctx, prompt)
 	assert.NoError(t, err, "failed to ask")
 
 	assert.NotNil(t, respMsg, "response message should not be nil")
@@ -383,7 +388,8 @@ func TestAgentLMS_UnknownFnCall(t *testing.T) {
 		Build()
 	assert.NoError(t, err)
 
-	respMsg, err := agent.Execute(prompt)
+	ctx := context.Background()
+	respMsg, err := agent.Execute(ctx, prompt)
 	assert.Equal(t, respMsg, "")
 	assert.Error(t, err, "failed to ask")
 	assert.ErrorIs(t, err, rellm.ErrWhileDispatchToolCall)
@@ -400,7 +406,7 @@ func TestAgentLMS_UnknownFnCall(t *testing.T) {
 		Build()
 	assert.NoError(t, err)
 
-	respMsg, err = agent.Execute(promptContinue)
+	respMsg, err = agent.Execute(ctx, promptContinue)
 	assert.NoError(t, err, "failed to ask")
 
 	assert.NotNil(t, respMsg, "response message should not be nil")
@@ -445,7 +451,8 @@ func TestAgentLMS_DispatchFailurePersistsPartialToolResults(t *testing.T) {
 		Build()
 	assert.NoError(t, err)
 
-	respMsg, err := agent.Execute(prompt)
+	ctx := context.Background()
+	respMsg, err := agent.Execute(ctx, prompt)
 	assert.Empty(t, respMsg)
 	assert.ErrorIs(t, err, rellm.ErrWhileDispatchToolCall)
 
@@ -516,7 +523,8 @@ func TestAgentLMSTooManyFunctionCall(t *testing.T) {
 		Build()
 	assert.NoError(t, err)
 
-	_, err = agent.Execute(prompt)
+	ctx := context.Background()
+	_, err = agent.Execute(ctx, prompt)
 	assert.Error(t, err, "expected error when tool iteration budget is exceeded")
 	assert.True(t, errors.Is(err, rellm.ErrMaxToolIterationsReached), "error should wrap ErrMaxToolIterationsReached")
 }

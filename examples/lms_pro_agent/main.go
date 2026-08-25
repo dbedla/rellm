@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"rellm/pkg/agentsutils"
 	"rellm/pkg/rellm"
 
@@ -33,7 +34,8 @@ func main() {
 			continue
 		}
 
-		llmResp, err := agent.Execute(prompt)
+		ctx := context.Background()
+		llmResp, err := agent.Execute(ctx, prompt)
 		if err != nil {
 			color.Red("unable to ask question: %s", err.Error())
 			continue

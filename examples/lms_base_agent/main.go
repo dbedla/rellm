@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"rellm/pkg/agentsutils"
 
 	"github.com/fatih/color"
@@ -21,7 +22,9 @@ func main() {
 		if msg == "EXIT" {
 			return
 		}
-		llmResp, err := agent.Ask(msg)
+
+		ctx := context.Background()
+		llmResp, err := agent.Ask(ctx, msg)
 		if err != nil {
 			color.Red("unable to ask question: %s", err.Error())
 			continue

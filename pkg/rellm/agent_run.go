@@ -2,6 +2,7 @@ package rellm
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,7 +12,7 @@ import (
 	"strings"
 )
 
-func (a *Agent) run(msg string, params promptParams) (string, error) {
+func (a *Agent) run(ctx context.Context, msg string, params promptParams) (string, error) {
 	conversation, err := a.CurrentConversation()
 	if err != nil {
 		return "", err
@@ -42,7 +43,7 @@ func (a *Agent) run(msg string, params promptParams) (string, error) {
 		req.Tools = a.toolset.BuildTools()
 	}
 
-	msgRespFromLLM, err := a.process(req)
+	msgRespFromLLM, err := a.process(ctx, req)
 
 	if err != nil {
 		return "", err
@@ -51,7 +52,7 @@ func (a *Agent) run(msg string, params promptParams) (string, error) {
 	return msgRespFromLLM, nil
 }
 
-func (a *Agent) post(req *ResponsesApiReq) (_ *ResponsesApiResp, err error) {
+func (a *Agent) post(ctx context.Context, req *ResponsesApiReq) (_ *ResponsesApiResp, err error) {
 	if a.inspectReq != nil {
 		a.inspectReq(req)
 	}
@@ -72,6 +73,8 @@ func (a *Agent) post(req *ResponsesApiReq) (_ *ResponsesApiResp, err error) {
 		URL:    apiUrl,
 		Body:   io.NopCloser(bytes.NewReader(body)),
 	}
+
+	httpReq = httpReq.WithContext(ctx)
 
 	resp, err := a.provider.Do(httpReq)
 	if err != nil {
@@ -99,9 +102,9 @@ func (a *Agent) post(req *ResponsesApiReq) (_ *ResponsesApiResp, err error) {
 	return parseResponsesApiResponse(rawBody, a.inspectResp)
 }
 
-func (a *Agent) process(req *ResponsesApiReq) (string, error) {
+func (a *Agent) process(ctx context.Context, req *ResponsesApiReq) (string, error) {
 	for i := uint64(0); i < a.maxToolsIterationWithoutReturnMessage; i++ {
-		conversationResponse, err := a.post(req)
+		conversationResponse, err := a.post(ctx, req)
 		if err != nil {
 			return "", err
 		}

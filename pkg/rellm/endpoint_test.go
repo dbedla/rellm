@@ -1,6 +1,7 @@
 package rellm
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -65,15 +66,17 @@ const testURL = "https://api.example.test/responses"
 func postWithValidResponse(t *testing.T) (*ResponsesApiResp, error) {
 	t.Helper()
 
+	ctx := context.Background()
 	req := &ResponsesApiReq{Model: "test-model", Input: []json.RawMessage{}}
-	return newTestAgent(t, http.StatusOK, `{"id":"resp_test"}`).post(req)
+	return newTestAgent(t, http.StatusOK, `{"id":"resp_test"}`).post(ctx, req)
 }
 
 func postWithResponse(t *testing.T, statusCode int, body string) error {
 	t.Helper()
 
+	ctx := context.Background()
 	req := &ResponsesApiReq{Model: "test-model", Input: []json.RawMessage{}}
-	_, err := newTestAgent(t, statusCode, body).post(req)
+	_, err := newTestAgent(t, statusCode, body).post(ctx, req)
 	return err
 }
 
