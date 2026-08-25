@@ -3,13 +3,11 @@ package rellm
 import (
 	"context"
 	"encoding/json"
-	"errors"
-	"io"
 	"net/http"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -80,27 +78,24 @@ func postWithResponse(t *testing.T, statusCode int, body string) error {
 	return err
 }
 
-func newTestAgent(t *testing.T, statusCode int, body string) *Agent {
+func newTestAgent(t *testing.T, statusCode int, body string) (*Agent, *HttpDoMock) {
 	t.Helper()
 
-	p, err := NewOpenRouterProvider("test-key", "google/gemma-4-26b-a4b")
-	require.NoError(t, err)
-	p.WithURL(testURL).WithHTTPClient(testEndpointClient{statusCode: statusCode, body: body})
 
-	return &Agent{provider: p}
+	httpDoMock := HttpDoMock{}
+	p, err := NewOpenRouterProviderWithHTTPClient("test-key", "google/gemma-4-26b-a4b", &httpDoMock)
+	assert.NoError(t, err)
+
+	return , &httpDoMock
 }
 
-type testEndpointClient struct {
-	statusCode int
-	body       string
+type HttpDoMock struct {
+	mock.Mock
 }
 
-func (c testEndpointClient) Do(req *http.Request) (*http.Response, error) {
-	if req.Header.Get("Authorization") == "" {
-		return nil, errors.New("missing authorization header")
-	}
-
-	header := make(http.Header)
-	header.Set("X-Request-ID", "req_test")
-	return &http.Response{StatusCode: c.statusCode, Header: header, Body: io.NopCloser(strings.NewReader(c.body))}, nil
+func (h *HttpDoMock) Do(req *http.Request) (*http.Response, error) {
+	args := h.Called(req)
+	return args.Get(0).(*http.Response), args.Error(1)
 }
+
+

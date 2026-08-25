@@ -3,7 +3,6 @@ package rellm
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 )
 
@@ -24,7 +23,7 @@ func NewOpenRouterProvider(apiKey string, model Model) (*OpenRouterProvider, err
 		return nil, ErrEndpointMissingModelName
 	}
 	if apiKey == "" {
-		return nil, fmt.Errorf("missing API key for OpenRouter provider")
+		return nil, ErrMissingApiKeyForProvider
 	}
 	h := make(http.Header)
 	h.Set("Content-Type", "application/json")
@@ -37,18 +36,16 @@ func NewOpenRouterProvider(apiKey string, model Model) (*OpenRouterProvider, err
 	}, nil
 }
 
-// todo: add next New... method
-// WithHTTPClient injects a custom HTTP client (e.g. a test fake).
-func (p *OpenRouterProvider) WithHTTPClient(c ClientHttpDo) *OpenRouterProvider {
-	p.client = c
-	return p
-}
-
-// todo: remove?
-// WithURL overrides the endpoint URL (used by tests / self-hosted gateways).
-func (p *OpenRouterProvider) WithURL(u string) *OpenRouterProvider {
-	p.url = u
-	return p
+func NewOpenRouterProviderWithHTTPClient(apiKey string, model Model, client ClientHttpDo) (*OpenRouterProvider, error) {
+	if client == nil {
+		return nil, ErrMissingHttpClientForProvider
+	}
+	p, err := NewOpenRouterProvider(apiKey, model)
+	if err != nil {
+		return nil, err
+	}
+	p.client = client
+	return p, nil
 }
 
 func (p *OpenRouterProvider) Model() Model        { return p.model }

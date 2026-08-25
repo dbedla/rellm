@@ -2,6 +2,7 @@ package rellm
 
 import (
 	"errors"
+	"fmt"
 )
 
 var ErrBuildNoProvider = errors.New("missing provider")
@@ -33,3 +34,6 @@ var ErrUserMsgConversionFailed = errors.New("user message conversion failed")
 var ErrEndpointMissingModelName = errors.New("missing model name for provider")
 var ErrEndpointMissingHost = errors.New("missing host (e.g. localhost or IP) for provider")
 var ErrEndpointMissingPort = errors.New("missing port for provider")
+
+var ErrMissingHttpClientForProvider = errors.New("missing HTTP client for provider")
+var ErrMissingApiKeyForProvider = fmt.Errorf("missing API key for provider")
