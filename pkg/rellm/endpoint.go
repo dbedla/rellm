@@ -9,6 +9,14 @@ import (
 	"strings"
 )
 
+// Model
+// value for models can be found:
+//   - For openrouter: https://openrouter.ai/models (curl --request GET --url 'https://openrouter.ai/api/v1/models?limit=10' | jq)
+//   - For lmstudio: https://lmstudio.ai/models
+//
+// names used by openrouter and lmstudio are not interchangeable:
+//   - lms: "google/gemma-4-26b-a4b"
+//   - openrouter: "google/gemma-4-26b-a4b-it"
 type Model string
 
 type ClientHttpDo interface {

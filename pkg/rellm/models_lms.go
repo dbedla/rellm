@@ -20,7 +20,7 @@ const (
 	Model_LMS_Google_Gemma_3_4B  Model = "google/gemma-3-4b"
 	Model_LMS_Google_Gemma_3_12B Model = "google/gemma-3-12b"
 
-	Model_LMS_Google_Gemma_4_26B_A4B Model = "google/gemma-4-26b-a4b"
+	//Model_LMS_Google_Gemma_4_26B_A4B Model = "google/gemma-4-26b-a4b"
 
 	Model_LMS_Qwen_Qwen3_Coder_30B Model = "qwen/qwen3-coder-30b"
 	Model_LMS_Qwen_Qwen3_6_27B     Model = "qwen/qwen3.6-27b"

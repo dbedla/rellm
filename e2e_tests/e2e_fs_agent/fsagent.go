@@ -38,7 +38,7 @@ func buildFSAgent(p rellm.Provider, dirs agentsDirs) (*rellm.Agent, error) {
 }
 
 func buildLmsProvider() (rellm.Provider, error) {
-	return rellm.NewLMStudioProvider(rellm.Model_LMS_Google_Gemma_4_26B_A4B, "http://127.0.0.1", "1234")
+	return rellm.NewLMStudioProvider("google/gemma-4-26b-a4b", "http://127.0.0.1", "1234")
 }
 
 func buildOpenRouterProvider() (rellm.Provider, error) {
@@ -52,7 +52,7 @@ func buildOpenRouterProvider() (rellm.Provider, error) {
 		return nil, fmt.Errorf("missing apikey for OPENROUTER_API_KEY")
 	}
 
-	return rellm.NewOpenRouterProvider(apiKey, rellm.Model_OpenRouter_Google_Gemini_3_1_Flash_Lite)
+	return rellm.NewOpenRouterProvider(apiKey, "google/gemini-3.1-flash-lite")
 }
 
 func buildFSToolset(readOnlyDir, outputDir string) (*agentsutils.FSToolset, error) {

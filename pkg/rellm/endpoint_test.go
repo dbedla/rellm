@@ -83,7 +83,7 @@ func postWithResponse(t *testing.T, statusCode int, body string) error {
 func newTestAgent(t *testing.T, statusCode int, body string) *Agent {
 	t.Helper()
 
-	p, err := NewOpenRouterProvider("test-key", Model_LMS_Google_Gemma_4_26B_A4B)
+	p, err := NewOpenRouterProvider("test-key", "google/gemma-4-26b-a4b")
 	require.NoError(t, err)
 	p.WithURL(testURL).WithHTTPClient(testEndpointClient{statusCode: statusCode, body: body})
 
