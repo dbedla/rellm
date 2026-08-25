@@ -1,7 +1,7 @@
 package main
 
 import (
-	"rellm/pkg/agentsutils"
+	"rellm/internal/examplesutils"
 	"rellm/pkg/rellm"
 )
 
@@ -25,7 +25,7 @@ func buildProAgent() (*rellm.Agent, error) {
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage(proAgentSysPrompt).
 		WithToolset(&WeatherToolset{}).
-		WithInspectEachRequest(agentsutils.InspectWithReqLog).
-		WithInspectEachResponse(agentsutils.InspectWithRespLog).
+		WithInspectEachRequest(examplesutils.InspectWithReqLog).
+		WithInspectEachResponse(examplesutils.InspectWithRespLog).
 		Build()
 }

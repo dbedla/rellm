@@ -2,13 +2,14 @@ package rellm_test
 
 import (
 	"bytes"
+	"context"
 	_ "embed"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
-	"rellm/pkg/agentsutils"
+	"rellm/internal/examplesutils"
 	"rellm/pkg/rellm"
 	"strings"
 	"testing"
@@ -73,7 +74,8 @@ func TestLMSAgentHiWithToolsNoCall(t *testing.T) {
 		Build()
 	assert.NoError(t, err)
 
-	respMsg, err := agent.Execute(promptFirst)
+	ctx := context.Background()
+	respMsg, err := agent.Execute(ctx, promptFirst)
 	assert.NoError(t, err, "failed to ask")
 
 	assert.NotNil(t, respMsg, "response message should not be nil")
@@ -86,7 +88,7 @@ func TestLMSAgentHiWithToolsNoCall(t *testing.T) {
 		Build()
 	assert.NoError(t, err)
 
-	respMsg, err = agent.Execute(promptReasoning)
+	respMsg, err = agent.Execute(ctx, promptReasoning)
 	assert.NoError(t, err, "failed to ask with reasoning in conversation")
 	assert.Equal(t, "I have access to the following tools:\n\n1.  **`GetDataFor`**: This tool allows me to retrieve specific data based on an input string you provide.\n2.  **`GetStaticData`**: This tool allows me to retrieve predefined static information.", respMsg)
 }
@@ -148,7 +150,8 @@ func TestOpenRouterAgentHiWithToolsNoCallGemma(t *testing.T) {
 		Build()
 	assert.NoError(t, err)
 
-	respMsg, err := agent.Execute(prompt)
+	ctx := context.Background()
+	respMsg, err := agent.Execute(ctx, prompt)
 	assert.NoError(t, err)
 	assert.Equal(t, "Hello! How can I help you today?", respMsg)
 
@@ -159,7 +162,7 @@ func TestOpenRouterAgentHiWithToolsNoCallGemma(t *testing.T) {
 		Build()
 	assert.NoError(t, err)
 
-	respMsg, err = agent.Execute(secondPrompt)
+	respMsg, err = agent.Execute(ctx, secondPrompt)
 	assert.NoError(t, err, "failed to ask with reasoning in conversation")
 	assert.Equal(t, "I have access to the following tools:\n\n1.  **`GetDataFor`**: This tool allows me to retrieve specific data based on an input string you provide.\n2.  **`GetStaticData`**: This tool allows me to retrieve pre-defined static data.", respMsg)
 }
@@ -221,7 +224,8 @@ func TestOpenRouterAgentHiWithToolsNoCallGemini(t *testing.T) {
 		Build()
 	assert.NoError(t, err)
 
-	respMsg, err := agent.Execute(prompt)
+	ctx := context.Background()
+	respMsg, err := agent.Execute(ctx, prompt)
 	assert.NoError(t, err)
 	assert.Equal(t, "Hello! How can I help you today?", respMsg)
 
@@ -232,7 +236,7 @@ func TestOpenRouterAgentHiWithToolsNoCallGemini(t *testing.T) {
 		Build()
 	assert.NoError(t, err)
 
-	respMsg, err = agent.Execute(secondPrompt)
+	respMsg, err = agent.Execute(ctx, secondPrompt)
 	assert.NoError(t, err, "failed to ask with reasoning in conversation")
 	assert.Equal(t, "I have access to the following tools:\n\n*   **`GetDataFor`**: This tool allows me to retrieve specific data based on an input you provide.\n*   **`GetStaticData`**: This tool allows me to retrieve general static information.\n\nHow can I help you use these today?", respMsg)
 }
@@ -318,7 +322,8 @@ func TestAgentLMS_ToolsCall(t *testing.T) {
 		Build()
 	assert.NoError(t, err)
 
-	respMsg, err := agent.Execute(prompt)
+	ctx := context.Background()
+	respMsg, err := agent.Execute(ctx, prompt)
 	assert.NoError(t, err, "failed to ask")
 
 	assert.NotNil(t, respMsg, "response message should not be nil")
@@ -383,7 +388,8 @@ func TestAgentLMS_UnknownFnCall(t *testing.T) {
 		Build()
 	assert.NoError(t, err)
 
-	respMsg, err := agent.Execute(prompt)
+	ctx := context.Background()
+	respMsg, err := agent.Execute(ctx, prompt)
 	assert.Equal(t, respMsg, "")
 	assert.Error(t, err, "failed to ask")
 	assert.ErrorIs(t, err, rellm.ErrWhileDispatchToolCall)
@@ -400,11 +406,74 @@ func TestAgentLMS_UnknownFnCall(t *testing.T) {
 		Build()
 	assert.NoError(t, err)
 
-	respMsg, err = agent.Execute(promptContinue)
+	respMsg, err = agent.Execute(ctx, promptContinue)
 	assert.NoError(t, err, "failed to ask")
 
 	assert.NotNil(t, respMsg, "response message should not be nil")
 	assert.Equal(t, "It appears that the attempt to call `GetSpecialData` resulted in an error indicating the function was not found. \n\nHow would you like to proceed? I can try calling one of the other available functions, such as `GetStaticData` or `GetDataFor`, if you provide a specific input.", respMsg, "response message should match")
+}
+
+func TestAgentLMS_DispatchFailurePersistsPartialToolResults(t *testing.T) {
+	agent, httpDo := buildTestProToolAgentLMS(t, TestDefaultMaxToolsIterationWithoutReturnMessage)
+	defer httpDo.AssertExpectations(t)
+
+	const response = `{
+		"output": [
+			{
+				"id": "fc_success",
+				"call_id": "call_success",
+				"type": "function_call",
+				"name": "GetStaticData",
+				"arguments": "{}"
+			},
+			{
+				"id": "fc_failure",
+				"call_id": "call_failure",
+				"type": "function_call",
+				"name": "UnknownTool",
+				"arguments": "{}"
+			}
+		],
+		"error": null
+	}`
+
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Return(&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(response)),
+		}, nil)
+
+	prompt, err := rellm.NewPromptBuilder().
+		WithMessage("call both tools").
+		WithReasoning(testReasoningEffort).
+		WithTemperature(testTemperature).
+		Build()
+	assert.NoError(t, err)
+
+	ctx := context.Background()
+	respMsg, err := agent.Execute(ctx, prompt)
+	assert.Empty(t, respMsg)
+	assert.ErrorIs(t, err, rellm.ErrWhileDispatchToolCall)
+
+	conversation, err := agent.CurrentConversation()
+	assert.NoError(t, err)
+
+	outputsByCallID := make(map[string]string)
+	for _, raw := range conversation {
+		var element struct {
+			Type   string `json:"type"`
+			CallID string `json:"call_id"`
+			Output string `json:"output"`
+		}
+		assert.NoError(t, json.Unmarshal(raw, &element))
+		if element.Type == "function_call_output" {
+			outputsByCallID[element.CallID] = element.Output
+		}
+	}
+
+	assert.Equal(t, "42", outputsByCallID["call_success"], "successful tool result should have been persisted despite the dispatch error")
+	assert.Equal(t, "invalid function call (function not found) UnknownTool", outputsByCallID["call_failure"])
 }
 
 func TestAgentLMSTooManyFunctionCall(t *testing.T) {
@@ -454,7 +523,8 @@ func TestAgentLMSTooManyFunctionCall(t *testing.T) {
 		Build()
 	assert.NoError(t, err)
 
-	_, err = agent.Execute(prompt)
+	ctx := context.Background()
+	_, err = agent.Execute(ctx, prompt)
 	assert.Error(t, err, "expected error when tool iteration budget is exceeded")
 	assert.True(t, errors.Is(err, rellm.ErrMaxToolIterationsReached), "error should wrap ErrMaxToolIterationsReached")
 }
@@ -482,7 +552,7 @@ func buildTestProToolAgentLMS(t *testing.T, maxToolsIterationWithoutReturnMessag
 		WithMaxToolsIterationWithoutReturnMessage(maxToolsIterationWithoutReturnMessage).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage("You are a helpful assistant.").
-		WithToolset(&agentsutils.DataSrcToolset{}).
+		WithToolset(&examplesutils.DataSrcToolset{}).
 		Build()
 
 	assert.NoError(t, err, "failed to create agent")
@@ -504,7 +574,7 @@ func buildTestProToolAgentOpenRouter(t *testing.T, model rellm.Model, maxToolsIt
 		WithMaxToolsIterationWithoutReturnMessage(maxToolsIterationWithoutReturnMessage).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage("You are a helpful assistant.").
-		WithToolset(&agentsutils.DataSrcToolset{}).
+		WithToolset(&examplesutils.DataSrcToolset{}).
 		Build()
 
 	assert.NoError(t, err, "failed to create agent")

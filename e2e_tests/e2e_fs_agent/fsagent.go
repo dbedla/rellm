@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"rellm/internal/examplesutils"
 	"rellm/pkg/agentsutils"
 	"rellm/pkg/rellm"
 
@@ -31,8 +32,8 @@ func buildFSAgent(p rellm.Provider, dirs agentsDirs) (*rellm.Agent, error) {
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithToolset(fsToolset).
 		WithSystemMessage(fsAgentSysPrompt).
-		WithInspectEachRequest(agentsutils.InspectWithReqLog).
-		WithInspectEachResponse(agentsutils.InspectWithRespLog).
+		WithInspectEachRequest(examplesutils.InspectWithReqLog).
+		WithInspectEachResponse(examplesutils.InspectWithRespLog).
 		Build()
 }
 

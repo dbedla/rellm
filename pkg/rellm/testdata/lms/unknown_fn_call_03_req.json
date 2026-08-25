@@ -42,7 +42,7 @@
     {
       "type": "function_call_output",
       "call_id": "call_3917504104210006",
-      "output": "invalid function call (function not found)GetSpecialData"
+      "output": "invalid function call (function not found) GetSpecialData"
     },
     {
       "role": "user",

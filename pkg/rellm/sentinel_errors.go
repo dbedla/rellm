@@ -23,6 +23,8 @@ var ErrEmptyReasoningEffort = fmt.Errorf("reasoning effort cannot be empty")
 
 var ErrNoImageHandler = fmt.Errorf("image handler not provided")
 var ErrCustomImageHandlerFailed = fmt.Errorf("custom image handler failed")
+var ErrImageParsingFailed = fmt.Errorf("error converting image generation element")
+var ErrReasoningParsingFailed = fmt.Errorf("error parsing reasoning element")
 
 var ErrUserMsgConversionFailed = fmt.Errorf("user message conversion failed")
 

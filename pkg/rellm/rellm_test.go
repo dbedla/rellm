@@ -2,7 +2,7 @@ package rellm_test
 
 import (
 	"net/http"
-	"rellm/pkg/agentsutils"
+	"rellm/internal/examplesutils"
 	"rellm/pkg/rellm"
 
 	"github.com/stretchr/testify/mock"
@@ -35,7 +35,7 @@ func SetParametersWithReqLog(req *rellm.ResponsesApiReq) {
 	req.Reasoning = &rellm.ReasoningConfig{Effort: rellm.ReasoningEffort_Medium}
 	req.Temperature = 0.5
 
-	agentsutils.InspectWithReqLog(req)
+	examplesutils.InspectWithReqLog(req)
 }
 
 func SetParametersForTest(req *rellm.ResponsesApiReq) {

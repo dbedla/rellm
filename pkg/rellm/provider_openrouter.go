@@ -2,6 +2,7 @@ package rellm
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 )
@@ -103,10 +104,18 @@ func (p *OpenRouterProvider) ToConversationElements(items []json.RawMessage) ([]
 			elements = append(elements, p.parseMessage(raw, msg.Id, msg.Role, msg.Content))
 
 		case "reasoning":
-			elements = append(elements, p.parseReasoning(raw))
+			elm, err := p.parseReasoning(raw)
+			if err != nil {
+				return nil, err
+			}
+			elements = append(elements, elm)
 
 		case "image_generation_call":
-			elements = append(elements, parseImageGeneration(raw))
+			elem, err := parseImageGeneration(raw)
+			if err != nil {
+				return nil, err
+			}
+			elements = append(elements, elem)
 
 		default:
 			// Unknown types pass through unchanged.
@@ -172,7 +181,7 @@ func hasImageParts(parts []MessagePart) bool {
 }
 
 // parseReasoning extracts reasoning text, summary, and provider continuation state.
-func (p *OpenRouterProvider) parseReasoning(raw json.RawMessage) ConversationElement {
+func (p *OpenRouterProvider) parseReasoning(raw json.RawMessage) (ConversationElement, error) {
 	var item struct {
 		Id        string                 `json:"id"`
 		Status    string                 `json:"status"`
@@ -181,7 +190,7 @@ func (p *OpenRouterProvider) parseReasoning(raw json.RawMessage) ConversationEle
 		Signature string                 `json:"signature"`
 	}
 	if err := json.Unmarshal(raw, &item); err != nil {
-		return nil // skip malformed items
+		return nil, errors.Join(ErrReasoningParsingFailed, err) // skip malformed items
 	}
 
 	textParts := make([]string, 0, len(item.Content))
@@ -197,7 +206,7 @@ func (p *OpenRouterProvider) parseReasoning(raw json.RawMessage) ConversationEle
 		Summary:   item.Summary,
 		Text:      joinTextParts(textParts),
 		Signature: item.Signature,
-	}
+	}, nil
 }
 
 func (p *OpenRouterProvider) ToProviderRepresentation(elements []ConversationElement) ([]json.RawMessage, error) {

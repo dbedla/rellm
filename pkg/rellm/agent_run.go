@@ -2,6 +2,7 @@ package rellm
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,7 +12,7 @@ import (
 	"strings"
 )
 
-func (a *Agent) run(msg string, params promptParams) (string, error) {
+func (a *Agent) run(ctx context.Context, msg string, params promptParams) (string, error) {
 	conversation, err := a.CurrentConversation()
 	if err != nil {
 		return "", err
@@ -42,7 +43,7 @@ func (a *Agent) run(msg string, params promptParams) (string, error) {
 		req.Tools = a.toolset.BuildTools()
 	}
 
-	msgRespFromLLM, err := a.process(req)
+	msgRespFromLLM, err := a.process(ctx, req)
 
 	if err != nil {
 		return "", err
@@ -51,7 +52,7 @@ func (a *Agent) run(msg string, params promptParams) (string, error) {
 	return msgRespFromLLM, nil
 }
 
-func (a *Agent) post(req *ResponsesApiReq) (_ *ResponsesApiResp, err error) {
+func (a *Agent) post(ctx context.Context, req *ResponsesApiReq) (_ *ResponsesApiResp, err error) {
 	if a.inspectReq != nil {
 		a.inspectReq(req)
 	}
@@ -72,6 +73,8 @@ func (a *Agent) post(req *ResponsesApiReq) (_ *ResponsesApiResp, err error) {
 		URL:    apiUrl,
 		Body:   io.NopCloser(bytes.NewReader(body)),
 	}
+
+	httpReq = httpReq.WithContext(ctx)
 
 	resp, err := a.provider.Do(httpReq)
 	if err != nil {
@@ -99,9 +102,15 @@ func (a *Agent) post(req *ResponsesApiReq) (_ *ResponsesApiResp, err error) {
 	return parseResponsesApiResponse(rawBody, a.inspectResp)
 }
 
-func (a *Agent) process(req *ResponsesApiReq) (string, error) {
+func (a *Agent) process(ctx context.Context, req *ResponsesApiReq) (string, error) {
 	for i := uint64(0); i < a.maxToolsIterationWithoutReturnMessage; i++ {
-		conversationResponse, err := a.post(req)
+
+		err := ctx.Err()
+		if err != nil {
+			return "", err
+		}
+
+		conversationResponse, err := a.post(ctx, req)
 		if err != nil {
 			return "", err
 		}
@@ -114,7 +123,7 @@ func (a *Agent) process(req *ResponsesApiReq) (string, error) {
 		if err != nil {
 			return "", errors.Join(ErrConversationElementConversion, err)
 		}
-		msg, fnCallsResp, imageHandled, err := a.dispatchConversation(conversation)
+		msg, fnCallsResp, imageHandled, err := a.dispatchConversation(ctx, conversation)
 		for _, fResp := range fnCallsResp {
 			conversation = append(conversation, fResp)
 		}
@@ -144,7 +153,7 @@ func (a *Agent) process(req *ResponsesApiReq) (string, error) {
 			fmt.Errorf("exceeded %d iterations", a.maxToolsIterationWithoutReturnMessage))
 }
 
-func (a *Agent) dispatchConversation(conversation []ConversationElement) (string, []*FunctionCallResp, bool, error) {
+func (a *Agent) dispatchConversation(ctx context.Context, conversation []ConversationElement) (string, []*FunctionCallResp, bool, error) {
 
 	var message strings.Builder
 	fnCallsResults := []*FunctionCallResp{}
@@ -164,7 +173,7 @@ func (a *Agent) dispatchConversation(conversation []ConversationElement) (string
 			continue
 
 		case *FunctionCall:
-			fResp, err := a.handleFunctionCall(el)
+			fResp, err := a.handleFunctionCall(ctx, el)
 			if err != nil {
 				outputErr = errors.Join(outputErr, err)
 			}
@@ -177,7 +186,7 @@ func (a *Agent) dispatchConversation(conversation []ConversationElement) (string
 			continue
 
 		case *ImageGeneration:
-			err := a.handleImageGenerationCall(el)
+			err := a.handleImageGenerationCall(ctx, el)
 			if err != nil {
 				outputErr = errors.Join(outputErr, err)
 			}
@@ -200,12 +209,12 @@ func messagesFromParts(parts []MessagePart) string {
 	return msg.String()
 }
 
-func (a *Agent) handleImageGenerationCall(image *ImageGeneration) error {
+func (a *Agent) handleImageGenerationCall(ctx context.Context, image *ImageGeneration) error {
 	if a.handleImageGeneration == nil {
 		return ErrNoImageHandler
 	}
 
-	resultNote, err := a.handleImageGeneration(image)
+	resultNote, err := a.handleImageGeneration(ctx, image)
 	if err != nil {
 		return errors.Join(ErrCustomImageHandlerFailed, err)
 	}
@@ -215,12 +224,12 @@ func (a *Agent) handleImageGenerationCall(image *ImageGeneration) error {
 	return nil
 }
 
-func (a *Agent) handleFunctionCall(fn *FunctionCall) (*FunctionCallResp, error) {
+func (a *Agent) handleFunctionCall(ctx context.Context, fn *FunctionCall) (*FunctionCallResp, error) {
 	if a.toolset == nil {
 		return nil, ErrNoToolsetButToolCallRequested
 	}
 
-	funcCallResp, ok := a.toolset.DispatchTools(fn.Name, fn.CallId, fn.Args)
+	funcCallResp, ok := a.toolset.DispatchTools(ctx, fn.Name, fn.CallId, fn.Args)
 	if !ok {
 		funcCallResp = invalidFunctionCallResp(fn)
 		return &funcCallResp, errors.Join(ErrWhileDispatchToolCall, fmt.Errorf("unknown tool name (%s)", fn.Name))
@@ -233,7 +242,7 @@ func invalidFunctionCallResp(fn *FunctionCall) FunctionCallResp {
 	return FunctionCallResp{
 		Type:   "function_call_output",
 		CallId: fn.CallId,
-		Output: "invalid function call (function not found)" + fn.Name,
+		Output: "invalid function call (function not found) " + fn.Name,
 	}
 
 }

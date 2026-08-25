@@ -2,6 +2,7 @@ package rellm_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -43,7 +44,8 @@ func TestAgentAsk_ConversationBeforeAndAfter(t *testing.T) {
 
 	assert.JSONEq(t, `[{"role":"system","content":[{"type":"input_text","text":"You are a helpful assistant with deep weather knowledge."}]}]`, string(conversationBeforeAsk))
 
-	respMsg, err := agent.Ask("Hi")
+	ctx := context.Background()
+	respMsg, err := agent.Ask(ctx, "Hi")
 	assert.NoError(t, err)
 	assert.NotNil(t, respMsg)
 	assert.Equal(t, "Hello! How can I help you today? \n\nIf you have any questions about the weather, meteorology, climate patterns, or even how certain atmospheric phenomena work, feel free to ask!", respMsg)
@@ -128,7 +130,8 @@ func TestAgentLMS_ToolsCallWithConversationCheck(t *testing.T) {
 		Build()
 	assert.NoError(t, err)
 
-	respMsg, err := agent.Execute(prompt)
+	ctx := context.Background()
+	respMsg, err := agent.Execute(ctx, prompt)
 	assert.NoError(t, err, "failed to ask")
 
 	assert.NotNil(t, respMsg, "response message should not be nil")
@@ -215,7 +218,8 @@ func TestAgentLMS_ToolsCallWithConversationCheck_SecondRespFail(t *testing.T) {
 		Build()
 	assert.NoError(t, err)
 
-	respMsg, err := agent.Execute(prompt)
+	ctx := context.Background()
+	respMsg, err := agent.Execute(ctx, prompt)
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, rellm.ErrEndpointNilBodyInResponse)
 
@@ -283,7 +287,8 @@ func TestAgentOpenRouterGemma_ConversationCheck(t *testing.T) {
 		Build()
 	assert.NoError(t, err)
 
-	respMsg, err := agent.Execute(prompt)
+	ctx := context.Background()
+	respMsg, err := agent.Execute(ctx, prompt)
 	assert.NoError(t, err)
 	assert.Equal(t, "Hello! How can I help you today?", respMsg)
 
@@ -294,7 +299,7 @@ func TestAgentOpenRouterGemma_ConversationCheck(t *testing.T) {
 		Build()
 	assert.NoError(t, err)
 
-	respMsg, err = agent.Execute(secondPrompt)
+	respMsg, err = agent.Execute(ctx, secondPrompt)
 	assert.NoError(t, err)
 	assert.Equal(t, "I have access to the following tools:\n\n1.  **`GetDataFor`**: This tool allows me to retrieve specific data based on an input string you provide.\n2.  **`GetStaticData`**: This tool allows me to retrieve pre-defined static data.", respMsg)
 
@@ -361,7 +366,8 @@ func TestAgentOpenRouterGemini_ConversationCheck(t *testing.T) {
 		Build()
 	assert.NoError(t, err)
 
-	respMsg, err := agent.Execute(prompt)
+	ctx := context.Background()
+	respMsg, err := agent.Execute(ctx, prompt)
 	assert.NoError(t, err)
 	assert.Equal(t, "Hello! How can I help you today?", respMsg)
 
@@ -372,7 +378,7 @@ func TestAgentOpenRouterGemini_ConversationCheck(t *testing.T) {
 		Build()
 	assert.NoError(t, err)
 
-	respMsg, err = agent.Execute(secondPrompt)
+	respMsg, err = agent.Execute(ctx, secondPrompt)
 	assert.NoError(t, err, "failed to ask with reasoning in conversation")
 	assert.Equal(t, "I have access to the following tools:\n\n*   **`GetDataFor`**: This tool allows me to retrieve specific data based on an input you provide.\n*   **`GetStaticData`**: This tool allows me to retrieve general static information.\n\nHow can I help you use these today?", respMsg)
 

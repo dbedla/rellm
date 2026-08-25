@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -45,7 +46,8 @@ func scenario(fsAgent *rellm.Agent, dirs agentsDirs) {
 	msg := "what files do you see"
 	color.Magenta(msg)
 
-	llmResp, err := fsAgent.Ask(msg)
+	ctx := context.Background()
+	llmResp, err := fsAgent.Ask(ctx, msg)
 	if err != nil {
 		panicWithLog("agent failed for input msg: "+msg, err)
 	}
@@ -61,7 +63,7 @@ func scenario(fsAgent *rellm.Agent, dirs agentsDirs) {
 	msg = "show me what is in files you mention"
 	color.Magenta(msg)
 
-	llmResp, err = fsAgent.Ask(msg)
+	llmResp, err = fsAgent.Ask(ctx, msg)
 	if err != nil {
 		panicWithLog("agent failed for input msg: "+msg, err)
 	}
@@ -77,7 +79,7 @@ func scenario(fsAgent *rellm.Agent, dirs agentsDirs) {
 	msg = "create file in your output directory, file name 'data.txt', file should contain content of both files from read only director"
 	color.Magenta(msg)
 
-	llmResp, err = fsAgent.Ask(msg)
+	llmResp, err = fsAgent.Ask(ctx, msg)
 	if err != nil {
 		panicWithLog("agent failed for input msg: "+msg, err)
 	}

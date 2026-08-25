@@ -78,7 +78,11 @@ func (p *LMStudioProvider) ToConversationElements(items []json.RawMessage) ([]Co
 			elements = append(elements, p.parseReasoning(raw))
 
 		case "image_generation_call":
-			elements = append(elements, parseImageGeneration(raw))
+			elem, err := parseImageGeneration(raw)
+			if err != nil {
+				return nil, err
+			}
+			elements = append(elements, elem)
 
 		case "function_call_output":
 			// Extract output field directly from raw JSON

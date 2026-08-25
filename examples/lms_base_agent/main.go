@@ -1,7 +1,8 @@
 package main
 
 import (
-	"rellm/pkg/agentsutils"
+	"context"
+	"rellm/internal/examplesutils"
 
 	"github.com/fatih/color"
 )
@@ -13,7 +14,7 @@ func main() {
 	}
 
 	for {
-		msg, err := agentsutils.ReadConsoleInput()
+		msg, err := examplesutils.ReadConsoleInput()
 		if err != nil {
 			color.Red("unable to read console input: %s", err)
 			return
@@ -21,7 +22,9 @@ func main() {
 		if msg == "EXIT" {
 			return
 		}
-		llmResp, err := agent.Ask(msg)
+
+		ctx := context.Background()
+		llmResp, err := agent.Ask(ctx, msg)
 		if err != nil {
 			color.Red("unable to ask question: %s", err.Error())
 			continue
