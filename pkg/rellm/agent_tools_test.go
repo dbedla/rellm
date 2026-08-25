@@ -31,7 +31,7 @@ var goldenLMS_Hi_03_req string
 var goldenLMS_Hi_04_resp string
 
 func TestLMSAgentHiWithToolsNoCall(t *testing.T) {
-	agent, httpDo := buildTestProToolAgentLMS(t, TestDefaultMaxToolsIterationWithoutReturnMessage)
+	agent, httpDo := buildTestProToolAgentLMS(t, testDefaultMaxAgentSteps)
 	defer httpDo.AssertExpectations(t)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
@@ -106,7 +106,7 @@ var goldenOR_Hi_03_req string
 var goldenOR_Hi_04_resp string
 
 func TestOpenRouterAgentHiWithToolsNoCallGemma(t *testing.T) {
-	agent, httpDo := buildTestProToolAgentOpenRouter(t, "google/gemma-4-26b-a4b-it", TestDefaultMaxToolsIterationWithoutReturnMessage)
+	agent, httpDo := buildTestProToolAgentOpenRouter(t, "google/gemma-4-26b-a4b-it", testDefaultMaxAgentSteps)
 	defer httpDo.AssertExpectations(t)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
@@ -180,7 +180,7 @@ var goldenOR_Hi_gemini_03_req string
 var goldenOR_Hi_gemini_04_resp string
 
 func TestOpenRouterAgentHiWithToolsNoCallGemini(t *testing.T) {
-	agent, httpDo := buildTestProToolAgentOpenRouter(t, "google/gemini-3.1-flash-lite", TestDefaultMaxToolsIterationWithoutReturnMessage)
+	agent, httpDo := buildTestProToolAgentOpenRouter(t, "google/gemini-3.1-flash-lite", testDefaultMaxAgentSteps)
 	defer httpDo.AssertExpectations(t)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
@@ -260,7 +260,7 @@ var goldenProReqA3 string
 var goldenProRespA3 string
 
 func TestAgentLMS_ToolsCall(t *testing.T) {
-	agent, httpDo := buildTestProToolAgentLMS(t, TestDefaultMaxToolsIterationWithoutReturnMessage)
+	agent, httpDo := buildTestProToolAgentLMS(t, testDefaultMaxAgentSteps)
 	defer httpDo.AssertExpectations(t)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
@@ -343,7 +343,7 @@ var goldenLMS_UnknownFnCall_req_03 string
 var goldenLMS_UnknownFnCall_resp_04 string
 
 func TestAgentLMS_UnknownFnCall(t *testing.T) {
-	agent, httpDo := buildTestProToolAgentLMS(t, TestDefaultMaxToolsIterationWithoutReturnMessage)
+	agent, httpDo := buildTestProToolAgentLMS(t, testDefaultMaxAgentSteps)
 	defer httpDo.AssertExpectations(t)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
@@ -414,7 +414,7 @@ func TestAgentLMS_UnknownFnCall(t *testing.T) {
 }
 
 func TestAgentLMS_DispatchFailurePersistsPartialToolResults(t *testing.T) {
-	agent, httpDo := buildTestProToolAgentLMS(t, TestDefaultMaxToolsIterationWithoutReturnMessage)
+	agent, httpDo := buildTestProToolAgentLMS(t, testDefaultMaxAgentSteps)
 	defer httpDo.AssertExpectations(t)
 
 	const response = `{

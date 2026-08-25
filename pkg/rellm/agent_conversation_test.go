@@ -68,7 +68,7 @@ func TestAgentAsk_ConversationBeforeAndAfter(t *testing.T) {
 }
 
 func TestAgentLMS_ToolsCallWithConversationCheck(t *testing.T) {
-	agent, httpDo := buildTestProToolAgentLMS(t, TestDefaultMaxToolsIterationWithoutReturnMessage)
+	agent, httpDo := buildTestProToolAgentLMS(t, testDefaultMaxAgentSteps)
 	defer httpDo.AssertExpectations(t)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
@@ -156,7 +156,7 @@ func TestAgentLMS_ToolsCallWithConversationCheck(t *testing.T) {
 }
 
 func TestAgentLMS_ToolsCallWithConversationCheck_SecondRespFail(t *testing.T) {
-	agent, httpDo := buildTestProToolAgentLMS(t, TestDefaultMaxToolsIterationWithoutReturnMessage)
+	agent, httpDo := buildTestProToolAgentLMS(t, testDefaultMaxAgentSteps)
 	defer httpDo.AssertExpectations(t)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
@@ -243,7 +243,7 @@ func TestAgentLMS_ToolsCallWithConversationCheck_SecondRespFail(t *testing.T) {
 }
 
 func TestAgentOpenRouterGemma_ConversationCheck(t *testing.T) {
-	agent, httpDo := buildTestProToolAgentOpenRouter(t, "google/gemma-4-26b-a4b-it", TestDefaultMaxToolsIterationWithoutReturnMessage)
+	agent, httpDo := buildTestProToolAgentOpenRouter(t, "google/gemma-4-26b-a4b-it", testDefaultMaxAgentSteps)
 	defer httpDo.AssertExpectations(t)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
@@ -322,7 +322,7 @@ func TestAgentOpenRouterGemma_ConversationCheck(t *testing.T) {
 }
 
 func TestAgentOpenRouterGemini_ConversationCheck(t *testing.T) {
-	agent, httpDo := buildTestProToolAgentOpenRouter(t, "google/gemini-3.1-flash-lite", TestDefaultMaxToolsIterationWithoutReturnMessage)
+	agent, httpDo := buildTestProToolAgentOpenRouter(t, "google/gemini-3.1-flash-lite", testDefaultMaxAgentSteps)
 	defer httpDo.AssertExpectations(t)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
