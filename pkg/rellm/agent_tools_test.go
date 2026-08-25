@@ -106,7 +106,7 @@ var goldenOR_Hi_03_req string
 var goldenOR_Hi_04_resp string
 
 func TestOpenRouterAgentHiWithToolsNoCallGemma(t *testing.T) {
-	agent, httpDo := buildTestProToolAgentOpenRouter(t, rellm.Model_OpenRouter_Google_Gemma_4_26b_A4b_It, TestDefaultMaxToolsIterationWithoutReturnMessage)
+	agent, httpDo := buildTestProToolAgentOpenRouter(t, "google/gemma-4-26b-a4b-it", TestDefaultMaxToolsIterationWithoutReturnMessage)
 	defer httpDo.AssertExpectations(t)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
@@ -180,7 +180,7 @@ var goldenOR_Hi_gemini_03_req string
 var goldenOR_Hi_gemini_04_resp string
 
 func TestOpenRouterAgentHiWithToolsNoCallGemini(t *testing.T) {
-	agent, httpDo := buildTestProToolAgentOpenRouter(t, rellm.Model_OpenRouter_Google_Gemini_3_1_Flash_Lite, TestDefaultMaxToolsIterationWithoutReturnMessage)
+	agent, httpDo := buildTestProToolAgentOpenRouter(t, "google/gemini-3.1-flash-lite", TestDefaultMaxToolsIterationWithoutReturnMessage)
 	defer httpDo.AssertExpectations(t)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
@@ -542,7 +542,7 @@ func buildTestProToolAgentLMS(t *testing.T, maxToolsIterationWithoutReturnMessag
 	agentName := "TestProAgent"
 	mockHttp := new(HttpDoMock)
 
-	p, err := rellm.NewLMStudioProvider(rellm.Model_LMS_Google_Gemma_4_26B_A4B, testBaseUrl, testPort)
+	p, err := rellm.NewLMStudioProvider("google/gemma-4-26b-a4b", testBaseUrl, testPort)
 	assert.NoError(t, err, "failed to create provider")
 	p.WithHTTPClient(mockHttp)
 

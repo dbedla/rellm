@@ -243,7 +243,7 @@ func TestAgentLMS_ToolsCallWithConversationCheck_SecondRespFail(t *testing.T) {
 }
 
 func TestAgentOpenRouterGemma_ConversationCheck(t *testing.T) {
-	agent, httpDo := buildTestProToolAgentOpenRouter(t, rellm.Model_OpenRouter_Google_Gemma_4_26b_A4b_It, TestDefaultMaxToolsIterationWithoutReturnMessage)
+	agent, httpDo := buildTestProToolAgentOpenRouter(t, "google/gemma-4-26b-a4b-it", TestDefaultMaxToolsIterationWithoutReturnMessage)
 	defer httpDo.AssertExpectations(t)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
@@ -322,7 +322,7 @@ func TestAgentOpenRouterGemma_ConversationCheck(t *testing.T) {
 }
 
 func TestAgentOpenRouterGemini_ConversationCheck(t *testing.T) {
-	agent, httpDo := buildTestProToolAgentOpenRouter(t, rellm.Model_OpenRouter_Google_Gemini_3_1_Flash_Lite, TestDefaultMaxToolsIterationWithoutReturnMessage)
+	agent, httpDo := buildTestProToolAgentOpenRouter(t, "google/gemini-3.1-flash-lite", TestDefaultMaxToolsIterationWithoutReturnMessage)
 	defer httpDo.AssertExpectations(t)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).

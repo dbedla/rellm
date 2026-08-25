@@ -49,7 +49,7 @@ func TestPromptBuilder_Build_EmptyMessage(t *testing.T) {
 func TestAgentBuilder_Build(t *testing.T) {
 
 	buildProvider := func() rellm.Provider {
-		p, err := rellm.NewLMStudioProvider(rellm.Model_LMS_Google_Gemma_4_26B_A4B, testBaseUrl, testPort)
+		p, err := rellm.NewLMStudioProvider("google/gemma-4-26b-a4b", testBaseUrl, testPort)
 		assert.NoError(t, err)
 		return p
 	}

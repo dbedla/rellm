@@ -60,9 +60,9 @@ func main() {
 func agentForProvider(provider string) (*rellm.Agent, error) {
 	switch provider {
 	case "--or-gemma":
-		return buildLOpenRouterAgent(rellm.Model_OpenRouter_Google_Gemma_4_26b_A4b_It)
+		return buildLOpenRouterAgent("google/gemma-4-26b-a4b-it")
 	case "--or-gemini":
-		return buildLOpenRouterAgent(rellm.Model_OpenRouter_Google_Gemini_3_1_Flash_Lite)
+		return buildLOpenRouterAgent("google/gemini-3.1-flash-lite")
 	case "--lms":
 		return buildLMSAgent()
 	default:

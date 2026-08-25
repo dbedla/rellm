@@ -17,7 +17,7 @@ func buildLMSAgent() (*rellm.Agent, error) {
 
 	agentName := "TestEndpointAgent"
 
-	p, err := rellm.NewLMStudioProvider(rellm.Model_LMS_Google_Gemma_4_26B_A4B, "http://127.0.0.1", "1234")
+	p, err := rellm.NewLMStudioProvider("google/gemma-4-26b-a4b", "http://127.0.0.1", "1234")
 	if err != nil {
 		return nil, err
 	}

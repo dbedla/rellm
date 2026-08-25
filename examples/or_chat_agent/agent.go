@@ -17,7 +17,7 @@ func buildLBaseAgent() (*rellm.Agent, error) {
 
 	agentName := "OpenRouterAgent"
 
-	p, err := newOpenRouterProvider(rellm.Model_OpenRouter_Google_Gemini_3_1_Flash_Lite)
+	p, err := newOpenRouterProvider("google/gemini-3.1-flash-lite")
 	if err != nil {
 		return nil, err
 	}
