@@ -154,3 +154,8 @@ func TestNewLMStudioProviderNoHttpHost(t *testing.T) {
 	url := p.URL()
 	assert.Equal(t, "http://127.0.0.1:1234/v1/responses", url)
 }
+
+func TestNewLMStudioProvider_MissingClient(t *testing.T) {
+	_, err := NewLMStudioProviderWithHTTPClient(Model("local/model"), "localhost", "123", nil)
+	assert.ErrorIs(t, err, ErrMissingHttpClientForProvider)
+}

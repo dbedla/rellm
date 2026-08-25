@@ -226,7 +226,7 @@ func TestNewOpenRouterProvider_EmptyModel(t *testing.T) {
 
 func TestNewOpenRouterProvider_EmptyApiKey(t *testing.T) {
 	_, err := NewOpenRouterProvider("", Model("test/model"))
-	assert.EqualError(t, err, "missing API key for OpenRouter provider")
+	assert.ErrorIs(t, err, ErrMissingApiKeyForProvider)
 }
 
 // TestOpenRouterRoundTrip_FromFile verifies faithful ToConversationElements→ToProviderRepresentation round-trip
@@ -252,4 +252,9 @@ func TestOpenRouterRoundTrip_FromFile(t *testing.T) {
 	for i, original := range req.Input {
 		assert.JSONEq(t, string(original), string(wireBack[i]), "item %d round-trip mismatch", i)
 	}
+}
+
+func TestNewOpenRouterProvider_MissingClient(t *testing.T) {
+	_, err := NewOpenRouterProviderWithHTTPClient("test-key", "test/model", nil)
+	assert.ErrorIs(t, err, ErrMissingHttpClientForProvider)
 }

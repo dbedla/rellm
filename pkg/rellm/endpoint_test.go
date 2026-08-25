@@ -56,12 +56,10 @@ func assertHTTPStatusError(t *testing.T, err error, statusCode int, body string)
 	require.ErrorAs(t, err, &statusErr)
 	assert.Equal(t, statusCode, statusErr.StatusCode)
 	assert.Equal(t, body, statusErr.Body)
-	assert.Equal(t, testURL, statusErr.URL)
+	assert.Equal(t, openRouterDefaultURL, statusErr.URL)
 	assert.Equal(t, "req_test", statusErr.RequestID)
 	assert.NotContains(t, err.Error(), "test-key")
 }
-
-const testURL = "https://api.example.test/responses"
 
 func postWithValidResponse(t *testing.T) (*ResponsesApiResp, error) {
 	t.Helper()
@@ -80,16 +78,6 @@ func postWithResponse(t *testing.T, statusCode int, body string) error {
 	return err
 }
 
-func newTestAgent(t *testing.T, statusCode int, body string) *Agent {
-	t.Helper()
-
-	p, err := NewOpenRouterProvider("test-key", "google/gemma-4-26b-a4b")
-	require.NoError(t, err)
-	p.WithURL(testURL).WithHTTPClient(testEndpointClient{statusCode: statusCode, body: body})
-
-	return &Agent{provider: p}
-}
-
 type testEndpointClient struct {
 	statusCode int
 	body       string
@@ -103,4 +91,11 @@ func (c testEndpointClient) Do(req *http.Request) (*http.Response, error) {
 	header := make(http.Header)
 	header.Set("X-Request-ID", "req_test")
 	return &http.Response{StatusCode: c.statusCode, Header: header, Body: io.NopCloser(strings.NewReader(c.body))}, nil
+}
+
+func newTestAgent(t *testing.T, statusCode int, body string) *Agent {
+	t.Helper()
+	p, err := NewOpenRouterProviderWithHTTPClient("test-key", "google/gemma-4-26b-a4b", testEndpointClient{statusCode: statusCode, body: body})
+	require.NoError(t, err)
+	return &Agent{provider: p}
 }

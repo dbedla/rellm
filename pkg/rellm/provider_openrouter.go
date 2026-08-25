@@ -3,7 +3,6 @@ package rellm
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 )
 
@@ -18,13 +17,12 @@ type OpenRouterProvider struct {
 const openRouterDefaultURL = "https://openrouter.ai/api/v1/responses"
 
 // NewOpenRouterProvider builds an OpenRouter provider. apiKey and model are required.
-// The HTTP client defaults to http.Client{}; override with WithHTTPClient.
 func NewOpenRouterProvider(apiKey string, model Model) (*OpenRouterProvider, error) {
 	if model == "" {
 		return nil, ErrEndpointMissingModelName
 	}
 	if apiKey == "" {
-		return nil, fmt.Errorf("missing API key for OpenRouter provider")
+		return nil, ErrMissingApiKeyForProvider
 	}
 	h := make(http.Header)
 	h.Set("Content-Type", "application/json")
@@ -37,16 +35,16 @@ func NewOpenRouterProvider(apiKey string, model Model) (*OpenRouterProvider, err
 	}, nil
 }
 
-// WithHTTPClient injects a custom HTTP client (e.g. a test fake).
-func (p *OpenRouterProvider) WithHTTPClient(c ClientHttpDo) *OpenRouterProvider {
-	p.client = c
-	return p
-}
-
-// WithURL overrides the endpoint URL (used by tests / self-hosted gateways).
-func (p *OpenRouterProvider) WithURL(u string) *OpenRouterProvider {
-	p.url = u
-	return p
+func NewOpenRouterProviderWithHTTPClient(apiKey string, model Model, client ClientHttpDo) (*OpenRouterProvider, error) {
+	if client == nil {
+		return nil, ErrMissingHttpClientForProvider
+	}
+	p, err := NewOpenRouterProvider(apiKey, model)
+	if err != nil {
+		return nil, err
+	}
+	p.client = client
+	return p, nil
 }
 
 func (p *OpenRouterProvider) Model() Model        { return p.model }

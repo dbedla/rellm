@@ -1,9 +1,7 @@
 package rellm
 
 type AgentBuilder struct {
-	agent       Agent
-	inspectReq  InspectEachRequest
-	inspectResp InspectEachResponse
+	agent Agent
 }
 
 func NewAgentBuilder() *AgentBuilder {
@@ -47,12 +45,12 @@ func (b *AgentBuilder) WithHandleImageGeneration(handleImage HandleImageGenerati
 }
 
 func (b *AgentBuilder) WithInspectEachRequest(inspect InspectEachRequest) *AgentBuilder {
-	b.inspectReq = inspect
+	b.agent.inspectReq = inspect
 	return b
 }
 
 func (b *AgentBuilder) WithInspectEachResponse(inspect InspectEachResponse) *AgentBuilder {
-	b.inspectResp = inspect
+	b.agent.inspectResp = inspect
 	return b
 }
 
@@ -73,15 +71,8 @@ func (b *AgentBuilder) Build() (*Agent, error) {
 		return nil, ErrBuildNoConversationStorage
 	}
 
-	if b.inspectReq != nil {
-		b.agent.inspectReq = b.inspectReq
-	}
-
-	if b.inspectResp != nil {
-		b.agent.inspectResp = b.inspectResp
-	}
-
-	return &b.agent, nil
+	agent := b.agent // copy: builder stays reusable without mutating built agents
+	return &agent, nil
 }
 
 const (
