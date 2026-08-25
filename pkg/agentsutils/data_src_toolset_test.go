@@ -1,6 +1,7 @@
 package agentsutils
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 
@@ -11,7 +12,8 @@ func TestDataSrcToolsetDispatchesGetDataFor(t *testing.T) {
 	toolset := &DataSrcToolset{}
 	arguments := json.RawMessage(`{"input":"test"}`)
 
-	resp, ok := toolset.DispatchTools("GetDataFor", "call_123", arguments)
+	ctx := context.Background()
+	resp, ok := toolset.DispatchTools(ctx, "GetDataFor", "call_123", arguments)
 
 	assert.True(t, ok)
 	assert.Equal(t, "function_call_output", resp.Type)
@@ -23,7 +25,8 @@ func TestDataSrcToolsetDispatchesGetDataForWithStringArguments(t *testing.T) {
 	toolset := &DataSrcToolset{}
 	arguments := json.RawMessage(`"{\"input\":\"test\"}"`)
 
-	resp, ok := toolset.DispatchTools("GetDataFor", "call_123", arguments)
+	ctx := context.Background()
+	resp, ok := toolset.DispatchTools(ctx, "GetDataFor", "call_123", arguments)
 
 	assert.True(t, ok)
 	assert.Equal(t, "function_call_output", resp.Type)

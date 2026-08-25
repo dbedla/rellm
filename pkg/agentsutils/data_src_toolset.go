@@ -1,6 +1,7 @@
 package agentsutils
 
 import (
+	"context"
 	"encoding/json"
 	"rellm/pkg/rellm"
 )
@@ -37,7 +38,7 @@ func (d *DataSrcToolset) BuildTools() []rellm.Tool {
 	}
 }
 
-func (d *DataSrcToolset) DispatchTools(name string, callID string, arguments json.RawMessage) (rellm.FunctionCallResp, bool) {
+func (d *DataSrcToolset) DispatchTools(_ context.Context, name string, callID string, arguments json.RawMessage) (rellm.FunctionCallResp, bool) {
 	switch name {
 	case "GetDataFor":
 		args, err := parseGetDataForArgs(arguments)

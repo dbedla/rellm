@@ -97,11 +97,11 @@ func TestAgentPromptToGetImage_handlerErr(t *testing.T) {
 	assert.Equal(t, "", respMsg, "response message should match")
 }
 
-func testImageGenerationHandler(image *rellm.ImageGeneration) (string, error) {
+func testImageGenerationHandler(_ context.Context, image *rellm.ImageGeneration) (string, error) {
 	return "image-stored-under-this-id", nil
 }
 
-func testImageGenerationHandlerAlwaysErr(image *rellm.ImageGeneration) (string, error) {
+func testImageGenerationHandlerAlwaysErr(_ context.Context, image *rellm.ImageGeneration) (string, error) {
 	return "", errors.New("test err in image handling error")
 }
 

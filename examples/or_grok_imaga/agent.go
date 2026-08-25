@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"rellm/pkg/agentsutils"
@@ -34,7 +35,7 @@ func buildLBaseAgent() (*rellm.Agent, error) {
 		Build()
 }
 
-func testHandleImage(image *rellm.ImageGeneration) (string, error) {
+func testHandleImage(_ context.Context, image *rellm.ImageGeneration) (string, error) {
 	return "asd", nil
 }
 

@@ -1,6 +1,7 @@
 package agentsutils
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -14,7 +15,8 @@ func TestFSToolsetDispatchToolsAcceptsStringWrappedArguments(t *testing.T) {
 	toolset := buildToolset(t, readOnlyDir, outputDir)
 	arguments := buildStringWrappedArguments(t, readOnlyDir)
 
-	resp, ok := toolset.DispatchTools("FSToolset.ListFilesIn", "call_1", arguments)
+	ctx := context.Background()
+	resp, ok := toolset.DispatchTools(ctx, "FSToolset.ListFilesIn", "call_1", arguments)
 
 	assert.True(t, ok)
 	assert.NotContains(t, resp.Output, "cannot unmarshal string")

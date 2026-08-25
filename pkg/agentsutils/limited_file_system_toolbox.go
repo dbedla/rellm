@@ -1,6 +1,7 @@
 package agentsutils
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"rellm/pkg/rellm"
@@ -130,7 +131,7 @@ func (f *FSToolset) BuildTools() []rellm.Tool {
 	}
 }
 
-func (f *FSToolset) DispatchTools(name string, callID string, arguments json.RawMessage) (rellm.FunctionCallResp, bool) {
+func (f *FSToolset) DispatchTools(_ context.Context, name string, callID string, arguments json.RawMessage) (rellm.FunctionCallResp, bool) {
 	arguments = normalizeToolArguments(arguments)
 	switch name {
 	case "FSToolset.GetReadOnlyPaths":

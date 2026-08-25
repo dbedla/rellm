@@ -7,7 +7,7 @@ import (
 
 type Toolset interface {
 	BuildTools() []Tool
-	DispatchTools(name string, callID string, arguments json.RawMessage) (FunctionCallResp, bool)
+	DispatchTools(ctx context.Context, name string, callID string, arguments json.RawMessage) (FunctionCallResp, bool)
 }
 
 type ConversationStorage interface {
@@ -31,7 +31,7 @@ type Agent struct {
 
 // HandleImageGeneration used as a callback for image generation
 // returned string will be used as image identifier and stored instead of original image content
-type HandleImageGeneration func(image *ImageGeneration) (string, error)
+type HandleImageGeneration func(ctx context.Context, image *ImageGeneration) (string, error)
 type InspectEachRequest func(*ResponsesApiReq)
 type InspectEachResponse func(resp *ResponsesApiResp)
 
