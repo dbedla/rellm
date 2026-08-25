@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"rellm/pkg/agentsutils"
+	"rellm/pkg/examplesutils"
 
 	"rellm/pkg/rellm"
 
@@ -24,7 +24,7 @@ func main() {
 	}
 
 	for {
-		msg, err := agentsutils.ReadConsoleInput()
+		msg, err := examplesutils.ReadConsoleInput()
 		if err != nil {
 			color.Red("unable to read console input: %s", err)
 			return

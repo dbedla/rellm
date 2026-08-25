@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"rellm/pkg/agentsutils"
+	"rellm/pkg/examplesutils"
 	"rellm/pkg/rellm"
 
 	"github.com/joho/godotenv"
@@ -30,8 +30,8 @@ func buildLBaseAgent() (*rellm.Agent, error) {
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage(baseAgentSysPrompt).
 		WithHandleImageGeneration(testHandleImage).
-		WithInspectEachRequest(agentsutils.InspectWithReqLog).
-		WithInspectEachResponse(agentsutils.InspectWithRespLog).
+		WithInspectEachRequest(examplesutils.InspectWithReqLog).
+		WithInspectEachResponse(examplesutils.InspectWithRespLog).
 		Build()
 }
 

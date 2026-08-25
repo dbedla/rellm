@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"rellm/pkg/agentsutils"
+	"rellm/pkg/examplesutils"
 	"rellm/pkg/rellm"
 	"strings"
 	"testing"
@@ -552,7 +552,7 @@ func buildTestProToolAgentLMS(t *testing.T, maxToolsIterationWithoutReturnMessag
 		WithMaxToolsIterationWithoutReturnMessage(maxToolsIterationWithoutReturnMessage).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage("You are a helpful assistant.").
-		WithToolset(&agentsutils.DataSrcToolset{}).
+		WithToolset(&examplesutils.DataSrcToolset{}).
 		Build()
 
 	assert.NoError(t, err, "failed to create agent")
@@ -574,7 +574,7 @@ func buildTestProToolAgentOpenRouter(t *testing.T, model rellm.Model, maxToolsIt
 		WithMaxToolsIterationWithoutReturnMessage(maxToolsIterationWithoutReturnMessage).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage("You are a helpful assistant.").
-		WithToolset(&agentsutils.DataSrcToolset{}).
+		WithToolset(&examplesutils.DataSrcToolset{}).
 		Build()
 
 	assert.NoError(t, err, "failed to create agent")

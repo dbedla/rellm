@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
-	"rellm/pkg/agentsutils"
+	"rellm/pkg/examplesutils"
 	"rellm/pkg/rellm"
 
 	"github.com/joho/godotenv"
@@ -28,9 +28,9 @@ func buildLMSAgent() (*rellm.Agent, error) {
 		WithMaxToolsIterationWithoutReturnMessage(20).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage(sysprompt).
-		WithToolset(&agentsutils.DataSrcToolset{}).
-		WithInspectEachRequest(agentsutils.InspectWithReqLog).
-		WithInspectEachResponse(agentsutils.InspectWithRespLog).
+		WithToolset(&examplesutils.DataSrcToolset{}).
+		WithInspectEachRequest(examplesutils.InspectWithReqLog).
+		WithInspectEachResponse(examplesutils.InspectWithRespLog).
 		Build()
 }
 
@@ -49,9 +49,9 @@ func buildLOpenRouterAgent(model rellm.Model) (*rellm.Agent, error) {
 		WithMaxToolsIterationWithoutReturnMessage(20).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage(sysprompt).
-		WithToolset(&agentsutils.DataSrcToolset{}).
-		WithInspectEachRequest(agentsutils.InspectWithReqLog).
-		WithInspectEachResponse(agentsutils.InspectWithRespLog).
+		WithToolset(&examplesutils.DataSrcToolset{}).
+		WithInspectEachRequest(examplesutils.InspectWithReqLog).
+		WithInspectEachResponse(examplesutils.InspectWithRespLog).
 		Build()
 }
 

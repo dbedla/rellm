@@ -1,7 +1,7 @@
 package main
 
 import (
-	"rellm/pkg/agentsutils"
+	"rellm/pkg/examplesutils"
 	"rellm/pkg/rellm"
 )
 
@@ -24,7 +24,7 @@ func buildLBaseAgent() (*rellm.Agent, error) {
 		WithMaxToolsIterationWithoutReturnMessage(20).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage(baseAgentSysPrompt).
-		WithInspectEachRequest(agentsutils.InspectWithReqLog).
-		WithInspectEachResponse(agentsutils.InspectWithRespLog).
+		WithInspectEachRequest(examplesutils.InspectWithReqLog).
+		WithInspectEachResponse(examplesutils.InspectWithRespLog).
 		Build()
 }

@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"rellm/pkg/agentsutils"
+	"rellm/pkg/examplesutils"
 	"rellm/pkg/rellm"
 
 	"github.com/fatih/color"
@@ -31,8 +32,8 @@ func buildFSAgent(p rellm.Provider, dirs agentsDirs) (*rellm.Agent, error) {
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithToolset(fsToolset).
 		WithSystemMessage(fsAgentSysPrompt).
-		WithInspectEachRequest(agentsutils.InspectWithReqLog).
-		WithInspectEachResponse(agentsutils.InspectWithRespLog).
+		WithInspectEachRequest(examplesutils.InspectWithReqLog).
+		WithInspectEachResponse(examplesutils.InspectWithRespLog).
 		Build()
 }
 

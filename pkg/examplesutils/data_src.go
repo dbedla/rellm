@@ -1,4 +1,4 @@
-package agentsutils
+package examplesutils
 
 type TestDataSource struct {
 }
