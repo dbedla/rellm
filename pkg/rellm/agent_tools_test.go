@@ -407,6 +407,68 @@ func TestAgentLMS_UnknownFnCall(t *testing.T) {
 	assert.Equal(t, "It appears that the attempt to call `GetSpecialData` resulted in an error indicating the function was not found. \n\nHow would you like to proceed? I can try calling one of the other available functions, such as `GetStaticData` or `GetDataFor`, if you provide a specific input.", respMsg, "response message should match")
 }
 
+func TestAgentLMS_DispatchFailurePersistsPartialToolResults(t *testing.T) {
+	agent, httpDo := buildTestProToolAgentLMS(t, TestDefaultMaxToolsIterationWithoutReturnMessage)
+	defer httpDo.AssertExpectations(t)
+
+	const response = `{
+		"output": [
+			{
+				"id": "fc_success",
+				"call_id": "call_success",
+				"type": "function_call",
+				"name": "GetStaticData",
+				"arguments": "{}"
+			},
+			{
+				"id": "fc_failure",
+				"call_id": "call_failure",
+				"type": "function_call",
+				"name": "UnknownTool",
+				"arguments": "{}"
+			}
+		],
+		"error": null
+	}`
+
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Return(&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(response)),
+		}, nil)
+
+	prompt, err := rellm.NewPromptBuilder().
+		WithMessage("call both tools").
+		WithReasoning(testReasoningEffort).
+		WithTemperature(testTemperature).
+		Build()
+	assert.NoError(t, err)
+
+	respMsg, err := agent.Execute(prompt)
+	assert.Empty(t, respMsg)
+	assert.ErrorIs(t, err, rellm.ErrWhileDispatchToolCall)
+
+	conversation, err := agent.CurrentConversation()
+	assert.NoError(t, err)
+
+	outputsByCallID := make(map[string]string)
+	for _, raw := range conversation {
+		var element struct {
+			Type   string `json:"type"`
+			CallID string `json:"call_id"`
+			Output string `json:"output"`
+		}
+		assert.NoError(t, json.Unmarshal(raw, &element))
+		if element.Type == "function_call_output" {
+			outputsByCallID[element.CallID] = element.Output
+		}
+	}
+
+	assert.Equal(t, "42", outputsByCallID["call_success"], "successful tool result should have been persisted despite the dispatch error")
+	assert.Equal(t, "invalid function call (function not found)UnknownTool", outputsByCallID["call_failure"])
+}
+
 func TestAgentLMSTooManyFunctionCall(t *testing.T) {
 	const NotEnoughToolLoopLimit = 2
 	agent, httpDo := buildTestProToolAgentLMS(t, NotEnoughToolLoopLimit)
