@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"rellm/internal/examplesutils"
 	"rellm/pkg/agentsutils"
-	"rellm/pkg/examplesutils"
 	"rellm/pkg/rellm"
 
 	"github.com/fatih/color"

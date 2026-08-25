@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"rellm/pkg/examplesutils"
+	"rellm/internal/examplesutils"
 	"rellm/pkg/rellm"
 	"strings"
 	"testing"

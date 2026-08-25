@@ -2,7 +2,7 @@ package rellm_test
 
 import (
 	"net/http"
-	"rellm/pkg/examplesutils"
+	"rellm/internal/examplesutils"
 	"rellm/pkg/rellm"
 
 	"github.com/stretchr/testify/mock"

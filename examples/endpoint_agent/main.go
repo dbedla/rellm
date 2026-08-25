@@ -4,8 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"rellm/pkg/examplesutils"
-
+	"rellm/internal/examplesutils"
 	"rellm/pkg/rellm"
 
 	"github.com/fatih/color"

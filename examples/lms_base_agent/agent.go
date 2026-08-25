@@ -1,7 +1,7 @@
 package main
 
 import (
-	"rellm/pkg/examplesutils"
+	"rellm/internal/examplesutils"
 	"rellm/pkg/rellm"
 )
 
