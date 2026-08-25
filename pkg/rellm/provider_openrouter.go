@@ -37,12 +37,14 @@ func NewOpenRouterProvider(apiKey string, model Model) (*OpenRouterProvider, err
 	}, nil
 }
 
+// todo: add next New... method
 // WithHTTPClient injects a custom HTTP client (e.g. a test fake).
 func (p *OpenRouterProvider) WithHTTPClient(c ClientHttpDo) *OpenRouterProvider {
 	p.client = c
 	return p
 }
 
+// todo: remove?
 // WithURL overrides the endpoint URL (used by tests / self-hosted gateways).
 func (p *OpenRouterProvider) WithURL(u string) *OpenRouterProvider {
 	p.url = u
