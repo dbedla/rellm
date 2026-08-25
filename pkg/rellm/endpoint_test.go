@@ -3,12 +3,13 @@ package rellm
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"io"
 	"net/http"
-	"rellm/internal/examplesutils"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -55,12 +56,10 @@ func assertHTTPStatusError(t *testing.T, err error, statusCode int, body string)
 	require.ErrorAs(t, err, &statusErr)
 	assert.Equal(t, statusCode, statusErr.StatusCode)
 	assert.Equal(t, body, statusErr.Body)
-	assert.Equal(t, testURL, statusErr.URL)
+	assert.Equal(t, openRouterDefaultURL, statusErr.URL)
 	assert.Equal(t, "req_test", statusErr.RequestID)
 	assert.NotContains(t, err.Error(), "test-key")
 }
-
-const testURL = "https://api.example.test/responses"
 
 func postWithValidResponse(t *testing.T) (*ResponsesApiResp, error) {
 	t.Helper()
@@ -79,43 +78,24 @@ func postWithResponse(t *testing.T, statusCode int, body string) error {
 	return err
 }
 
-//func newTestAgent(t *testing.T, statusCode int, body string) (*Agent, *HttpDoMock) {
-//	t.Helper()
-//
-//
-//	httpDoMock := HttpDoMock{}
-//	p, err := NewOpenRouterProviderWithHTTPClient("test-key", "google/gemma-4-26b-a4b", &httpDoMock)
-//	assert.NoError(t, err)
-//
-//	return , &httpDoMock
-//}
-
-type HttpDoMock struct {
-	mock.Mock
+type testEndpointClient struct {
+	statusCode int
+	body       string
 }
 
-func (h *HttpDoMock) Do(req *http.Request) (*http.Response, error) {
-	args := h.Called(req)
-	return args.Get(0).(*http.Response), args.Error(1)
+func (c testEndpointClient) Do(req *http.Request) (*http.Response, error) {
+	if req.Header.Get("Authorization") == "" {
+		return nil, errors.New("missing authorization header")
+	}
+
+	header := make(http.Header)
+	header.Set("X-Request-ID", "req_test")
+	return &http.Response{StatusCode: c.statusCode, Header: header, Body: io.NopCloser(strings.NewReader(c.body))}, nil
 }
 
-func buildTestProToolAgentOpenRouter(t *testing.T, model Model, maxAgentSteps uint64) (*Agent, *HttpDoMock) {
-
-	agentName := "TestProAgent"
-	mockHttp := new(HttpDoMock)
-
-	p, err := NewOpenRouterProviderWithHTTPClient("test-key", model, mockHttp)
-	assert.NoError(t, err)
-
-	ta, err := NewAgentBuilder().
-		WithProvider(p).
-		WithAgentName(agentName).
-		WithMaxAgentSteps(maxAgentSteps).
-		WithConversationStorage(NewInMemoryStorage()).
-		WithSystemMessage("You are a helpful assistant.").
-		WithToolset(&examplesutils.DataSrcToolset{}).
-		Build()
-
-	assert.NoError(t, err, "failed to create agent")
-	return ta, mockHttp
+func newTestAgent(t *testing.T, statusCode int, body string) *Agent {
+	t.Helper()
+	p, err := NewOpenRouterProviderWithHTTPClient("test-key", "google/gemma-4-26b-a4b", testEndpointClient{statusCode: statusCode, body: body})
+	require.NoError(t, err)
+	return &Agent{provider: p}
 }

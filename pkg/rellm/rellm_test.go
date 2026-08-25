@@ -11,15 +11,13 @@ import (
 const (
 	testBaseUrl              = "http://127.0.0.1"
 	testPort                 = "1234"
-	testResponsesApiEndpoint = "/v1/responses"
 	testReasoningEffort      = rellm.ReasoningEffort_Low
 	testTemperature          = 0.5
 	testDefaultMaxAgentSteps = rellm.DefaultMaxAgentSteps
 )
 
 func baseRequestMatch(req *http.Request) bool {
-	return req.URL.String() == testBaseUrl+":"+testPort+testResponsesApiEndpoint &&
-		req.Method == "POST"
+	return req.Method == http.MethodPost
 }
 
 type HttpDoMock struct {

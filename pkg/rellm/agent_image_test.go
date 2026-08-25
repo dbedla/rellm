@@ -111,9 +111,8 @@ func buildTestImageAgent(t *testing.T, maxAgentSteps uint64,
 	agentName := "TestImageAgent"
 	mockHttp := new(HttpDoMock)
 
-	p, err := rellm.NewOpenRouterProvider("test-key", rellm.Model("x-ai/grok-imagine-image-quality"))
+	p, err := rellm.NewOpenRouterProviderWithHTTPClient("test-key", rellm.Model("x-ai/grok-imagine-image-quality"), mockHttp)
 	assert.NoError(t, err, "failed to create provider")
-	p.WithHTTPClient(mockHttp).WithURL(testBaseUrl + ":" + testPort + testResponsesApiEndpoint)
 
 	ta, err := rellm.NewAgentBuilder().
 		WithProvider(p).

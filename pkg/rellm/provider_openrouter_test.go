@@ -226,7 +226,7 @@ func TestNewOpenRouterProvider_EmptyModel(t *testing.T) {
 
 func TestNewOpenRouterProvider_EmptyApiKey(t *testing.T) {
 	_, err := NewOpenRouterProvider("", Model("test/model"))
-	assert.EqualError(t, err, "missing API key for OpenRouter provider")
+	assert.ErrorIs(t, err, ErrMissingApiKeyForProvider)
 }
 
 // TestOpenRouterRoundTrip_FromFile verifies faithful ToConversationElements→ToProviderRepresentation round-trip
