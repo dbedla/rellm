@@ -24,15 +24,11 @@ func (a *Agent) run(ctx context.Context, msg string, params promptParams) (strin
 	}
 
 	conversation = append(conversation, userMsg)
-	if err := a.conversationStorage.Append([]json.RawMessage{userMsg}); err != nil {
+	if err := a.conversationStorage.Append([]ConversationElement{userMsg}); err != nil {
 		return "", err
 	}
 
-	elements, err := a.provider.ToConversationElements(conversation)
-	if err != nil {
-		return "", errors.Join(ErrConversationElementConversion, err)
-	}
-	wire, err := a.provider.ToProviderRepresentation(elements)
+	wire, err := a.provider.ToProviderRepresentation(conversation)
 	if err != nil {
 		return "", errors.Join(ErrConversationElementConversion, err)
 	}
@@ -133,7 +129,7 @@ func (a *Agent) process(ctx context.Context, req *ResponsesApiReq) (string, erro
 		}
 		req.Input = append(req.Input, raw...)
 
-		conversationErr := a.conversationStorage.Append(raw)
+		conversationErr := a.conversationStorage.Append(conversation)
 		if conversationErr != nil {
 			return "", conversationErr
 		}

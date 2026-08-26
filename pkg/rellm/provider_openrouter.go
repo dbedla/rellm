@@ -87,12 +87,14 @@ func (p *OpenRouterProvider) ToConversationElements(items []json.RawMessage) ([]
 			if err := json.Unmarshal(raw, &out); err == nil {
 				elements = append(elements, &FunctionCallResp{
 					Id:     msg.Id,
+					Type:   "function_call_output",
 					CallId: msg.CallID,
 					Output: out.Output,
 				})
 			} else {
 				elements = append(elements, &FunctionCallResp{
 					Id:     msg.Id,
+					Type:   "function_call_output",
 					CallId: msg.CallID,
 					Output: string(msg.Content),
 				})
@@ -132,21 +134,21 @@ func (p *OpenRouterProvider) parseMessage(raw json.RawMessage, id, role string, 
 	if err := json.Unmarshal(raw, &statusInfo); err == nil {
 		status = statusInfo.Status
 	}
-	parts := parseMessageContent(content)
+	parts := normalizeMessageParts(ParseMessageContent(content), role)
 	switch role {
 	case "assistant":
-		return &AssistantMessage{messageContent{Id: id, Role: role, Status: status, Content: parts}}
+		return &AssistantMessage{MessageContent{Id: id, Role: role, Status: status, Content: parts}}
 	case "system":
-		return &SystemMessage{messageContent{Id: id, Role: role, Content: parts}}
+		return &SystemMessage{MessageContent{Id: id, Role: role, Content: parts}}
 	default: // "user" or unknown
-		return &UserMessage{messageContent{Id: id, Role: role, Status: status, Content: parts}}
+		return &UserMessage{MessageContent{Id: id, Role: role, Status: status, Content: parts}}
 	}
 }
 
 // marshalTextMessage serializes an assistant/system message for OpenRouter:
 // text-only content becomes a string (matching the observed wire format,
 // which stringifies output_text parts too); multimodal stays an array.
-func (p *OpenRouterProvider) marshalTextMessage(mc messageContent) (json.RawMessage, error) {
+func (p *OpenRouterProvider) marshalTextMessage(mc MessageContent) (json.RawMessage, error) {
 	payload := map[string]interface{}{
 		"role": mc.Role,
 		"type": "message",
@@ -197,12 +199,15 @@ func (p *OpenRouterProvider) parseReasoning(raw json.RawMessage) (ConversationEl
 			textParts = append(textParts, part.Text)
 		}
 	}
+	if len(item.Summary) == 0 {
+		item.Summary = nil
+	}
 
 	return &Reasoning{
 		Id:        item.Id,
 		Status:    item.Status,
 		Summary:   item.Summary,
-		Text:      joinTextParts(textParts),
+		Text:      JoinTextParts(textParts),
 		Signature: item.Signature,
 	}, nil
 }
@@ -233,14 +238,14 @@ func (p *OpenRouterProvider) ToProviderRepresentation(elements []ConversationEle
 			raw = append(raw, b)
 
 		case *AssistantMessage:
-			b, err := p.marshalTextMessage(el.messageContent)
+			b, err := p.marshalTextMessage(el.MessageContent)
 			if err != nil {
 				return nil, err
 			}
 			raw = append(raw, b)
 
 		case *SystemMessage:
-			b, err := p.marshalTextMessage(el.messageContent)
+			b, err := p.marshalTextMessage(el.MessageContent)
 			if err != nil {
 				return nil, err
 			}
@@ -290,8 +295,10 @@ func (p *OpenRouterProvider) ToProviderRepresentation(elements []ConversationEle
 			}
 			// Signed reasoning blocks are provider continuation state; preserve
 			// their summary field even when it is empty.
-			if len(el.Summary) > 0 || el.Signature != "" {
+			if len(el.Summary) > 0 {
 				r["summary"] = el.Summary
+			} else if el.Signature != "" {
+				r["summary"] = []string{}
 			}
 			if el.Text != "" {
 				r["content"] = []MessagePart{{Type: "reasoning_text", Text: el.Text}}

@@ -110,26 +110,28 @@ func (p *LMStudioProvider) ToConversationElements(items []json.RawMessage) ([]Co
 			if err := json.Unmarshal(raw, &out); err == nil {
 				elements = append(elements, &FunctionCallResp{
 					Id:     msg.Id,
+					Type:   "function_call_output",
 					CallId: msg.CallID,
 					Output: out.Output,
 				})
 			} else {
 				elements = append(elements, &FunctionCallResp{
 					Id:     msg.Id,
+					Type:   "function_call_output",
 					CallId: msg.CallID,
 					Output: string(msg.Content),
 				})
 			}
 
 		case "message", "": // messages often lack an explicit type field
-			parts := parseMessageContent(msg.Content)
+			parts := normalizeMessageParts(ParseMessageContent(msg.Content), msg.Role)
 			switch msg.Role {
 			case "assistant":
-				elements = append(elements, &AssistantMessage{messageContent{Id: msg.Id, Role: msg.Role, Content: parts}})
+				elements = append(elements, &AssistantMessage{MessageContent{Id: msg.Id, Role: msg.Role, Content: parts}})
 			case "system":
-				elements = append(elements, &SystemMessage{messageContent{Id: msg.Id, Role: msg.Role, Content: parts}})
+				elements = append(elements, &SystemMessage{MessageContent{Id: msg.Id, Role: msg.Role, Content: parts}})
 			default: // "user" or unknown
-				elements = append(elements, &UserMessage{messageContent{Id: msg.Id, Role: msg.Role, Content: parts}})
+				elements = append(elements, &UserMessage{MessageContent{Id: msg.Id, Role: msg.Role, Content: parts}})
 			}
 		}
 	}
@@ -149,7 +151,9 @@ func (p *LMStudioProvider) parseReasoning(raw json.RawMessage) ConversationEleme
 	if err := json.Unmarshal(raw, &meta); err == nil {
 		r.Id = meta.Id
 		r.Status = meta.Status
-		r.Summary = meta.Summary
+		if len(meta.Summary) > 0 {
+			r.Summary = meta.Summary
+		}
 	}
 
 	// Extract text from content array (reasoning_text items)
@@ -166,7 +170,7 @@ func (p *LMStudioProvider) parseReasoning(raw json.RawMessage) ConversationEleme
 				textParts = append(textParts, c.Text)
 			}
 		}
-		r.Text = joinTextParts(textParts)
+		r.Text = JoinTextParts(textParts)
 	}
 
 	return r
@@ -174,7 +178,7 @@ func (p *LMStudioProvider) parseReasoning(raw json.RawMessage) ConversationEleme
 
 // marshalMessage serializes any role-typed message for LM Studio: content is
 // always a structured array (LM Studio does not use the "type":"message" field).
-func (p *LMStudioProvider) marshalMessage(mc messageContent) (json.RawMessage, error) {
+func (p *LMStudioProvider) marshalMessage(mc MessageContent) (json.RawMessage, error) {
 	payload := map[string]interface{}{
 		"role": mc.Role,
 	}
@@ -200,21 +204,21 @@ func (p *LMStudioProvider) ToProviderRepresentation(elements []ConversationEleme
 	for _, e := range elements {
 		switch el := e.(type) {
 		case *UserMessage:
-			b, err := p.marshalMessage(el.messageContent)
+			b, err := p.marshalMessage(el.MessageContent)
 			if err != nil {
 				return nil, err
 			}
 			raw = append(raw, b)
 
 		case *AssistantMessage:
-			b, err := p.marshalMessage(el.messageContent)
+			b, err := p.marshalMessage(el.MessageContent)
 			if err != nil {
 				return nil, err
 			}
 			raw = append(raw, b)
 
 		case *SystemMessage:
-			b, err := p.marshalMessage(el.messageContent)
+			b, err := p.marshalMessage(el.MessageContent)
 			if err != nil {
 				return nil, err
 			}
@@ -293,8 +297,8 @@ func (p *LMStudioProvider) ToProviderRepresentation(elements []ConversationEleme
 
 var _ Provider = &LMStudioProvider{}
 
-// joinTextParts joins text parts with spaces.
-func joinTextParts(parts []string) string {
+// JoinTextParts joins text parts with spaces.
+func JoinTextParts(parts []string) string {
 	var sb strings.Builder
 	for i, p := range parts {
 		if p == "" {

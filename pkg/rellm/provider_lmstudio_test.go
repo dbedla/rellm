@@ -65,7 +65,7 @@ func TestLMStudioToProviderRepresentation_ImageGeneration(t *testing.T) {
 
 func TestLMStudioToProviderRepresentation_UserMessage(t *testing.T) {
 	p := &LMStudioProvider{}
-	msg := UserMessage{messageContent{Role: "user", Content: []MessagePart{{Type: "input_text", Text: "hi"}}}}
+	msg := UserMessage{MessageContent{Role: "user", Content: []MessagePart{{Type: "input_text", Text: "hi"}}}}
 	raw, err := p.ToProviderRepresentation([]ConversationElement{&msg})
 	assert.NoError(t, err)
 	assert.Len(t, raw, 1)

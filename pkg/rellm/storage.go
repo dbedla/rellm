@@ -10,20 +10,20 @@ import (
 )
 
 type InMemoryStorage struct {
-	Messages []json.RawMessage
+	Messages []ConversationElement
 }
 
 func NewInMemoryStorage() *InMemoryStorage {
 	return &InMemoryStorage{}
 }
 
-func (s *InMemoryStorage) Load() ([]json.RawMessage, error) {
-	cp := make([]json.RawMessage, len(s.Messages))
+func (s *InMemoryStorage) Load() ([]ConversationElement, error) {
+	cp := make([]ConversationElement, len(s.Messages))
 	copy(cp, s.Messages)
 	return cp, nil
 }
 
-func (s *InMemoryStorage) Append(delta []json.RawMessage) error {
+func (s *InMemoryStorage) Append(delta []ConversationElement) error {
 	s.Messages = append(s.Messages, delta...)
 	return nil
 }
@@ -36,15 +36,15 @@ func NewFilesystemStorage(path string) *FilesystemStorage {
 	return &FilesystemStorage{path: path}
 }
 
-func (s *FilesystemStorage) Load() ([]json.RawMessage, error) {
+func (s *FilesystemStorage) Load() ([]ConversationElement, error) {
 	data, err := os.ReadFile(s.path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return []json.RawMessage{}, nil
+			return []ConversationElement{}, nil
 		}
 		return nil, err
 	}
-	messages := []json.RawMessage{}
+	elements := []ConversationElement{}
 	for lineNum, line := range bytes.Split(data, []byte("\n")) {
 		line = bytes.TrimSpace(line)
 		if len(line) == 0 {
@@ -53,12 +53,16 @@ func (s *FilesystemStorage) Load() ([]json.RawMessage, error) {
 		if !json.Valid(line) {
 			return nil, errors.Join(ErrMalformedConversationStorage, fmt.Errorf("file: %s, line: %d", s.path, lineNum+1))
 		}
-		messages = append(messages, json.RawMessage(line))
+		el, err := ParseConversationElement(line)
+		if err != nil {
+			return nil, errors.Join(ErrMalformedConversationStorage, fmt.Errorf("file: %s, line: %d", s.path, lineNum+1), err)
+		}
+		elements = append(elements, el)
 	}
-	return messages, nil
+	return elements, nil
 }
 
-func (s *FilesystemStorage) Append(delta []json.RawMessage) (err error) {
+func (s *FilesystemStorage) Append(delta []ConversationElement) (err error) {
 	if len(delta) == 0 {
 		return nil
 	}
@@ -68,10 +72,16 @@ func (s *FilesystemStorage) Append(delta []json.RawMessage) (err error) {
 		}
 	}
 	var buf bytes.Buffer
-	for _, m := range delta {
-		if err := json.Compact(&buf, m); err != nil {
+	for _, el := range delta {
+		b, err := json.Marshal(el)
+		if err != nil {
 			return err
 		}
+		var compact bytes.Buffer
+		if err := json.Compact(&compact, b); err != nil {
+			return err
+		}
+		buf.Write(compact.Bytes())
 		buf.WriteByte('\n')
 	}
 	f, err := os.OpenFile(s.path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)

@@ -3,7 +3,6 @@ package rellm_test
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"io"
 	"net/http"
@@ -55,14 +54,13 @@ func TestAgentPromptToGetImage(t *testing.T) {
 	conversation, err := agent.CurrentConversation()
 	assert.NoError(t, err)
 	lastMsg := conversation[len(conversation)-1]
-	var imageConversationRepresentation rellm.ImageGeneration
-	err = json.Unmarshal(lastMsg, &imageConversationRepresentation)
-	assert.NoError(t, err)
+	imageGeneration, ok := lastMsg.(*rellm.ImageGeneration)
+	assert.True(t, ok, "expected *ImageGeneration, got %T", lastMsg)
 
-	assert.Equal(t, "image-stored-under-this-id", imageConversationRepresentation.Result)
-	assert.Equal(t, "image_generation_call", imageConversationRepresentation.Type)
-	assert.Equal(t, "completed", imageConversationRepresentation.Status)
-	assert.Equal(t, "ig_tmp_vqotwoa5eg", imageConversationRepresentation.Id)
+	assert.Equal(t, "image-stored-under-this-id", imageGeneration.Result)
+	assert.Equal(t, rellm.KindImageGeneration, imageGeneration.Kind())
+	assert.Equal(t, "completed", imageGeneration.Status)
+	assert.Equal(t, "ig_tmp_vqotwoa5eg", imageGeneration.Id)
 }
 
 func TestAgentPromptToGetImage_handlerErr(t *testing.T) {

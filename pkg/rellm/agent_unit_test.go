@@ -1,7 +1,6 @@
 package rellm
 
 import (
-	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -13,9 +12,9 @@ func TestPromptMessageToConversationMultimodal(t *testing.T) {
 	msg, err := PromptMessageToConversation(prompt, role)
 	assert.NoError(t, err)
 
-	var userMsg UserMessage
-	err = json.Unmarshal(msg, &userMsg)
-	assert.NoError(t, err)
+	userMsg, ok := msg.(*UserMessage)
+	assert.True(t, ok, "expected *UserMessage, got %T", msg)
+	assert.Equal(t, KindUserMessage, userMsg.Kind())
 	assert.Equal(t, role, userMsg.Role)
 	assert.Len(t, userMsg.Content, 1)
 	assert.Equal(t, "input_text", userMsg.Content[0].Type)

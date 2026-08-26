@@ -1,7 +1,6 @@
 package rellm
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -112,24 +111,16 @@ func (b *PromptBuilder) Build() (*Prompt, error) {
 	}, nil
 }
 
-func PromptMessageToConversation(prompt, role string) (json.RawMessage, error) {
+func PromptMessageToConversation(prompt, role string) (ConversationElement, error) {
 	content := []MessagePart{{Type: "input_text", Text: prompt}}
-	var msg interface{}
 	switch role {
 	case "user":
-		msg = UserMessage{messageContent{Role: role, Content: content}}
+		return &UserMessage{MessageContent{Role: role, Content: content}}, nil
 	case "system":
-		msg = SystemMessage{messageContent{Role: role, Content: content}}
+		return &SystemMessage{MessageContent{Role: role, Content: content}}, nil
 	case "assistant":
-		msg = AssistantMessage{messageContent{Role: role, Content: content}}
+		return &AssistantMessage{MessageContent{Role: role, Content: content}}, nil
 	default:
 		return nil, fmt.Errorf("promptMessageToConversation: unknown role %q", role)
 	}
-
-	jsonInput, err := json.Marshal(msg)
-	if err != nil {
-		return nil, fmt.Errorf("promptMessageToConversation: %w", err)
-	}
-
-	return jsonInput, nil
 }

@@ -35,14 +35,13 @@ func TestAgentAsk_ConversationBeforeAndAfter(t *testing.T) {
 			Body:       io.NopCloser(strings.NewReader(goldenRespHi)),
 		}, nil)
 
-	conversationBeforeAskRaw, err := agent.CurrentConversation()
+	conversationBeforeAsk, err := agent.CurrentConversation()
 	assert.NoError(t, err)
-	assert.Len(t, conversationBeforeAskRaw, 1)
+	assert.Len(t, conversationBeforeAsk, 1)
 
-	conversationBeforeAsk, err := json.Marshal(conversationBeforeAskRaw)
+	beforeAskJSON, err := json.Marshal(conversationBeforeAsk)
 	assert.NoError(t, err)
-
-	assert.JSONEq(t, `[{"role":"system","content":[{"type":"input_text","text":"You are a helpful assistant with deep weather knowledge."}]}]`, string(conversationBeforeAsk))
+	assert.JSONEq(t, `[{"kind":"system_message","role":"system","content":[{"type":"input_text","text":"You are a helpful assistant with deep weather knowledge."}]}]`, string(beforeAskJSON))
 
 	ctx := context.Background()
 	respMsg, err := agent.Ask(ctx, "Hi")
@@ -55,16 +54,10 @@ func TestAgentAsk_ConversationBeforeAndAfter(t *testing.T) {
 		goldenRespHi)
 	assert.NoError(t, err)
 
-	expectedAfterAsk, err := json.Marshal(conversationFromGolden)
+	conversationAfterAsk, err := agent.CurrentConversation()
 	assert.NoError(t, err)
 
-	conversationAfterAskRaw, err := agent.CurrentConversation()
-	assert.NoError(t, err)
-
-	conversationAfterAsk, err := json.Marshal(conversationAfterAskRaw)
-	assert.NoError(t, err)
-
-	assert.JSONEq(t, string(expectedAfterAsk), string(conversationAfterAsk))
+	assert.Equal(t, conversationFromGolden, conversationAfterAsk)
 }
 
 func TestAgentLMS_ToolsCallWithConversationCheck(t *testing.T) {
@@ -146,13 +139,7 @@ func TestAgentLMS_ToolsCallWithConversationCheck(t *testing.T) {
 		goldenProRespA3)
 	assert.NoError(t, err)
 
-	expected, err := json.Marshal(conversationFromGolden)
-	assert.NoError(t, err)
-
-	actual, err := json.Marshal(agentConversation)
-	assert.NoError(t, err)
-
-	assert.JSONEq(t, string(expected), string(actual))
+	assert.Equal(t, conversationFromGolden, agentConversation)
 }
 
 func TestAgentLMS_ToolsCallWithConversationCheck_SecondRespFail(t *testing.T) {
@@ -233,13 +220,7 @@ func TestAgentLMS_ToolsCallWithConversationCheck_SecondRespFail(t *testing.T) {
 		goldenProReqA3)
 	assert.NoError(t, err)
 
-	expected, err := json.Marshal(conversationFromGolden)
-	assert.NoError(t, err)
-
-	actual, err := json.Marshal(agentConversation)
-	assert.NoError(t, err)
-
-	assert.JSONEq(t, string(expected), string(actual))
+	assert.Equal(t, conversationFromGolden, agentConversation)
 }
 
 func TestAgentOpenRouterGemma_ConversationCheck(t *testing.T) {
@@ -312,13 +293,7 @@ func TestAgentOpenRouterGemma_ConversationCheck(t *testing.T) {
 	)
 	assert.NoError(t, err)
 
-	expected, err := json.Marshal(conversationFromGolden)
-	assert.NoError(t, err)
-
-	actual, err := json.Marshal(agentConversation)
-	assert.NoError(t, err)
-
-	assert.JSONEq(t, string(expected), string(actual))
+	assert.Equal(t, conversationFromGolden, agentConversation)
 }
 
 func TestAgentOpenRouterGemini_ConversationCheck(t *testing.T) {
@@ -391,11 +366,5 @@ func TestAgentOpenRouterGemini_ConversationCheck(t *testing.T) {
 	)
 	assert.NoError(t, err)
 
-	expected, err := json.Marshal(conversationFromGolden)
-	assert.NoError(t, err)
-
-	actual, err := json.Marshal(agentConversation)
-	assert.NoError(t, err)
-
-	assert.JSONEq(t, string(expected), string(actual))
+	assert.Equal(t, conversationFromGolden, agentConversation)
 }
