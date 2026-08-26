@@ -73,7 +73,7 @@ func (p *LMStudioProvider) ToConversationElements(items []json.RawMessage) ([]Co
 		var msg struct {
 			Type    string          `json:"type"`
 			Role    string          `json:"role"`
-			Id      string          `json:"id"`
+			ID      string          `json:"id"`
 			Name    string          `json:"name"`
 			CallID  string          `json:"call_id"`
 			Args    json.RawMessage `json:"arguments"`
@@ -86,10 +86,10 @@ func (p *LMStudioProvider) ToConversationElements(items []json.RawMessage) ([]Co
 		switch msg.Type {
 		case "function_call":
 			elements = append(elements, &FunctionCall{
-				Id:     msg.Id,
+				ID:     msg.ID,
 				Name:   msg.Name,
 				Args:   msg.Args,
-				CallId: msg.CallID,
+				CallID: msg.CallID,
 			})
 
 		case "reasoning":
@@ -109,16 +109,16 @@ func (p *LMStudioProvider) ToConversationElements(items []json.RawMessage) ([]Co
 			}
 			if err := json.Unmarshal(raw, &out); err == nil {
 				elements = append(elements, &FunctionCallResp{
-					Id:     msg.Id,
+					ID:     msg.ID,
 					Type:   "function_call_output",
-					CallId: msg.CallID,
+					CallID: msg.CallID,
 					Output: out.Output,
 				})
 			} else {
 				elements = append(elements, &FunctionCallResp{
-					Id:     msg.Id,
+					ID:     msg.ID,
 					Type:   "function_call_output",
-					CallId: msg.CallID,
+					CallID: msg.CallID,
 					Output: string(msg.Content),
 				})
 			}
@@ -127,11 +127,11 @@ func (p *LMStudioProvider) ToConversationElements(items []json.RawMessage) ([]Co
 			parts := normalizeMessageParts(ParseMessageContent(msg.Content), msg.Role)
 			switch msg.Role {
 			case "assistant":
-				elements = append(elements, &AssistantMessage{MessageContent{Id: msg.Id, Role: msg.Role, Content: parts}})
+				elements = append(elements, &AssistantMessage{MessageContent{ID: msg.ID, Role: msg.Role, Content: parts}})
 			case "system":
-				elements = append(elements, &SystemMessage{MessageContent{Id: msg.Id, Role: msg.Role, Content: parts}})
+				elements = append(elements, &SystemMessage{MessageContent{ID: msg.ID, Role: msg.Role, Content: parts}})
 			default: // "user" or unknown
-				elements = append(elements, &UserMessage{MessageContent{Id: msg.Id, Role: msg.Role, Content: parts}})
+				elements = append(elements, &UserMessage{MessageContent{ID: msg.ID, Role: msg.Role, Content: parts}})
 			}
 		}
 	}
@@ -144,12 +144,12 @@ func (p *LMStudioProvider) parseReasoning(raw json.RawMessage) ConversationEleme
 
 	// Extract id, status, summary from top level
 	var meta struct {
-		Id      string   `json:"id"`
+		ID      string   `json:"id"`
 		Status  string   `json:"status"`
 		Summary []string `json:"summary"`
 	}
 	if err := json.Unmarshal(raw, &meta); err == nil {
-		r.Id = meta.Id
+		r.ID = meta.ID
 		r.Status = meta.Status
 		if len(meta.Summary) > 0 {
 			r.Summary = meta.Summary
@@ -182,8 +182,8 @@ func (p *LMStudioProvider) marshalMessage(mc MessageContent) (json.RawMessage, e
 	payload := map[string]interface{}{
 		"role": mc.Role,
 	}
-	if mc.Id != "" {
-		payload["id"] = mc.Id
+	if mc.ID != "" {
+		payload["id"] = mc.ID
 	}
 	if mc.Status != "" {
 		payload["status"] = mc.Status
@@ -226,10 +226,10 @@ func (p *LMStudioProvider) ToProviderRepresentation(elements []ConversationEleme
 
 		case *FunctionCall:
 			fc := map[string]interface{}{
-				"id":        el.Id,
+				"id":        el.ID,
 				"name":      el.Name,
 				"arguments": json.RawMessage(el.Args),
-				"call_id":   el.CallId,
+				"call_id":   el.CallID,
 				"status":    "completed",
 				"type":      "function_call",
 			}
@@ -241,11 +241,11 @@ func (p *LMStudioProvider) ToProviderRepresentation(elements []ConversationEleme
 
 		case *FunctionCallResp:
 			resp := map[string]interface{}{
-				"call_id": el.CallId,
+				"call_id": el.CallID,
 				"type":    "function_call_output",
 			}
-			if el.Id != "" {
-				resp["id"] = el.Id
+			if el.ID != "" {
+				resp["id"] = el.ID
 			}
 			// Use Output which may be JSON-encoded or plain text.
 			resp["output"] = el.Output
@@ -258,7 +258,7 @@ func (p *LMStudioProvider) ToProviderRepresentation(elements []ConversationEleme
 		case *Reasoning:
 			// Always include summary field (even if empty) for faithful round-trip.
 			payload := map[string]interface{}{
-				"id":     el.Id,
+				"id":     el.ID,
 				"status": el.Status,
 				"type":   "reasoning",
 			}
@@ -277,7 +277,7 @@ func (p *LMStudioProvider) ToProviderRepresentation(elements []ConversationEleme
 
 		case *ImageGeneration:
 			sig := map[string]interface{}{
-				"id":     el.Id,
+				"id":     el.ID,
 				"type":   "image_generation_call",
 				"status": el.Status,
 				"result": el.Result,

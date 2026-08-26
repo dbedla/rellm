@@ -31,10 +31,6 @@ const (
 type ConversationElement interface {
 	// Kind reports this element's canonical discriminator.
 	Kind() ElementKind
-
-	// ID reports the element's provider-assigned id ("" if none). Used for
-	// logging and FunctionCall <-> FunctionCallResp pairing.
-	ID() string
 }
 
 // MessageContent holds shared fields for role-typed messages. Role is the wire
@@ -42,7 +38,7 @@ type ConversationElement interface {
 // per-type serialization shape. Exported so providers outside this package can
 // construct and read message elements.
 type MessageContent struct {
-	Id      string        `json:"id,omitempty"`
+	ID      string        `json:"id,omitempty"`
 	Role    string        `json:"role"`
 	Status  string        `json:"status,omitempty"`
 	Content []MessagePart `json:"content"` // structured parts (text + images etc.)
@@ -55,7 +51,6 @@ type UserMessage struct {
 }
 
 func (*UserMessage) Kind() ElementKind { return KindUserMessage }
-func (m *UserMessage) ID() string      { return m.Id }
 
 // AssistantMessage is a model-generated text message. Content serializes as a
 // plain string on the wire.
@@ -64,7 +59,6 @@ type AssistantMessage struct {
 }
 
 func (*AssistantMessage) Kind() ElementKind { return KindAssistantMessage }
-func (m *AssistantMessage) ID() string      { return m.Id }
 
 // SystemMessage is a system instruction. Content serializes as a plain string
 // on the wire.
@@ -73,33 +67,30 @@ type SystemMessage struct {
 }
 
 func (*SystemMessage) Kind() ElementKind { return KindSystemMessage }
-func (m *SystemMessage) ID() string      { return m.Id }
 
 // FunctionCall is a model-requested tool invocation.
 type FunctionCall struct {
-	Id     string          `json:"id"`
+	ID     string          `json:"id"`
 	Name   string          `json:"name"`
 	Args   json.RawMessage `json:"arguments"`
-	CallId string          `json:"call_id"`
+	CallID string          `json:"call_id"`
 }
 
 func (*FunctionCall) Kind() ElementKind { return KindFunctionCall }
-func (f *FunctionCall) ID() string      { return f.Id }
 
 // FunctionCallResponse is the tool's result sent back to the model.
 type FunctionCallResp struct {
-	Id     string `json:"id,omitempty"`
+	ID     string `json:"id,omitempty"`
 	Type   string `json:"type"`
-	CallId string `json:"call_id"`
+	CallID string `json:"call_id"`
 	Output string `json:"output"` // raw output (may be JSON-encoded by some providers, plain text by others)
 }
 
 func (*FunctionCallResp) Kind() ElementKind { return KindFunctionCallResp }
-func (f *FunctionCallResp) ID() string      { return f.Id }
 
 // Reasoning captures model chain-of-thought output.
 type Reasoning struct {
-	Id        string   `json:"id,omitempty"`
+	ID        string   `json:"id,omitempty"`
 	Status    string   `json:"status,omitempty"`
 	Summary   []string `json:"summary,omitempty"`
 	Text      string   `json:"text"`
@@ -107,18 +98,16 @@ type Reasoning struct {
 }
 
 func (*Reasoning) Kind() ElementKind { return KindReasoning }
-func (r *Reasoning) ID() string      { return r.Id }
 
 // ImageGeneration is a generated image with its result note.
 type ImageGeneration struct {
-	Id     string `json:"id,omitempty"`
+	ID     string `json:"id,omitempty"`
 	Type   string `json:"type"`
 	Status string `json:"status,omitempty"`
 	Result string `json:"result"` // user-visible identifier returned by the handler
 }
 
 func (*ImageGeneration) Kind() ElementKind { return KindImageGeneration }
-func (i *ImageGeneration) ID() string      { return i.Id }
 
 // marshalWithKind serializes v and injects the canonical "kind" discriminator.
 func marshalWithKind(kind ElementKind, v any) (json.RawMessage, error) {
@@ -333,14 +322,14 @@ func normalizeMessageParts(parts []MessagePart, role string) []MessagePart {
 // ImageGeneration element.
 func parseImageGeneration(raw json.RawMessage) (ConversationElement, error) {
 	var ig struct {
-		Id     string `json:"id"`
+		ID     string `json:"id"`
 		Status string `json:"status"`
 		Result string `json:"result"`
 	}
 	if err := json.Unmarshal(raw, &ig); err != nil {
 		return nil, errors.Join(ErrImageParsingFailed, err)
 	}
-	return &ImageGeneration{Id: ig.Id, Status: ig.Status, Result: ig.Result}, nil
+	return &ImageGeneration{ID: ig.ID, Status: ig.Status, Result: ig.Result}, nil
 }
 
 type ImageURL struct {

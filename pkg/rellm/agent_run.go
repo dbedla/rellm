@@ -225,7 +225,7 @@ func (a *Agent) handleFunctionCall(ctx context.Context, fn *FunctionCall) (*Func
 		return nil, ErrNoToolsetButToolCallRequested
 	}
 
-	funcCallResp, ok := a.toolset.DispatchTools(ctx, fn.Name, fn.CallId, fn.Args)
+	funcCallResp, ok := a.toolset.DispatchTools(ctx, fn.Name, fn.CallID, fn.Args)
 	if !ok {
 		funcCallResp = invalidFunctionCallResp(fn)
 		return &funcCallResp, errors.Join(ErrWhileDispatchToolCall, fmt.Errorf("unknown tool name (%s)", fn.Name))
@@ -237,7 +237,7 @@ func (a *Agent) handleFunctionCall(ctx context.Context, fn *FunctionCall) (*Func
 func invalidFunctionCallResp(fn *FunctionCall) FunctionCallResp {
 	return FunctionCallResp{
 		Type:   "function_call_output",
-		CallId: fn.CallId,
+		CallID: fn.CallID,
 		Output: "invalid function call (function not found) " + fn.Name,
 	}
 

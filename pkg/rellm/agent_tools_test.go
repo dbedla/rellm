@@ -462,7 +462,7 @@ func TestAgentLMS_DispatchFailurePersistsPartialToolResults(t *testing.T) {
 	outputsByCallID := make(map[string]string)
 	for _, el := range conversation {
 		if resp, ok := el.(*rellm.FunctionCallResp); ok && resp.Type == "function_call_output" {
-			outputsByCallID[resp.CallId] = resp.Output
+			outputsByCallID[resp.CallID] = resp.Output
 		}
 	}
 

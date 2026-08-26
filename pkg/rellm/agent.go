@@ -56,14 +56,14 @@ func (a *Agent) CurrentConversation() ([]ConversationElement, error) {
 	return a.conversationStorage.Load()
 }
 
-func FuncResultToFunctionCallResp(callId string, funcResult any) FunctionCallResp {
+func FuncResultToFunctionCallResp(callID string, funcResult any) FunctionCallResp {
 	b, err := json.Marshal(funcResult)
 	if err != nil {
 		errorMsg := "unable to execute function; " + err.Error()
-		return FunctionCallResp{Type: "function_call_output", CallId: callId, Output: errorMsg}
+		return FunctionCallResp{Type: "function_call_output", CallID: callID, Output: errorMsg}
 	}
 
-	return FunctionCallResp{Type: "function_call_output", CallId: callId, Output: string(b)}
+	return FunctionCallResp{Type: "function_call_output", CallID: callID, Output: string(b)}
 }
 
 // Execute builds the user message, packages inference params, and hands both to

@@ -171,7 +171,7 @@ type ResponsesApiUsage struct {
 	} `json:"output_tokens_details"`
 	TotalTokens int                  `json:"total_tokens"`
 	Cost        *float64             `json:"cost,omitempty"`
-	IsByok      *bool                `json:"is_byok,omitempty"`
+	IsBYOK      *bool                `json:"is_byok,omitempty"`
 	CostDetails *ResponseCostDetails `json:"cost_details,omitempty"`
 }
 
@@ -190,7 +190,7 @@ type ResponseTool struct {
 }
 
 type ResponsesApiResp struct {
-	Id                string            `json:"id"`
+	ID                string            `json:"id"`
 	Object            string            `json:"object"`
 	CreatedAt         int               `json:"created_at"`
 	Model             string            `json:"model"`
@@ -212,7 +212,7 @@ type ResponsesApiResp struct {
 	Metadata          struct {
 	} `json:"metadata"`
 	Background         bool        `json:"background"`
-	PreviousResponseId interface{} `json:"previous_response_id"`
+	PreviousResponseID interface{} `json:"previous_response_id"`
 	ServiceTier        string      `json:"service_tier"`
 	Truncation         string      `json:"truncation"`
 	Store              bool        `json:"store"`

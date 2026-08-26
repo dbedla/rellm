@@ -60,7 +60,7 @@ func TestAgentPromptToGetImage(t *testing.T) {
 	assert.Equal(t, "image-stored-under-this-id", imageGeneration.Result)
 	assert.Equal(t, rellm.KindImageGeneration, imageGeneration.Kind())
 	assert.Equal(t, "completed", imageGeneration.Status)
-	assert.Equal(t, "ig_tmp_vqotwoa5eg", imageGeneration.Id)
+	assert.Equal(t, "ig_tmp_vqotwoa5eg", imageGeneration.ID)
 }
 
 func TestAgentPromptToGetImage_handlerErr(t *testing.T) {

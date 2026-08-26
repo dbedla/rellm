@@ -38,7 +38,7 @@ func TestEndpointPostOKValidResponse(t *testing.T) {
 
 	require.NoError(t, err)
 	require.NotNil(t, resp)
-	assert.Equal(t, "resp_test", resp.Id)
+	assert.Equal(t, "resp_test", resp.ID)
 }
 
 func TestEndpointPostMalformedJSONResponse(t *testing.T) {
