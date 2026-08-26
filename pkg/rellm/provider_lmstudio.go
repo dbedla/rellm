@@ -110,19 +110,21 @@ func (p *LMStudioProvider) ToConversationElements(items []json.RawMessage) ([]Co
 			if err := json.Unmarshal(raw, &out); err == nil {
 				elements = append(elements, &FunctionCallResp{
 					Id:     msg.Id,
+					Type:   "function_call_output",
 					CallId: msg.CallID,
 					Output: out.Output,
 				})
 			} else {
 				elements = append(elements, &FunctionCallResp{
 					Id:     msg.Id,
+					Type:   "function_call_output",
 					CallId: msg.CallID,
 					Output: string(msg.Content),
 				})
 			}
 
 		case "message", "": // messages often lack an explicit type field
-			parts := ParseMessageContent(msg.Content)
+			parts := normalizeMessageParts(ParseMessageContent(msg.Content), msg.Role)
 			switch msg.Role {
 			case "assistant":
 				elements = append(elements, &AssistantMessage{MessageContent{Id: msg.Id, Role: msg.Role, Content: parts}})
@@ -149,7 +151,9 @@ func (p *LMStudioProvider) parseReasoning(raw json.RawMessage) ConversationEleme
 	if err := json.Unmarshal(raw, &meta); err == nil {
 		r.Id = meta.Id
 		r.Status = meta.Status
-		r.Summary = meta.Summary
+		if len(meta.Summary) > 0 {
+			r.Summary = meta.Summary
+		}
 	}
 
 	// Extract text from content array (reasoning_text items)

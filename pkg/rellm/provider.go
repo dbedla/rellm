@@ -304,6 +304,31 @@ func ParseMessageContent(content json.RawMessage) []MessagePart {
 	return nil
 }
 
+// normalizeMessageParts canonicalizes provider text parts independently of
+// the shape used on the wire. Providers may replay text as a plain string or
+// return it as an input_text/output_text object; the canonical representation
+// is determined by the message role.
+func normalizeMessageParts(parts []MessagePart, role string) []MessagePart {
+	textType := "input_text"
+	if role == "assistant" {
+		textType = "output_text"
+	}
+
+	for i := range parts {
+		if parts[i].Type == "input_text" || parts[i].Type == "output_text" {
+			parts[i].Type = textType
+		}
+		if len(parts[i].Annotations) == 0 {
+			parts[i].Annotations = nil
+		}
+		if len(parts[i].Logprobs) == 0 {
+			parts[i].Logprobs = nil
+		}
+	}
+
+	return parts
+}
+
 // parseImageGeneration parses an image_generation_call wire item into an
 // ImageGeneration element.
 func parseImageGeneration(raw json.RawMessage) (ConversationElement, error) {

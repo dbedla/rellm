@@ -57,10 +57,13 @@ func TestInMemoryStorage_AppendMultiple(t *testing.T) {
 func TestInMemoryStorage_LoadDoesNotAlias(t *testing.T) {
 	s := NewInMemoryStorage()
 	assert.NoError(t, s.Append([]ConversationElement{testUserMsg("x")}))
+
 	loaded, err := s.Load()
 	assert.NoError(t, err)
 	assert.Len(t, loaded, 1)
 	loaded = append(loaded, testAssistantMsg("y"))
+	assert.Len(t, loaded, 2)
+
 	again, err := s.Load()
 	assert.NoError(t, err)
 	assert.Len(t, again, 1)

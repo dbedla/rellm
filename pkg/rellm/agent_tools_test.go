@@ -573,36 +573,24 @@ func buildTestProToolAgentOpenRouter(t *testing.T, model rellm.Model, maxAgentSt
 	return ta, mockHttp
 }
 
-func buildConversationFromGoldenLms(goldens ...string) ([]json.RawMessage, error) {
+func buildConversationFromGoldenLms(goldens ...string) ([]rellm.ConversationElement, error) {
 	rawConversation, err := buildRawConversationFromGolden(goldens...)
 	if err != nil {
 		return nil, fmt.Errorf("build raw conversation from golden: %w", err)
 	}
 
 	lmsProvider := rellm.LMStudioProvider{}
-	return providerNormalization(rawConversation, &lmsProvider)
+	return lmsProvider.ToConversationElements(rawConversation)
 }
 
-func buildConversationFromGoldenOpenRouter(goldens ...string) ([]json.RawMessage, error) {
+func buildConversationFromGoldenOpenRouter(goldens ...string) ([]rellm.ConversationElement, error) {
 	rawConversation, err := buildRawConversationFromGolden(goldens...)
 	if err != nil {
 		return nil, fmt.Errorf("build raw conversation from golden: %w", err)
 	}
 
 	orProvider := rellm.OpenRouterProvider{}
-	return providerNormalization(rawConversation, &orProvider)
-}
-
-func providerNormalization(input []json.RawMessage, provider rellm.Provider) ([]json.RawMessage, error) {
-	ce, err := provider.ToConversationElements(input)
-	if err != nil {
-		return nil, fmt.Errorf("convert input to conversation elements: %w", err)
-	}
-	lmsRepresentation, err := provider.ToProviderRepresentation(ce)
-	if err != nil {
-		return nil, fmt.Errorf("convert conversation elements to raw conversation: %w", err)
-	}
-	return lmsRepresentation, nil
+	return orProvider.ToConversationElements(rawConversation)
 }
 
 func buildRawConversationFromGolden(goldens ...string) ([]json.RawMessage, error) {

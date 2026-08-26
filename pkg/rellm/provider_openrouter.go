@@ -87,12 +87,14 @@ func (p *OpenRouterProvider) ToConversationElements(items []json.RawMessage) ([]
 			if err := json.Unmarshal(raw, &out); err == nil {
 				elements = append(elements, &FunctionCallResp{
 					Id:     msg.Id,
+					Type:   "function_call_output",
 					CallId: msg.CallID,
 					Output: out.Output,
 				})
 			} else {
 				elements = append(elements, &FunctionCallResp{
 					Id:     msg.Id,
+					Type:   "function_call_output",
 					CallId: msg.CallID,
 					Output: string(msg.Content),
 				})
@@ -132,7 +134,7 @@ func (p *OpenRouterProvider) parseMessage(raw json.RawMessage, id, role string, 
 	if err := json.Unmarshal(raw, &statusInfo); err == nil {
 		status = statusInfo.Status
 	}
-	parts := ParseMessageContent(content)
+	parts := normalizeMessageParts(ParseMessageContent(content), role)
 	switch role {
 	case "assistant":
 		return &AssistantMessage{MessageContent{Id: id, Role: role, Status: status, Content: parts}}
@@ -196,6 +198,9 @@ func (p *OpenRouterProvider) parseReasoning(raw json.RawMessage) (ConversationEl
 		if part.Type == "reasoning_text" || part.Type == "text" {
 			textParts = append(textParts, part.Text)
 		}
+	}
+	if len(item.Summary) == 0 {
+		item.Summary = nil
 	}
 
 	return &Reasoning{
@@ -290,8 +295,10 @@ func (p *OpenRouterProvider) ToProviderRepresentation(elements []ConversationEle
 			}
 			// Signed reasoning blocks are provider continuation state; preserve
 			// their summary field even when it is empty.
-			if len(el.Summary) > 0 || el.Signature != "" {
+			if len(el.Summary) > 0 {
 				r["summary"] = el.Summary
+			} else if el.Signature != "" {
+				r["summary"] = []string{}
 			}
 			if el.Text != "" {
 				r["content"] = []MessagePart{{Type: "reasoning_text", Text: el.Text}}
