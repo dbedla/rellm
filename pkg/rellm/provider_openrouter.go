@@ -132,21 +132,21 @@ func (p *OpenRouterProvider) parseMessage(raw json.RawMessage, id, role string, 
 	if err := json.Unmarshal(raw, &statusInfo); err == nil {
 		status = statusInfo.Status
 	}
-	parts := parseMessageContent(content)
+	parts := ParseMessageContent(content)
 	switch role {
 	case "assistant":
-		return &AssistantMessage{messageContent{Id: id, Role: role, Status: status, Content: parts}}
+		return &AssistantMessage{MessageContent{Id: id, Role: role, Status: status, Content: parts}}
 	case "system":
-		return &SystemMessage{messageContent{Id: id, Role: role, Content: parts}}
+		return &SystemMessage{MessageContent{Id: id, Role: role, Content: parts}}
 	default: // "user" or unknown
-		return &UserMessage{messageContent{Id: id, Role: role, Status: status, Content: parts}}
+		return &UserMessage{MessageContent{Id: id, Role: role, Status: status, Content: parts}}
 	}
 }
 
 // marshalTextMessage serializes an assistant/system message for OpenRouter:
 // text-only content becomes a string (matching the observed wire format,
 // which stringifies output_text parts too); multimodal stays an array.
-func (p *OpenRouterProvider) marshalTextMessage(mc messageContent) (json.RawMessage, error) {
+func (p *OpenRouterProvider) marshalTextMessage(mc MessageContent) (json.RawMessage, error) {
 	payload := map[string]interface{}{
 		"role": mc.Role,
 		"type": "message",
@@ -202,7 +202,7 @@ func (p *OpenRouterProvider) parseReasoning(raw json.RawMessage) (ConversationEl
 		Id:        item.Id,
 		Status:    item.Status,
 		Summary:   item.Summary,
-		Text:      joinTextParts(textParts),
+		Text:      JoinTextParts(textParts),
 		Signature: item.Signature,
 	}, nil
 }
@@ -233,14 +233,14 @@ func (p *OpenRouterProvider) ToProviderRepresentation(elements []ConversationEle
 			raw = append(raw, b)
 
 		case *AssistantMessage:
-			b, err := p.marshalTextMessage(el.messageContent)
+			b, err := p.marshalTextMessage(el.MessageContent)
 			if err != nil {
 				return nil, err
 			}
 			raw = append(raw, b)
 
 		case *SystemMessage:
-			b, err := p.marshalTextMessage(el.messageContent)
+			b, err := p.marshalTextMessage(el.MessageContent)
 			if err != nil {
 				return nil, err
 			}

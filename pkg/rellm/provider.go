@@ -9,16 +9,39 @@ import (
 
 // --- Canonical conversation element types ------------------------------------
 
+// ElementKind discriminates conversation elements at runtime. It is
+// canonical (provider-independent): wire "type" values are translated to
+// kinds by each provider's parser.
+type ElementKind string
+
+const (
+	KindUserMessage      ElementKind = "user_message"
+	KindAssistantMessage ElementKind = "assistant_message"
+	KindSystemMessage    ElementKind = "system_message"
+	KindFunctionCall     ElementKind = "function_call"
+	KindFunctionCallResp ElementKind = "function_call_response"
+	KindReasoning        ElementKind = "reasoning"
+	KindImageGeneration  ElementKind = "image_generation"
+)
+
 // ConversationElement is a typed item in a conversation. Providers convert their
 // raw wire output into these; the agent operates on them without knowing which
-// provider produced them.
+// provider produced them. The interface is intentionally NOT sealed: custom
+// element types and external providers may implement it.
 type ConversationElement interface {
+	// Kind reports this element's canonical discriminator.
+	Kind() ElementKind
+
+	// ID reports the element's provider-assigned id ("" if none). Used for
+	// logging and FunctionCall <-> FunctionCallResp pairing.
+	ID() string
 }
 
-// messageContent holds shared fields for role-typed messages. Role is the wire
+// MessageContent holds shared fields for role-typed messages. Role is the wire
 // role field; the concrete type constrains it to a fixed value and drives
-// per-type serialization shape.
-type messageContent struct {
+// per-type serialization shape. Exported so providers outside this package can
+// construct and read message elements.
+type MessageContent struct {
 	Id      string        `json:"id,omitempty"`
 	Role    string        `json:"role"`
 	Status  string        `json:"status,omitempty"`
@@ -28,20 +51,29 @@ type messageContent struct {
 // UserMessage is a user-authored message. Content is always a parts array on
 // the wire (supports multimodal: text, images, files).
 type UserMessage struct {
-	messageContent
+	MessageContent
 }
+
+func (*UserMessage) Kind() ElementKind { return KindUserMessage }
+func (m *UserMessage) ID() string      { return m.Id }
 
 // AssistantMessage is a model-generated text message. Content serializes as a
 // plain string on the wire.
 type AssistantMessage struct {
-	messageContent
+	MessageContent
 }
+
+func (*AssistantMessage) Kind() ElementKind { return KindAssistantMessage }
+func (m *AssistantMessage) ID() string      { return m.Id }
 
 // SystemMessage is a system instruction. Content serializes as a plain string
 // on the wire.
 type SystemMessage struct {
-	messageContent
+	MessageContent
 }
+
+func (*SystemMessage) Kind() ElementKind { return KindSystemMessage }
+func (m *SystemMessage) ID() string      { return m.Id }
 
 // FunctionCall is a model-requested tool invocation.
 type FunctionCall struct {
@@ -51,6 +83,9 @@ type FunctionCall struct {
 	CallId string          `json:"call_id"`
 }
 
+func (*FunctionCall) Kind() ElementKind { return KindFunctionCall }
+func (f *FunctionCall) ID() string      { return f.Id }
+
 // FunctionCallResponse is the tool's result sent back to the model.
 type FunctionCallResp struct {
 	Id     string `json:"id,omitempty"`
@@ -58,6 +93,9 @@ type FunctionCallResp struct {
 	CallId string `json:"call_id"`
 	Output string `json:"output"` // raw output (may be JSON-encoded by some providers, plain text by others)
 }
+
+func (*FunctionCallResp) Kind() ElementKind { return KindFunctionCallResp }
+func (f *FunctionCallResp) ID() string      { return f.Id }
 
 // Reasoning captures model chain-of-thought output.
 type Reasoning struct {
@@ -68,6 +106,9 @@ type Reasoning struct {
 	Signature string   `json:"signature,omitempty"` // OpenRouter-only signing key
 }
 
+func (*Reasoning) Kind() ElementKind { return KindReasoning }
+func (r *Reasoning) ID() string      { return r.Id }
+
 // ImageGeneration is a generated image with its result note.
 type ImageGeneration struct {
 	Id     string `json:"id,omitempty"`
@@ -75,6 +116,9 @@ type ImageGeneration struct {
 	Status string `json:"status,omitempty"`
 	Result string `json:"result"` // user-visible identifier returned by the handler
 }
+
+func (*ImageGeneration) Kind() ElementKind { return KindImageGeneration }
+func (i *ImageGeneration) ID() string      { return i.Id }
 
 // TextFromContent extracts concatenated text from structured parts.
 // Works on both string-based and MessagePart-based content.
@@ -130,9 +174,10 @@ func messagePartsWithStrings(texts []string) []MessagePart {
 	return parts
 }
 
-// parseMessageContent normalizes a wire content field (string, []string, or
-// []MessagePart) into []MessagePart.
-func parseMessageContent(content json.RawMessage) []MessagePart {
+// ParseMessageContent normalizes a wire content field (string, []string, or
+// []MessagePart) into []MessagePart. Exported for external providers that need
+// the same content normalization when parsing wire messages.
+func ParseMessageContent(content json.RawMessage) []MessagePart {
 	var textStr string
 	if json.Unmarshal(content, &textStr) == nil {
 		return messagePartsWithStrings([]string{textStr})

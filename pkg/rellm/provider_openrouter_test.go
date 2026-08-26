@@ -147,7 +147,7 @@ func TestOpenRouterReasoningSignatureOnlyRoundTrip(t *testing.T) {
 
 func TestOpenRouterToProviderRepresentation_AssistantMessage(t *testing.T) {
 	p := &OpenRouterProvider{}
-	msg := AssistantMessage{messageContent{Role: "assistant", Content: []MessagePart{{Type: "input_text", Text: "hello world"}}}}
+	msg := AssistantMessage{MessageContent{Role: "assistant", Content: []MessagePart{{Type: "input_text", Text: "hello world"}}}}
 	raw, err := p.ToProviderRepresentation([]ConversationElement{&msg})
 	assert.NoError(t, err)
 	assert.Len(t, raw, 1)
@@ -164,7 +164,7 @@ func TestOpenRouterToProviderRepresentation_AssistantMessage(t *testing.T) {
 
 func TestOpenRouterToProviderRepresentation_UserStructuredContent(t *testing.T) {
 	p := &OpenRouterProvider{}
-	msg := UserMessage{messageContent{Role: "user", Content: []MessagePart{
+	msg := UserMessage{MessageContent{Role: "user", Content: []MessagePart{
 		{Type: "input_text", Text: "hello"},
 		{Type: "image_url", ImageURL: &ImageURL{URL: "https://example.com/img.png"}},
 	}}}

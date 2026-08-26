@@ -117,11 +117,11 @@ func PromptMessageToConversation(prompt, role string) (json.RawMessage, error) {
 	var msg interface{}
 	switch role {
 	case "user":
-		msg = UserMessage{messageContent{Role: role, Content: content}}
+		msg = UserMessage{MessageContent{Role: role, Content: content}}
 	case "system":
-		msg = SystemMessage{messageContent{Role: role, Content: content}}
+		msg = SystemMessage{MessageContent{Role: role, Content: content}}
 	case "assistant":
-		msg = AssistantMessage{messageContent{Role: role, Content: content}}
+		msg = AssistantMessage{MessageContent{Role: role, Content: content}}
 	default:
 		return nil, fmt.Errorf("promptMessageToConversation: unknown role %q", role)
 	}
