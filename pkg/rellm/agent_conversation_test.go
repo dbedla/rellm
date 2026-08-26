@@ -35,14 +35,13 @@ func TestAgentAsk_ConversationBeforeAndAfter(t *testing.T) {
 			Body:       io.NopCloser(strings.NewReader(goldenRespHi)),
 		}, nil)
 
-	conversationBeforeAskRaw, err := agent.CurrentConversation()
+	conversationBeforeAsk, err := agent.CurrentConversation()
 	assert.NoError(t, err)
-	assert.Len(t, conversationBeforeAskRaw, 1)
+	assert.Len(t, conversationBeforeAsk, 1)
 
-	conversationBeforeAsk, err := json.Marshal(conversationBeforeAskRaw)
+	beforeAskJSON, err := json.Marshal(conversationBeforeAsk)
 	assert.NoError(t, err)
-
-	assert.JSONEq(t, `[{"role":"system","content":[{"type":"input_text","text":"You are a helpful assistant with deep weather knowledge."}]}]`, string(conversationBeforeAsk))
+	assert.JSONEq(t, `[{"kind":"system_message","role":"system","content":[{"type":"input_text","text":"You are a helpful assistant with deep weather knowledge."}]}]`, string(beforeAskJSON))
 
 	ctx := context.Background()
 	respMsg, err := agent.Ask(ctx, "Hi")
@@ -61,10 +60,15 @@ func TestAgentAsk_ConversationBeforeAndAfter(t *testing.T) {
 	conversationAfterAskRaw, err := agent.CurrentConversation()
 	assert.NoError(t, err)
 
-	conversationAfterAsk, err := json.Marshal(conversationAfterAskRaw)
+	// Stored conversation is canonical elements; compare via the provider's
+	// wire representation.
+	lms := rellm.LMStudioProvider{}
+	actualAfterAsk, err := lms.ToProviderRepresentation(conversationAfterAskRaw)
+	assert.NoError(t, err)
+	actualAfterAskJSON, err := json.Marshal(actualAfterAsk)
 	assert.NoError(t, err)
 
-	assert.JSONEq(t, string(expectedAfterAsk), string(conversationAfterAsk))
+	assert.JSONEq(t, string(expectedAfterAsk), string(actualAfterAskJSON))
 }
 
 func TestAgentLMS_ToolsCallWithConversationCheck(t *testing.T) {
@@ -149,7 +153,9 @@ func TestAgentLMS_ToolsCallWithConversationCheck(t *testing.T) {
 	expected, err := json.Marshal(conversationFromGolden)
 	assert.NoError(t, err)
 
-	actual, err := json.Marshal(agentConversation)
+	actualWire, err := (&rellm.LMStudioProvider{}).ToProviderRepresentation(agentConversation)
+	assert.NoError(t, err)
+	actual, err := json.Marshal(actualWire)
 	assert.NoError(t, err)
 
 	assert.JSONEq(t, string(expected), string(actual))
@@ -236,7 +242,9 @@ func TestAgentLMS_ToolsCallWithConversationCheck_SecondRespFail(t *testing.T) {
 	expected, err := json.Marshal(conversationFromGolden)
 	assert.NoError(t, err)
 
-	actual, err := json.Marshal(agentConversation)
+	actualWire, err := (&rellm.LMStudioProvider{}).ToProviderRepresentation(agentConversation)
+	assert.NoError(t, err)
+	actual, err := json.Marshal(actualWire)
 	assert.NoError(t, err)
 
 	assert.JSONEq(t, string(expected), string(actual))
@@ -315,7 +323,9 @@ func TestAgentOpenRouterGemma_ConversationCheck(t *testing.T) {
 	expected, err := json.Marshal(conversationFromGolden)
 	assert.NoError(t, err)
 
-	actual, err := json.Marshal(agentConversation)
+	actualWire, err := (&rellm.OpenRouterProvider{}).ToProviderRepresentation(agentConversation)
+	assert.NoError(t, err)
+	actual, err := json.Marshal(actualWire)
 	assert.NoError(t, err)
 
 	assert.JSONEq(t, string(expected), string(actual))
@@ -394,7 +404,9 @@ func TestAgentOpenRouterGemini_ConversationCheck(t *testing.T) {
 	expected, err := json.Marshal(conversationFromGolden)
 	assert.NoError(t, err)
 
-	actual, err := json.Marshal(agentConversation)
+	actualWire, err := (&rellm.OpenRouterProvider{}).ToProviderRepresentation(agentConversation)
+	assert.NoError(t, err)
+	actual, err := json.Marshal(actualWire)
 	assert.NoError(t, err)
 
 	assert.JSONEq(t, string(expected), string(actual))

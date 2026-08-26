@@ -120,6 +120,117 @@ type ImageGeneration struct {
 func (*ImageGeneration) Kind() ElementKind { return KindImageGeneration }
 func (i *ImageGeneration) ID() string      { return i.Id }
 
+// marshalWithKind serializes v and injects the canonical "kind" discriminator.
+func marshalWithKind(kind ElementKind, v any) (json.RawMessage, error) {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return nil, err
+	}
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(b, &m); err != nil {
+		return nil, err
+	}
+	m["kind"], err = json.Marshal(string(kind))
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(m)
+}
+
+// Canonical serialization: storage (and anything else) marshals elements to a
+// self-describing form keyed on "kind". Provider wire serialization stays in
+// ToProviderRepresentation and never goes through these methods.
+
+func (m *UserMessage) MarshalJSON() ([]byte, error) {
+	return marshalWithKind(KindUserMessage, &m.MessageContent)
+}
+
+func (m *AssistantMessage) MarshalJSON() ([]byte, error) {
+	return marshalWithKind(KindAssistantMessage, &m.MessageContent)
+}
+
+func (m *SystemMessage) MarshalJSON() ([]byte, error) {
+	return marshalWithKind(KindSystemMessage, &m.MessageContent)
+}
+
+func (f *FunctionCall) MarshalJSON() ([]byte, error) {
+	type plain FunctionCall
+	return marshalWithKind(KindFunctionCall, (*plain)(f))
+}
+
+func (f *FunctionCallResp) MarshalJSON() ([]byte, error) {
+	type plain FunctionCallResp
+	return marshalWithKind(KindFunctionCallResp, (*plain)(f))
+}
+
+func (r *Reasoning) MarshalJSON() ([]byte, error) {
+	type plain Reasoning
+	return marshalWithKind(KindReasoning, (*plain)(r))
+}
+
+func (i *ImageGeneration) MarshalJSON() ([]byte, error) {
+	type plain ImageGeneration
+	return marshalWithKind(KindImageGeneration, (*plain)(i))
+}
+
+// ParseConversationElement decodes a canonical (kind-tagged) element produced
+// by MarshalJSON. The "kind" field itself is ignored by the concrete structs'
+// unmarshaling.
+func ParseConversationElement(raw json.RawMessage) (ConversationElement, error) {
+	var k struct {
+		Kind ElementKind `json:"kind"`
+	}
+	if err := json.Unmarshal(raw, &k); err != nil {
+		return nil, err
+	}
+	switch k.Kind {
+	case KindUserMessage:
+		var e UserMessage
+		if err := json.Unmarshal(raw, &e); err != nil {
+			return nil, err
+		}
+		return &e, nil
+	case KindAssistantMessage:
+		var e AssistantMessage
+		if err := json.Unmarshal(raw, &e); err != nil {
+			return nil, err
+		}
+		return &e, nil
+	case KindSystemMessage:
+		var e SystemMessage
+		if err := json.Unmarshal(raw, &e); err != nil {
+			return nil, err
+		}
+		return &e, nil
+	case KindFunctionCall:
+		var e FunctionCall
+		if err := json.Unmarshal(raw, &e); err != nil {
+			return nil, err
+		}
+		return &e, nil
+	case KindFunctionCallResp:
+		var e FunctionCallResp
+		if err := json.Unmarshal(raw, &e); err != nil {
+			return nil, err
+		}
+		return &e, nil
+	case KindReasoning:
+		var e Reasoning
+		if err := json.Unmarshal(raw, &e); err != nil {
+			return nil, err
+		}
+		return &e, nil
+	case KindImageGeneration:
+		var e ImageGeneration
+		if err := json.Unmarshal(raw, &e); err != nil {
+			return nil, err
+		}
+		return &e, nil
+	default:
+		return nil, ErrUnknownConversationElement
+	}
+}
+
 // TextFromContent extracts concatenated text from structured parts.
 // Works on both string-based and MessagePart-based content.
 func TextFromContent(parts []MessagePart) string {

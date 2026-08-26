@@ -460,15 +460,9 @@ func TestAgentLMS_DispatchFailurePersistsPartialToolResults(t *testing.T) {
 	assert.NoError(t, err)
 
 	outputsByCallID := make(map[string]string)
-	for _, raw := range conversation {
-		var element struct {
-			Type   string `json:"type"`
-			CallID string `json:"call_id"`
-			Output string `json:"output"`
-		}
-		assert.NoError(t, json.Unmarshal(raw, &element))
-		if element.Type == "function_call_output" {
-			outputsByCallID[element.CallID] = element.Output
+	for _, el := range conversation {
+		if resp, ok := el.(*rellm.FunctionCallResp); ok && resp.Type == "function_call_output" {
+			outputsByCallID[resp.CallId] = resp.Output
 		}
 	}
 
@@ -596,35 +590,7 @@ func buildConversationFromGoldenOpenRouter(goldens ...string) ([]json.RawMessage
 	}
 
 	orProvider := rellm.OpenRouterProvider{}
-	ce, err := orProvider.ToConversationElements(rawConversation)
-	if err != nil {
-		return nil, fmt.Errorf("convert input to conversation elements: %w", err)
-	}
-
-	var normalized []json.RawMessage
-	for _, e := range ce {
-		switch el := e.(type) {
-		case *rellm.SystemMessage:
-			msg, err := rellm.PromptMessageToConversation(rellm.TextFromContent(el.Content), "system")
-			if err != nil {
-				return nil, err
-			}
-			normalized = append(normalized, msg)
-		case *rellm.UserMessage:
-			msg, err := rellm.PromptMessageToConversation(rellm.TextFromContent(el.Content), "user")
-			if err != nil {
-				return nil, err
-			}
-			normalized = append(normalized, msg)
-		default:
-			raw, err := orProvider.ToProviderRepresentation([]rellm.ConversationElement{el})
-			if err != nil {
-				return nil, err
-			}
-			normalized = append(normalized, raw...)
-		}
-	}
-	return normalized, nil
+	return providerNormalization(rawConversation, &orProvider)
 }
 
 func providerNormalization(input []json.RawMessage, provider rellm.Provider) ([]json.RawMessage, error) {

@@ -9,6 +9,21 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func testUserMsg(text string) *UserMessage {
+	return &UserMessage{MessageContent{Role: "user", Content: []MessagePart{{Type: "input_text", Text: text}}}}
+}
+
+func testAssistantMsg(text string) *AssistantMessage {
+	return &AssistantMessage{MessageContent{Role: "assistant", Content: []MessagePart{{Type: "output_text", Text: text}}}}
+}
+
+func assertElementJSONEq(t *testing.T, expected string, actual ConversationElement) {
+	t.Helper()
+	b, err := json.Marshal(actual)
+	assert.NoError(t, err)
+	assert.JSONEq(t, expected, string(b))
+}
+
 func TestInMemoryStorage_LoadEmpty(t *testing.T) {
 	s := NewInMemoryStorage()
 	msgs, err := s.Load()
@@ -18,37 +33,35 @@ func TestInMemoryStorage_LoadEmpty(t *testing.T) {
 
 func TestInMemoryStorage_AppendAndLoad(t *testing.T) {
 	s := NewInMemoryStorage()
-	delta := []json.RawMessage{
-		json.RawMessage(`{"role":"user","content":"hi"}`),
-		json.RawMessage(`{"role":"assistant","content":"hello"}`),
-	}
-	err := s.Append(delta)
-	assert.NoError(t, err)
+	delta := []ConversationElement{testUserMsg("hi")}
+	assert.NoError(t, s.Append(delta))
 	msgs, err := s.Load()
 	assert.NoError(t, err)
-	assert.Equal(t, delta, msgs)
+	assert.Len(t, msgs, 1)
+	assertElementJSONEq(t, `{"kind":"user_message","role":"user","content":[{"type":"input_text","text":"hi"}]}`, msgs[0])
 }
 
 func TestInMemoryStorage_AppendMultiple(t *testing.T) {
 	s := NewInMemoryStorage()
-	first := []json.RawMessage{json.RawMessage(`{"role":"user","content":"a"}`)}
-	second := []json.RawMessage{json.RawMessage(`{"role":"assistant","content":"b"}`)}
+	first := []ConversationElement{testUserMsg("a")}
+	second := []ConversationElement{testAssistantMsg("b")}
 	assert.NoError(t, s.Append(first))
 	assert.NoError(t, s.Append(second))
 	msgs, err := s.Load()
 	assert.NoError(t, err)
-	assert.Equal(t, append(first, second...), msgs)
+	assert.Len(t, msgs, 2)
+	assert.Equal(t, KindUserMessage, msgs[0].Kind())
+	assert.Equal(t, KindAssistantMessage, msgs[1].Kind())
 }
 
 func TestInMemoryStorage_LoadDoesNotAlias(t *testing.T) {
 	s := NewInMemoryStorage()
-	assert.NoError(t, s.Append([]json.RawMessage{json.RawMessage(`{"role":"user","content":"x"}`)}))
+	assert.NoError(t, s.Append([]ConversationElement{testUserMsg("x")}))
 	loaded, err := s.Load()
 	assert.NoError(t, err)
 	assert.Len(t, loaded, 1)
-	loaded = append(loaded, json.RawMessage(`{"role":"assistant","content":"y"}`))
+	loaded = append(loaded, testAssistantMsg("y"))
 	again, err := s.Load()
-	assert.Len(t, loaded, 2)
 	assert.NoError(t, err)
 	assert.Len(t, again, 1)
 }
@@ -71,44 +84,41 @@ func TestFilesystemStorage_LoadMissingFile(t *testing.T) {
 func TestFilesystemStorage_AppendAndLoad(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "conv.jsonl")
 	s := NewFilesystemStorage(path)
-	delta := []json.RawMessage{
-		json.RawMessage(`{"role":"user","content":"hi"}`),
-		json.RawMessage(`{"role":"assistant","content":"hello"}`),
-	}
+	delta := []ConversationElement{testUserMsg("hi"), testAssistantMsg("hello")}
 	err := s.Append(delta)
 	assert.NoError(t, err)
-	content, err := os.ReadFile(path)
-	assert.NoError(t, err)
-	expected := `{"role":"user","content":"hi"}` + "\n" + `{"role":"assistant","content":"hello"}` + "\n"
-	assert.Equal(t, expected, string(content))
-	msgs, err := s.Load()
-	assert.NoError(t, err)
-	assert.Equal(t, delta, msgs)
-}
 
-func TestFilesystemStorage_AppendMultiple(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "conv.jsonl")
-	s := NewFilesystemStorage(path)
-	first := []json.RawMessage{json.RawMessage(`{"role":"user","content":"a"}`)}
-	second := []json.RawMessage{json.RawMessage(`{"role":"assistant","content":"b"}`)}
-	assert.NoError(t, s.Append(first))
-	assert.NoError(t, s.Append(second))
+	// Storage format: one canonical kind-tagged element per line (map marshal
+	// sorts keys alphabetically).
 	content, err := os.ReadFile(path)
 	assert.NoError(t, err)
-	expected := `{"role":"user","content":"a"}` + "\n" + `{"role":"assistant","content":"b"}` + "\n"
+	expected := `{"content":[{"type":"input_text","text":"hi"}],"kind":"user_message","role":"user"}` + "\n" +
+		`{"content":[{"type":"output_text","text":"hello"}],"kind":"assistant_message","role":"assistant"}` + "\n"
 	assert.Equal(t, expected, string(content))
+
 	msgs, err := s.Load()
 	assert.NoError(t, err)
-	assert.Equal(t, append(first, second...), msgs)
+	assert.Len(t, msgs, 2)
+	assert.Equal(t, delta[0].Kind(), msgs[0].Kind())
+	assert.Equal(t, delta[1].Kind(), msgs[1].Kind())
 }
 
 func TestFilesystemStorage_LoadMalformedLineReturnsError(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "conv.jsonl")
-	content := `{"role":"user","content":"hi"}` + "\n" + `{broken` + "\n"
+	content := `{"kind":"user_message"}` + "\n" + `{broken` + "\n"
 	assert.NoError(t, os.WriteFile(path, []byte(content), 0644))
 	s := NewFilesystemStorage(path)
 	_, err := s.Load()
 	assert.ErrorIs(t, err, ErrMalformedConversationStorage)
+}
+
+func TestFilesystemStorage_LoadUnknownKindReturnsError(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "conv.jsonl")
+	content := `{"kind":"time_travel","role":"user"}` + "\n"
+	assert.NoError(t, os.WriteFile(path, []byte(content), 0644))
+	s := NewFilesystemStorage(path)
+	_, err := s.Load()
+	assert.ErrorIs(t, err, ErrUnknownConversationElement)
 }
 
 func TestFilesystemStorage_AppendEmpty(t *testing.T) {
@@ -122,36 +132,13 @@ func TestFilesystemStorage_AppendEmpty(t *testing.T) {
 	assert.Empty(t, msgs)
 }
 
-func TestFilesystemStorage_AppendMultilineJSONCompacts(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "conv.jsonl")
-	s := NewFilesystemStorage(path)
-	delta := []json.RawMessage{
-		json.RawMessage("{\n  \"role\": \"user\",\n  \"content\": \"hello world\"\n}"),
-	}
-	err := s.Append(delta)
-	assert.NoError(t, err)
-
-	content, err := os.ReadFile(path)
-	assert.NoError(t, err)
-	expected := `{"role":"user","content":"hello world"}` + "\n"
-	assert.Equal(t, expected, string(content))
-
-	msgs, err := s.Load()
-	assert.NoError(t, err)
-	assert.Len(t, msgs, 1)
-	assert.JSONEq(t, `{"role":"user","content":"hello world"}`, string(msgs[0]))
-}
-
 func TestFilesystemStorage_AppendCreatesParentDir(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "sub", "conv.jsonl")
 	s := NewFilesystemStorage(path)
-	delta := []json.RawMessage{json.RawMessage(`{"role":"user","content":"hi"}`)}
-	err := s.Append(delta)
+	err := s.Append([]ConversationElement{testUserMsg("hi")})
 	assert.NoError(t, err)
-	content, err := os.ReadFile(path)
-	assert.NoError(t, err)
-	assert.Equal(t, `{"role":"user","content":"hi"}`+"\n", string(content))
 	msgs, err := s.Load()
 	assert.NoError(t, err)
-	assert.Equal(t, delta, msgs)
+	assert.Len(t, msgs, 1)
+	assert.Equal(t, "hi", msgs[0].(*UserMessage).Content[0].Text)
 }

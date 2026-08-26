@@ -11,8 +11,8 @@ type Toolset interface {
 }
 
 type ConversationStorage interface {
-	Load() ([]json.RawMessage, error)
-	Append([]json.RawMessage) error
+	Load() ([]ConversationElement, error)
+	Append([]ConversationElement) error
 }
 
 type Agent struct {
@@ -35,7 +35,7 @@ type HandleImageGeneration func(ctx context.Context, image *ImageGeneration) (st
 type InspectEachRequest func(*ResponsesApiReq)
 type InspectEachResponse func(resp *ResponsesApiResp)
 
-func (a *Agent) CurrentConversation() ([]json.RawMessage, error) {
+func (a *Agent) CurrentConversation() ([]ConversationElement, error) {
 	conversation, err := a.conversationStorage.Load()
 	if err != nil {
 		return nil, err
@@ -49,7 +49,7 @@ func (a *Agent) CurrentConversation() ([]json.RawMessage, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = a.conversationStorage.Append([]json.RawMessage{systemMessage})
+	err = a.conversationStorage.Append([]ConversationElement{systemMessage})
 	if err != nil {
 		return nil, err
 	}
