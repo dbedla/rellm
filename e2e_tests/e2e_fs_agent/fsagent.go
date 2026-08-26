@@ -37,7 +37,7 @@ func buildFSAgent(p rellm.Provider, dirs agentsDirs) (*rellm.Agent, error) {
 		Build()
 }
 
-func buildLmsProvider() (rellm.Provider, error) {
+func buildLMSProvider() (rellm.Provider, error) {
 	return rellm.NewLMStudioProvider("google/gemma-4-26b-a4b", "http://127.0.0.1", "1234")
 }
 
@@ -119,7 +119,7 @@ func setup(fl flag) (agentsDirs, *rellm.Agent, error) {
 func providerForFlag(fl flag) (rellm.Provider, error) {
 	switch fl {
 	case flag_LMS:
-		return buildLmsProvider()
+		return buildLMSProvider()
 	case flag_OpenRouter:
 		return buildOpenRouterProvider()
 	default:

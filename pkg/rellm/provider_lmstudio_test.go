@@ -37,27 +37,27 @@ func TestLMStudioToConversationElements_ImageGeneration(t *testing.T) {
 
 	ig, ok := elems[0].(*ImageGeneration)
 	assert.True(t, ok)
-	assert.Equal(t, "ig_tmp_vqotwoa5eg", ig.Id)
+	assert.Equal(t, "ig_tmp_vqotwoa5eg", ig.ID)
 	assert.Equal(t, "completed", ig.Status)
 	assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQ", ig.Result)
 }
 
 func TestLMStudioToProviderRepresentation_ImageGeneration(t *testing.T) {
 	p := &LMStudioProvider{}
-	ig := ImageGeneration{Id: "ig_tmp_vqotwoa5eg", Status: "completed", Result: "data:image/jpeg;base64,/9j/4AAQ"}
+	ig := ImageGeneration{ID: "ig_tmp_vqotwoa5eg", Status: "completed", Result: "data:image/jpeg;base64,/9j/4AAQ"}
 	raw, err := p.ToProviderRepresentation([]ConversationElement{&ig})
 	assert.NoError(t, err)
 	assert.Len(t, raw, 1)
 
 	var wire struct {
-		Id     string `json:"id"`
+		ID     string `json:"id"`
 		Type   string `json:"type"`
 		Status string `json:"status"`
 		Result string `json:"result"`
 	}
 	err = json.Unmarshal(raw[0], &wire)
 	assert.NoError(t, err)
-	assert.Equal(t, "ig_tmp_vqotwoa5eg", wire.Id)
+	assert.Equal(t, "ig_tmp_vqotwoa5eg", wire.ID)
 	assert.Equal(t, "image_generation_call", wire.Type)
 	assert.Equal(t, "completed", wire.Status)
 	assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQ", wire.Result)
@@ -134,21 +134,21 @@ func TestLMStudioRoundTrip_FromFile(t *testing.T) {
 	}
 }
 
-func TestNewLMStudioProviderHttpHost(t *testing.T) {
+func TestNewLMStudioProviderHTTPHost(t *testing.T) {
 	p, err := NewLMStudioProvider("google/gemma-4-26b-a4b", "http://127.0.0.1", "1234")
 	assert.NoError(t, err)
 	url := p.URL()
 	assert.Equal(t, "http://127.0.0.1:1234/v1/responses", url)
 }
 
-func TestNewLMStudioProviderHttpsHost(t *testing.T) {
+func TestNewLMStudioProviderHTTPSHost(t *testing.T) {
 	p, err := NewLMStudioProvider("google/gemma-4-26b-a4b", "https://127.0.0.1", "1234")
 	assert.NoError(t, err)
 	url := p.URL()
 	assert.Equal(t, "https://127.0.0.1:1234/v1/responses", url)
 }
 
-func TestNewLMStudioProviderNoHttpHost(t *testing.T) {
+func TestNewLMStudioProviderNoHTTPHost(t *testing.T) {
 	p, err := NewLMStudioProvider("google/gemma-4-26b-a4b", "127.0.0.1", "1234")
 	assert.NoError(t, err)
 	url := p.URL()
@@ -157,5 +157,5 @@ func TestNewLMStudioProviderNoHttpHost(t *testing.T) {
 
 func TestNewLMStudioProvider_MissingClient(t *testing.T) {
 	_, err := NewLMStudioProviderWithHTTPClient(Model("local/model"), "localhost", "123", nil)
-	assert.ErrorIs(t, err, ErrMissingHttpClientForProvider)
+	assert.ErrorIs(t, err, ErrMissingHTTPClientForProvider)
 }

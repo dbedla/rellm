@@ -19,7 +19,7 @@ import (
 //   - openrouter: "google/gemma-4-26b-a4b-it"
 type Model string
 
-type ClientHttpDo interface {
+type HTTPClient interface {
 	Do(request *http.Request) (*http.Response, error)
 }
 
@@ -51,9 +51,9 @@ const (
 	ReasoningEffort_XHigh  ReasoningEffort = "xhigh"
 )
 
-func parseResponsesApiResponse(rawBody []byte, inspectResp InspectEachResponse) (*ResponsesApiResp, error) {
+func parseResponsesAPIResponse(rawBody []byte, inspectResp InspectEachResponse) (*ResponsesAPIResp, error) {
 
-	conversationResponse, err := unmarshal[ResponsesApiResp](rawBody)
+	conversationResponse, err := unmarshal[ResponsesAPIResp](rawBody)
 	if err != nil {
 		return nil, errors.Join(err, fmt.Errorf("%s", string(rawBody)))
 	}

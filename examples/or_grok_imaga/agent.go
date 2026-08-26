@@ -14,7 +14,7 @@ const (
 	baseAgentSysPrompt = `You are a helpful assistant.`
 )
 
-func buildLBaseAgent() (*rellm.Agent, error) {
+func buildBaseAgent() (*rellm.Agent, error) {
 
 	agentName := "OpenRouterImageAgent"
 
@@ -29,13 +29,13 @@ func buildLBaseAgent() (*rellm.Agent, error) {
 		WithMaxAgentSteps(20).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage(baseAgentSysPrompt).
-		WithHandleImageGeneration(testHandleImage).
+		WithHandleImageGeneration(handleImage).
 		WithInspectEachRequest(examplesutils.InspectWithReqLog).
 		WithInspectEachResponse(examplesutils.InspectWithRespLog).
 		Build()
 }
 
-func testHandleImage(_ context.Context, image *rellm.ImageGeneration) (string, error) {
+func handleImage(_ context.Context, image *rellm.ImageGeneration) (string, error) {
 	return "asd", nil
 }
 

@@ -17,7 +17,7 @@ func TestDataSrcToolsetDispatchesGetDataFor(t *testing.T) {
 
 	assert.True(t, ok)
 	assert.Equal(t, "function_call_output", resp.Type)
-	assert.Equal(t, "call_123", resp.CallId)
+	assert.Equal(t, "call_123", resp.CallID)
 	assert.JSONEq(t, `["abc","def"]`, resp.Output)
 }
 
@@ -30,6 +30,6 @@ func TestDataSrcToolsetDispatchesGetDataForWithStringArguments(t *testing.T) {
 
 	assert.True(t, ok)
 	assert.Equal(t, "function_call_output", resp.Type)
-	assert.Equal(t, "call_123", resp.CallId)
+	assert.Equal(t, "call_123", resp.CallID)
 	assert.JSONEq(t, `["abc","def"]`, resp.Output)
 }

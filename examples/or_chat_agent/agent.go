@@ -13,7 +13,7 @@ const (
 	baseAgentSysPrompt = `You are a helpful assistant.`
 )
 
-func buildLBaseAgent() (*rellm.Agent, error) {
+func buildBaseAgent() (*rellm.Agent, error) {
 
 	agentName := "OpenRouterAgent"
 

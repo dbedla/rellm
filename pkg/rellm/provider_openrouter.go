@@ -11,7 +11,7 @@ type OpenRouterProvider struct {
 	model  Model
 	url    string
 	header http.Header
-	client ClientHttpDo
+	client HTTPClient
 }
 
 const openRouterDefaultURL = "https://openrouter.ai/api/v1/responses"
@@ -35,9 +35,9 @@ func NewOpenRouterProvider(apiKey string, model Model) (*OpenRouterProvider, err
 	}, nil
 }
 
-func NewOpenRouterProviderWithHTTPClient(apiKey string, model Model, client ClientHttpDo) (*OpenRouterProvider, error) {
+func NewOpenRouterProviderWithHTTPClient(apiKey string, model Model, client HTTPClient) (*OpenRouterProvider, error) {
 	if client == nil {
-		return nil, ErrMissingHttpClientForProvider
+		return nil, ErrMissingHTTPClientForProvider
 	}
 	p, err := NewOpenRouterProvider(apiKey, model)
 	if err != nil {
@@ -60,7 +60,7 @@ func (p *OpenRouterProvider) ToConversationElements(items []json.RawMessage) ([]
 		var msg struct {
 			Type    string          `json:"type"`
 			Role    string          `json:"role"`
-			Id      string          `json:"id"`
+			ID      string          `json:"id"`
 			Name    string          `json:"name"`
 			CallID  string          `json:"call_id"`
 			Args    json.RawMessage `json:"arguments"`
@@ -73,10 +73,10 @@ func (p *OpenRouterProvider) ToConversationElements(items []json.RawMessage) ([]
 		switch msg.Type {
 		case "function_call":
 			elements = append(elements, &FunctionCall{
-				Id:     msg.Id,
+				ID:     msg.ID,
 				Name:   msg.Name,
 				Args:   msg.Args,
-				CallId: msg.CallID,
+				CallID: msg.CallID,
 			})
 
 		case "function_call_output":
@@ -86,22 +86,22 @@ func (p *OpenRouterProvider) ToConversationElements(items []json.RawMessage) ([]
 			}
 			if err := json.Unmarshal(raw, &out); err == nil {
 				elements = append(elements, &FunctionCallResp{
-					Id:     msg.Id,
+					ID:     msg.ID,
 					Type:   "function_call_output",
-					CallId: msg.CallID,
+					CallID: msg.CallID,
 					Output: out.Output,
 				})
 			} else {
 				elements = append(elements, &FunctionCallResp{
-					Id:     msg.Id,
+					ID:     msg.ID,
 					Type:   "function_call_output",
-					CallId: msg.CallID,
+					CallID: msg.CallID,
 					Output: string(msg.Content),
 				})
 			}
 
 		case "message", "": // messages often lack an explicit type field; infer from role
-			elements = append(elements, p.parseMessage(raw, msg.Id, msg.Role, msg.Content))
+			elements = append(elements, p.parseMessage(raw, msg.ID, msg.Role, msg.Content))
 
 		case "reasoning":
 			elm, err := p.parseReasoning(raw)
@@ -137,11 +137,11 @@ func (p *OpenRouterProvider) parseMessage(raw json.RawMessage, id, role string, 
 	parts := normalizeMessageParts(ParseMessageContent(content), role)
 	switch role {
 	case "assistant":
-		return &AssistantMessage{MessageContent{Id: id, Role: role, Status: status, Content: parts}}
+		return &AssistantMessage{MessageContent{ID: id, Role: role, Status: status, Content: parts}}
 	case "system":
-		return &SystemMessage{MessageContent{Id: id, Role: role, Content: parts}}
+		return &SystemMessage{MessageContent{ID: id, Role: role, Content: parts}}
 	default: // "user" or unknown
-		return &UserMessage{MessageContent{Id: id, Role: role, Status: status, Content: parts}}
+		return &UserMessage{MessageContent{ID: id, Role: role, Status: status, Content: parts}}
 	}
 }
 
@@ -153,8 +153,8 @@ func (p *OpenRouterProvider) marshalTextMessage(mc MessageContent) (json.RawMess
 		"role": mc.Role,
 		"type": "message",
 	}
-	if mc.Id != "" {
-		payload["id"] = mc.Id
+	if mc.ID != "" {
+		payload["id"] = mc.ID
 	}
 	if mc.Status != "" {
 		payload["status"] = mc.Status
@@ -183,7 +183,7 @@ func hasImageParts(parts []MessagePart) bool {
 // parseReasoning extracts reasoning text, summary, and provider continuation state.
 func (p *OpenRouterProvider) parseReasoning(raw json.RawMessage) (ConversationElement, error) {
 	var item struct {
-		Id        string                 `json:"id"`
+		ID        string                 `json:"id"`
 		Status    string                 `json:"status"`
 		Summary   []string               `json:"summary"`
 		Content   []ReasoningContentPart `json:"content"`
@@ -204,7 +204,7 @@ func (p *OpenRouterProvider) parseReasoning(raw json.RawMessage) (ConversationEl
 	}
 
 	return &Reasoning{
-		Id:        item.Id,
+		ID:        item.ID,
 		Status:    item.Status,
 		Summary:   item.Summary,
 		Text:      JoinTextParts(textParts),
@@ -225,8 +225,8 @@ func (p *OpenRouterProvider) ToProviderRepresentation(elements []ConversationEle
 				"type":    "message",
 				"content": el.Content,
 			}
-			if el.Id != "" {
-				payload["id"] = el.Id
+			if el.ID != "" {
+				payload["id"] = el.ID
 			}
 			if el.Status != "" {
 				payload["status"] = el.Status
@@ -253,8 +253,8 @@ func (p *OpenRouterProvider) ToProviderRepresentation(elements []ConversationEle
 
 		case *FunctionCall:
 			fc := map[string]interface{}{
-				"id":        el.Id,
-				"call_id":   el.CallId,
+				"id":        el.ID,
+				"call_id":   el.CallID,
 				"name":      el.Name,
 				"arguments": json.RawMessage(el.Args),
 				"status":    "completed",
@@ -268,11 +268,11 @@ func (p *OpenRouterProvider) ToProviderRepresentation(elements []ConversationEle
 
 		case *FunctionCallResp:
 			resp := map[string]interface{}{
-				"call_id": el.CallId,
+				"call_id": el.CallID,
 				"type":    "function_call_output",
 			}
-			if el.Id != "" {
-				resp["id"] = el.Id
+			if el.ID != "" {
+				resp["id"] = el.ID
 			}
 			// Use Output which may be JSON-encoded or plain text.
 			resp["output"] = el.Output
@@ -289,7 +289,7 @@ func (p *OpenRouterProvider) ToProviderRepresentation(elements []ConversationEle
 				continue
 			}
 			r := map[string]interface{}{
-				"id":     el.Id,
+				"id":     el.ID,
 				"status": el.Status,
 				"type":   "reasoning",
 			}
@@ -314,7 +314,7 @@ func (p *OpenRouterProvider) ToProviderRepresentation(elements []ConversationEle
 
 		case *ImageGeneration:
 			sig := map[string]interface{}{
-				"id":     el.Id,
+				"id":     el.ID,
 				"type":   "image_generation_call",
 				"status": el.Status,
 				"result": el.Result,
