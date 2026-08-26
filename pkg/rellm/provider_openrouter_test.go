@@ -224,7 +224,7 @@ func TestNewOpenRouterProvider_EmptyModel(t *testing.T) {
 	assert.ErrorIs(t, err, ErrEndpointMissingModelName)
 }
 
-func TestNewOpenRouterProvider_EmptyApiKey(t *testing.T) {
+func TestNewOpenRouterProvider_EmptyAPIKey(t *testing.T) {
 	_, err := NewOpenRouterProvider("", Model("test/model"))
 	assert.ErrorIs(t, err, ErrMissingApiKeyForProvider)
 }

@@ -134,21 +134,21 @@ func TestLMStudioRoundTrip_FromFile(t *testing.T) {
 	}
 }
 
-func TestNewLMStudioProviderHttpHost(t *testing.T) {
+func TestNewLMStudioProviderHTTPHost(t *testing.T) {
 	p, err := NewLMStudioProvider("google/gemma-4-26b-a4b", "http://127.0.0.1", "1234")
 	assert.NoError(t, err)
 	url := p.URL()
 	assert.Equal(t, "http://127.0.0.1:1234/v1/responses", url)
 }
 
-func TestNewLMStudioProviderHttpsHost(t *testing.T) {
+func TestNewLMStudioProviderHTTPSHost(t *testing.T) {
 	p, err := NewLMStudioProvider("google/gemma-4-26b-a4b", "https://127.0.0.1", "1234")
 	assert.NoError(t, err)
 	url := p.URL()
 	assert.Equal(t, "https://127.0.0.1:1234/v1/responses", url)
 }
 
-func TestNewLMStudioProviderNoHttpHost(t *testing.T) {
+func TestNewLMStudioProviderNoHTTPHost(t *testing.T) {
 	p, err := NewLMStudioProvider("google/gemma-4-26b-a4b", "127.0.0.1", "1234")
 	assert.NoError(t, err)
 	url := p.URL()

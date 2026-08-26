@@ -60,10 +60,10 @@ func (s *LimitedFileSystem) GetFileContentAsString(path string) (string, error) 
 	return string(content), nil
 }
 
-// GetFileContentAsByte returns the content of the file at the given path as a []byte
+// GetFileContentAsBytes returns the content of the file at the given path as a []byte
 // error will be returned if the path is outside FSSandbox.readOnlyDirs or FSSandbox.outputDir
 // error will be returned if the path does not exist or is not accessible.
-func (s *LimitedFileSystem) GetFileContentAsByte(path string) ([]byte, error) {
+func (s *LimitedFileSystem) GetFileContentAsBytes(path string) ([]byte, error) {
 	absPath, err := s.validatePath(path, false)
 	if err != nil {
 		return nil, err
@@ -75,6 +75,11 @@ func (s *LimitedFileSystem) GetFileContentAsByte(path string) ([]byte, error) {
 	}
 
 	return content, nil
+}
+
+// GetFileContentAsByte is an alias for GetFileContentAsBytes.
+func (s *LimitedFileSystem) GetFileContentAsByte(path string) ([]byte, error) {
+	return s.GetFileContentAsBytes(path)
 }
 
 // WriteBytesToFile writes bytes into a specific file.

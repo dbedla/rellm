@@ -34,7 +34,7 @@ func buildLMSAgent() (*rellm.Agent, error) {
 		Build()
 }
 
-func buildLOpenRouterAgent(model rellm.Model) (*rellm.Agent, error) {
+func buildOpenRouterAgent(model rellm.Model) (*rellm.Agent, error) {
 
 	agentName := "OpenRouterImageAgent"
 

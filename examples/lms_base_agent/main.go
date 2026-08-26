@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	agent, err := buildLBaseAgent()
+	agent, err := buildBaseAgent()
 	if err != nil {
 		panic(err)
 	}
