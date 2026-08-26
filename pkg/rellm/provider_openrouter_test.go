@@ -256,5 +256,5 @@ func TestOpenRouterRoundTrip_FromFile(t *testing.T) {
 
 func TestNewOpenRouterProvider_MissingClient(t *testing.T) {
 	_, err := NewOpenRouterProviderWithHTTPClient("test-key", "test/model", nil)
-	assert.ErrorIs(t, err, ErrMissingHttpClientForProvider)
+	assert.ErrorIs(t, err, ErrMissingHTTPClientForProvider)
 }

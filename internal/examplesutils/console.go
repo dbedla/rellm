@@ -21,7 +21,7 @@ func ReadConsoleInput() (string, error) {
 	return strings.TrimSpace(input), nil
 }
 
-func InspectWithReqLog(req *rellm.ResponsesApiReq) {
+func InspectWithReqLog(req *rellm.ResponsesAPIReq) {
 	color.White(" === REQ ===")
 	b, err := json.Marshal(req)
 	if err != nil {
@@ -30,7 +30,7 @@ func InspectWithReqLog(req *rellm.ResponsesApiReq) {
 	color.White(string(b))
 }
 
-func InspectWithRespLog(req *rellm.ResponsesApiResp) {
+func InspectWithRespLog(req *rellm.ResponsesAPIResp) {
 	color.White(" === RESP ===")
 	b, err := json.Marshal(req)
 	if err != nil {

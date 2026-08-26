@@ -120,7 +120,7 @@ func TestPromptBuilder_AllFields(t *testing.T) {
 			b, err := io.ReadAll(args.Get(0).(*http.Request).Body)
 			assert.NoError(t, err)
 
-			var req rellm.ResponsesApiReq
+			var req rellm.ResponsesAPIReq
 			err = json.Unmarshal(b, &req)
 			assert.NoError(t, err)
 
@@ -217,10 +217,10 @@ func TestAgentAsk_RetryAfterProviderFailedMessageStaysInConversation(t *testing.
 	assert.Len(t, conversation, 5)
 }
 
-func buildTestAgent(t *testing.T) (*rellm.Agent, *HttpDoMock) {
+func buildTestAgent(t *testing.T) (*rellm.Agent, *HTTPDoMock) {
 
 	agentName := "TestAgent"
-	mockHttp := new(HttpDoMock)
+	mockHttp := new(HTTPDoMock)
 
 	p, err := rellm.NewLMStudioProviderWithHTTPClient("google/gemma-4-26b-a4b", testBaseUrl, testPort, mockHttp)
 	assert.NoError(t, err, "failed to create provider")

@@ -104,10 +104,10 @@ func testImageGenerationHandlerAlwaysErr(_ context.Context, image *rellm.ImageGe
 }
 
 func buildTestImageAgent(t *testing.T, maxAgentSteps uint64,
-	imageGenerationH rellm.HandleImageGeneration) (*rellm.Agent, *HttpDoMock) {
+	imageGenerationH rellm.HandleImageGeneration) (*rellm.Agent, *HTTPDoMock) {
 
 	agentName := "TestImageAgent"
-	mockHttp := new(HttpDoMock)
+	mockHttp := new(HTTPDoMock)
 
 	p, err := rellm.NewOpenRouterProviderWithHTTPClient("test-key", rellm.Model("x-ai/grok-imagine-image-quality"), mockHttp)
 	assert.NoError(t, err, "failed to create provider")

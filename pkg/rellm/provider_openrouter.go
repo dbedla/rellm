@@ -11,7 +11,7 @@ type OpenRouterProvider struct {
 	model  Model
 	url    string
 	header http.Header
-	client ClientHttpDo
+	client HTTPClient
 }
 
 const openRouterDefaultURL = "https://openrouter.ai/api/v1/responses"
@@ -35,9 +35,9 @@ func NewOpenRouterProvider(apiKey string, model Model) (*OpenRouterProvider, err
 	}, nil
 }
 
-func NewOpenRouterProviderWithHTTPClient(apiKey string, model Model, client ClientHttpDo) (*OpenRouterProvider, error) {
+func NewOpenRouterProviderWithHTTPClient(apiKey string, model Model, client HTTPClient) (*OpenRouterProvider, error) {
 	if client == nil {
-		return nil, ErrMissingHttpClientForProvider
+		return nil, ErrMissingHTTPClientForProvider
 	}
 	p, err := NewOpenRouterProvider(apiKey, model)
 	if err != nil {

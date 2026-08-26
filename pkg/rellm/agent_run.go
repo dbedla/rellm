@@ -33,7 +33,7 @@ func (a *Agent) run(ctx context.Context, msg string, params promptParams) (strin
 		return "", errors.Join(ErrConversationElementConversion, err)
 	}
 
-	req := toBaseResponsesApiReq(params, a.provider.Model(), wire)
+	req := toBaseResponsesAPIReq(params, a.provider.Model(), wire)
 
 	if a.toolset != nil {
 		req.Tools = a.toolset.BuildTools()
@@ -48,7 +48,7 @@ func (a *Agent) run(ctx context.Context, msg string, params promptParams) (strin
 	return msgRespFromLLM, nil
 }
 
-func (a *Agent) post(ctx context.Context, req *ResponsesApiReq) (_ *ResponsesApiResp, err error) {
+func (a *Agent) post(ctx context.Context, req *ResponsesAPIReq) (_ *ResponsesAPIResp, err error) {
 	if a.inspectReq != nil {
 		a.inspectReq(req)
 	}
@@ -95,10 +95,10 @@ func (a *Agent) post(ctx context.Context, req *ResponsesApiReq) (_ *ResponsesApi
 		return nil, newHTTPStatusError(resp, rawBody, apiUrl.String())
 	}
 
-	return parseResponsesApiResponse(rawBody, a.inspectResp)
+	return parseResponsesAPIResponse(rawBody, a.inspectResp)
 }
 
-func (a *Agent) process(ctx context.Context, req *ResponsesApiReq) (string, error) {
+func (a *Agent) process(ctx context.Context, req *ResponsesAPIReq) (string, error) {
 	for i := uint64(0); i < a.maxAgentSteps; i++ {
 
 		err := ctx.Err()
@@ -243,8 +243,8 @@ func invalidFunctionCallResp(fn *FunctionCall) FunctionCallResp {
 
 }
 
-func toBaseResponsesApiReq(params promptParams, model Model, conversation []json.RawMessage) *ResponsesApiReq {
-	return &ResponsesApiReq{
+func toBaseResponsesAPIReq(params promptParams, model Model, conversation []json.RawMessage) *ResponsesAPIReq {
+	return &ResponsesAPIReq{
 		Model:            string(model),
 		Input:            conversation,
 		Temperature:      params.Temperature,

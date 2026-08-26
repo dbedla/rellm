@@ -32,8 +32,8 @@ type Agent struct {
 // HandleImageGeneration used as a callback for image generation
 // returned string will be used as image identifier and stored instead of original image content
 type HandleImageGeneration func(ctx context.Context, image *ImageGeneration) (string, error)
-type InspectEachRequest func(*ResponsesApiReq)
-type InspectEachResponse func(resp *ResponsesApiResp)
+type InspectEachRequest func(*ResponsesAPIReq)
+type InspectEachResponse func(resp *ResponsesAPIResp)
 
 func (a *Agent) CurrentConversation() ([]ConversationElement, error) {
 	conversation, err := a.conversationStorage.Load()

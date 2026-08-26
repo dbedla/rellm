@@ -20,23 +20,23 @@ func baseRequestMatch(req *http.Request) bool {
 	return req.Method == http.MethodPost
 }
 
-type HttpDoMock struct {
+type HTTPDoMock struct {
 	mock.Mock
 }
 
-func (h *HttpDoMock) Do(req *http.Request) (*http.Response, error) {
+func (h *HTTPDoMock) Do(req *http.Request) (*http.Response, error) {
 	args := h.Called(req)
 	return args.Get(0).(*http.Response), args.Error(1)
 }
 
-func SetParametersWithReqLog(req *rellm.ResponsesApiReq) {
+func SetParametersWithReqLog(req *rellm.ResponsesAPIReq) {
 	req.Reasoning = &rellm.ReasoningConfig{Effort: rellm.ReasoningEffort_Medium}
 	req.Temperature = 0.5
 
 	examplesutils.InspectWithReqLog(req)
 }
 
-func SetParametersForTest(req *rellm.ResponsesApiReq) {
+func SetParametersForTest(req *rellm.ResponsesAPIReq) {
 	req.Reasoning = &rellm.ReasoningConfig{Effort: rellm.ReasoningEffort_Medium}
 	req.Temperature = 0.5
 }

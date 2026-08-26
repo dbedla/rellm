@@ -2,7 +2,7 @@ package rellm
 
 import "encoding/json"
 
-type ResponsesApiReq struct {
+type ResponsesAPIReq struct {
 	// Required
 	Model string `json:"model"`
 
@@ -160,7 +160,7 @@ type AttachmentTool struct {
 	Type string `json:"type"`
 }
 
-type ResponsesApiUsage struct {
+type ResponsesAPIUsage struct {
 	InputTokens        int `json:"input_tokens"`
 	InputTokensDetails struct {
 		CachedTokens int `json:"cached_tokens"`
@@ -189,7 +189,7 @@ type ResponseTool struct {
 	Strict      bool   `json:"strict"`
 }
 
-type ResponsesApiResp struct {
+type ResponsesAPIResp struct {
 	ID                string            `json:"id"`
 	Object            string            `json:"object"`
 	CreatedAt         int               `json:"created_at"`
@@ -197,7 +197,7 @@ type ResponsesApiResp struct {
 	Status            string            `json:"status"`
 	CompletedAt       int               `json:"completed_at"`
 	Output            []json.RawMessage `json:"output"`
-	Error             *ErrorLLM         `json:"error"`
+	Error             *LLMError         `json:"error"`
 	IncompleteDetails interface{}       `json:"incomplete_details"`
 	Tools             []ResponseTool    `json:"tools"`
 	ToolChoice        string            `json:"tool_choice"`
@@ -211,12 +211,12 @@ type ResponsesApiResp struct {
 	MaxToolCalls      interface{}       `json:"max_tool_calls"`
 	Metadata          struct {
 	} `json:"metadata"`
-	Background         bool        `json:"background"`
-	PreviousResponseID interface{} `json:"previous_response_id"`
-	ServiceTier        string      `json:"service_tier"`
-	Truncation         string      `json:"truncation"`
-	Store              bool        `json:"store"`
-	Instructions       interface{} `json:"instructions"`
+	Background         bool              `json:"background"`
+	PreviousResponseID interface{}       `json:"previous_response_id"`
+	ServiceTier        string            `json:"service_tier"`
+	Truncation         string            `json:"truncation"`
+	Store              bool              `json:"store"`
+	Instructions       interface{}       `json:"instructions"`
 	Text               struct {
 		Format struct {
 			Type string `json:"type"`
@@ -226,10 +226,10 @@ type ResponsesApiResp struct {
 	SafetyIdentifier interface{}       `json:"safety_identifier"`
 	PromptCacheKey   interface{}       `json:"prompt_cache_key"`
 	User             json.RawMessage   `json:"user,omitempty"`
-	Usage            ResponsesApiUsage `json:"usage"`
+	Usage            ResponsesAPIUsage `json:"usage"`
 }
 
-type ErrorLLM struct {
+type LLMError struct {
 	Message  string `json:"message"`
 	Code     any    `json:"code"`
 	Metadata struct {

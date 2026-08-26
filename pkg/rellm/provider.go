@@ -242,12 +242,12 @@ func TextFromContent(parts []MessagePart) string {
 // (URL/headers/http client) and its wire-format translation
 // (ConversationElement <-> provider JSON).
 type Provider interface {
-	// Model name as configured (fills ResponsesApiReq.Model).
+	// Model name as configured (fills ResponsesAPIReq.Model).
 	Model() Model
 
 	// Transport shim: send a pre-built http.Request, return the raw response.
 	// Owns only the http.Client. Agent.post builds the request from
-	// ResponsesApiReq + URL() + Header() and handles status/unmarshal.
+	// ResponsesAPIReq + URL() + Header() and handles status/unmarshal.
 	Do(request *http.Request) (*http.Response, error)
 
 	// URL for the Responses API endpoint this backend talks to.

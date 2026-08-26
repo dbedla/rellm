@@ -13,7 +13,7 @@ type LMStudioProvider struct {
 	model  Model
 	url    string
 	header http.Header
-	client ClientHttpDo
+	client HTTPClient
 }
 
 // NewLMStudioProvider builds an LM Studio provider. model, host and port are required.
@@ -46,9 +46,9 @@ func NewLMStudioProvider(model Model, host, port string) (*LMStudioProvider, err
 	}, nil
 }
 
-func NewLMStudioProviderWithHTTPClient(model Model, host, port string, c ClientHttpDo) (*LMStudioProvider, error) {
+func NewLMStudioProviderWithHTTPClient(model Model, host, port string, c HTTPClient) (*LMStudioProvider, error) {
 	if c == nil {
-		return nil, ErrMissingHttpClientForProvider
+		return nil, ErrMissingHTTPClientForProvider
 	}
 
 	p, err := NewLMStudioProvider(model, host, port)

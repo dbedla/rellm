@@ -531,10 +531,10 @@ func TestFuncResultToFunctionCallRespSerializesOutputAsString(t *testing.T) {
 	assert.JSONEq(t, `{"type":"function_call_output","call_id":"call_123","output":"42"}`, string(jsonResp))
 }
 
-func buildTestProToolAgentLMS(t *testing.T, maxAgentSteps uint64) (*rellm.Agent, *HttpDoMock) {
+func buildTestProToolAgentLMS(t *testing.T, maxAgentSteps uint64) (*rellm.Agent, *HTTPDoMock) {
 
 	agentName := "TestProAgent"
-	mockHttp := new(HttpDoMock)
+	mockHttp := new(HTTPDoMock)
 
 	p, err := rellm.NewLMStudioProviderWithHTTPClient("google/gemma-4-26b-a4b", testBaseUrl, testPort, mockHttp)
 	assert.NoError(t, err, "failed to create provider")
@@ -552,10 +552,10 @@ func buildTestProToolAgentLMS(t *testing.T, maxAgentSteps uint64) (*rellm.Agent,
 	return ta, mockHttp
 }
 
-func buildTestProToolAgentOpenRouter(t *testing.T, model rellm.Model, maxAgentSteps uint64) (*rellm.Agent, *HttpDoMock) {
+func buildTestProToolAgentOpenRouter(t *testing.T, model rellm.Model, maxAgentSteps uint64) (*rellm.Agent, *HTTPDoMock) {
 
 	agentName := "TestProAgent"
-	mockHttp := new(HttpDoMock)
+	mockHttp := new(HTTPDoMock)
 
 	p, err := rellm.NewOpenRouterProviderWithHTTPClient("test-key", model, mockHttp)
 	assert.NoError(t, err)
