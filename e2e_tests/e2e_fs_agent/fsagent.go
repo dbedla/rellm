@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"rellm/internal/examplesutils"
 	"rellm/pkg/agentsutils"
@@ -25,11 +26,12 @@ func buildFSAgent(p rellm.Provider, dirs agentsDirs) (*rellm.Agent, error) {
 		return nil, err
 	}
 
+	conversationFilePath := path.Join(dirs.workspace, agentName+"_conversation.json")
 	return rellm.NewAgentBuilder().
 		WithProvider(p).
 		WithAgentName(agentName).
 		WithMaxAgentSteps(20).
-		WithConversationStorage(rellm.NewInMemoryStorage()).
+		WithConversationStorage(rellm.NewFilesystemStorage(conversationFilePath)).
 		WithToolset(fsToolset).
 		WithSystemMessage(fsAgentSysPrompt).
 		WithInspectEachRequest(examplesutils.InspectWithReqLog).
