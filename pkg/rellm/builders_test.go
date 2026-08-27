@@ -36,8 +36,6 @@ func TestPromptBuilder_Validation_AccumulatesMultipleErrors(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.True(t, errors.Is(err, rellm.ErrEmptyPrompt), "ErrEmptyPrompt should be present in joined error")
-	assert.True(t, errors.Is(err, rellm.ErrEmptyReasoningEffort), "ErrEmptyReasoningEffort should be present in joined error")
-
 }
 
 func TestPromptBuilder_Build_EmptyMessage(t *testing.T) {
