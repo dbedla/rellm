@@ -66,29 +66,35 @@ func (s *FilesystemStorage) Append(delta []ConversationElement) (err error) {
 	if len(delta) == 0 {
 		return nil
 	}
-	if dir := filepath.Dir(s.path); dir != "" {
-		if err := os.MkdirAll(dir, 0755); err != nil {
-			return err
-		}
-	}
+
+	// 1. Serialize and validate the entire batch in memory first
 	var buf bytes.Buffer
-	for _, el := range delta {
+	for i, el := range delta {
 		b, err := json.Marshal(el)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to marshal conversation element [%d]: %w", i, err)
 		}
-		var compact bytes.Buffer
-		if err := json.Compact(&compact, b); err != nil {
-			return err
-		}
-		buf.Write(compact.Bytes())
+
+		buf.Write(b)
 		buf.WriteByte('\n')
 	}
+
+	// 2. Ensure the parent directory exists
+	if dir := filepath.Dir(s.path); dir != "" {
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			return fmt.Errorf("failed to create storage dir %s: %w", dir, err)
+		}
+	}
+
+	// 3. Write buffered batch to disk
 	f, err := os.OpenFile(s.path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to open storage file %s: %w", s.path, err)
 	}
 	defer closeWithError(&err, f)
-	_, err = f.Write(buf.Bytes())
-	return err
+
+	if _, err = f.Write(buf.Bytes()); err != nil {
+		return fmt.Errorf("failed to write to storage file %s: %w", s.path, err)
+	}
+	return nil
 }

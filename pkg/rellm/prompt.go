@@ -1,7 +1,6 @@
 package rellm
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 )
@@ -29,7 +28,6 @@ type promptParams struct {
 type PromptBuilder struct {
 	msg    string
 	params promptParams
-	errs   []error // accumulated validation errors from WithXxx calls; surfaced in Build()
 }
 
 func NewPromptBuilder() *PromptBuilder {
@@ -39,10 +37,6 @@ func NewPromptBuilder() *PromptBuilder {
 }
 
 func (b *PromptBuilder) WithMessage(msg string) *PromptBuilder {
-	if strings.TrimSpace(msg) == "" {
-		b.errs = append(b.errs, ErrEmptyPrompt)
-		return b
-	}
 	b.msg = msg
 	return b
 }
@@ -53,10 +47,7 @@ func (b *PromptBuilder) WithTemperature(t float32) *PromptBuilder {
 }
 
 func (b *PromptBuilder) WithReasoning(effort ReasoningEffort) *PromptBuilder {
-	if effort == "" {
-		b.errs = append(b.errs, ErrEmptyReasoningEffort)
-		return b
-	}
+
 	b.params.Reasoning = &ReasoningConfig{Effort: effort}
 	return b
 }
@@ -97,16 +88,19 @@ func (b *PromptBuilder) WithTopLogprobs(n int) *PromptBuilder {
 }
 
 // Build returns the constructed prompt. It validates accumulated WithXxx calls;
-// all validation errors are joined into a single error so callers see every problem at once.
 func (b *PromptBuilder) Build() (*Prompt, error) {
-	if len(b.errs) > 0 {
-		return nil, errors.Join(b.errs...)
-	}
-	if strings.TrimSpace(b.msg) == "" {
+	trimmedMsg := strings.TrimSpace(b.msg)
+	if trimmedMsg == "" {
 		return nil, ErrEmptyPrompt
 	}
+
+	if b.params.Reasoning != nil {
+		if b.params.Reasoning.Effort == "" {
+			return nil, ErrEmptyReasoningEffort
+		}
+	}
 	return &Prompt{
-		msg:    b.msg,
+		msg:    trimmedMsg,
 		params: b.params,
 	}, nil
 }

@@ -91,7 +91,7 @@ func unmarshal[K any](rawBody []byte) (K, error) {
 	var data K
 	err := json.Unmarshal(rawBody, &data)
 	if err != nil {
-		return *new(K), fmt.Errorf("error unmarshaling: %s; unmarshaling type %T; raw: %s", err, data, string(rawBody))
+		return *new(K), fmt.Errorf("error unmarshaling %T: %w (raw body: %s)", data, err, string(rawBody))
 	}
 
 	return data, nil
