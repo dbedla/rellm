@@ -88,7 +88,6 @@ func (b *PromptBuilder) WithTopLogprobs(n int) *PromptBuilder {
 }
 
 // Build returns the constructed prompt. It validates accumulated WithXxx calls;
-// all validation errors are joined into a single error so callers see every problem at once.
 func (b *PromptBuilder) Build() (*Prompt, error) {
 	trimmedMsg := strings.TrimSpace(b.msg)
 	if trimmedMsg == "" {

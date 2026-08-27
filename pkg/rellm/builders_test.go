@@ -28,16 +28,6 @@ func TestPromptBuilder_Validation_RejectsEmptyMessage(t *testing.T) {
 	assert.ErrorIs(t, err, rellm.ErrEmptyPrompt)
 }
 
-func TestPromptBuilder_Validation_AccumulatesMultipleErrors(t *testing.T) {
-	_, err := rellm.NewPromptBuilder().
-		WithMessage("").
-		WithReasoning("").
-		Build()
-
-	assert.Error(t, err)
-	assert.True(t, errors.Is(err, rellm.ErrEmptyPrompt), "ErrEmptyPrompt should be present in joined error")
-}
-
 func TestPromptBuilder_Build_EmptyMessage(t *testing.T) {
 	_, err := rellm.NewPromptBuilder().Build()
 	assert.Error(t, err)
