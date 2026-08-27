@@ -74,11 +74,8 @@ func (s *FilesystemStorage) Append(delta []ConversationElement) (err error) {
 		if err != nil {
 			return fmt.Errorf("failed to marshal conversation element [%d]: %w", i, err)
 		}
-		var compact bytes.Buffer
-		if err := json.Compact(&compact, b); err != nil {
-			return fmt.Errorf("failed to compact JSON for element [%d]: %w", i, err)
-		}
-		buf.Write(compact.Bytes())
+
+		buf.Write(b)
 		buf.WriteByte('\n')
 	}
 
@@ -89,7 +86,7 @@ func (s *FilesystemStorage) Append(delta []ConversationElement) (err error) {
 		}
 	}
 
-	// 3. Write buffered batch atomically to disk
+	// 3. Write buffered batch to disk
 	f, err := os.OpenFile(s.path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return fmt.Errorf("failed to open storage file %s: %w", s.path, err)
