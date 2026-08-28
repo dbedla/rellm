@@ -26,7 +26,7 @@ var ErrEmptyPrompt = errors.New("prompt message is empty")
 var ErrEmptyReasoningEffort = errors.New("reasoning effort cannot be empty")
 
 var ErrNoUnknownConversationElementHandler = errors.New("unknown conversation element handler not provided")
-var ErrCustomConversationElementHandlerFailed = errors.New("custom image handler failed")
+var ErrCustomConversationElementHandlerFailed = errors.New("custom unknown conversation element handler failed")
 var ErrNoImageHandler = errors.New("image handler not provided")
 var ErrCustomImageHandlerFailed = errors.New("custom image handler failed")
 var ErrImageParsingFailed = errors.New("error converting image generation element")

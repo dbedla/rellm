@@ -35,7 +35,7 @@ type Agent struct {
 type HandleImageGeneration func(ctx context.Context, image *ImageGeneration) (string, error)
 type InspectEachRequest func(*ResponsesAPIReq)
 type InspectEachResponse func(resp *ResponsesAPIResp)
-type HandleUnknownConversationElement func(ctx context.Context, el *UnknownElement) (*UnknownElement, error)
+type HandleUnknownConversationElement func(ctx context.Context, el *UnknownElement) (ConversationElement, error)
 
 func (a *Agent) CurrentConversation() ([]ConversationElement, error) {
 	conversation, err := a.conversationStorage.Load()

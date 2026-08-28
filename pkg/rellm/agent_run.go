@@ -169,7 +169,7 @@ func (a *Agent) dispatchConversation(ctx context.Context, conversation []Convers
 		case *UnknownElement:
 			unknownResp, err := a.executeUnknownConversationCallHandler(ctx, el)
 			if err != nil {
-				return "", nil, false, errors.Join(ErrCustomConversationElementHandlerFailed, err)
+				outputErr = errors.Join(outputErr, err)
 			}
 			if unknownResp != nil {
 				newConversationElements = append(newConversationElements, unknownResp)
@@ -228,17 +228,17 @@ func (a *Agent) executeImageGenerationCallHandler(ctx context.Context, image *Im
 	return nil
 }
 
-func (a *Agent) executeUnknownConversationCallHandler(ctx context.Context, el *UnknownElement) (*UnknownElement, error) {
+func (a *Agent) executeUnknownConversationCallHandler(ctx context.Context, el *UnknownElement) (ConversationElement, error) {
 	if a.handleUnknownConversationElement == nil {
 		return nil, ErrNoUnknownConversationElementHandler
 	}
 
-	fixed, err := a.handleUnknownConversationElement(ctx, el)
+	response, err := a.handleUnknownConversationElement(ctx, el)
 	if err != nil {
 		return nil, errors.Join(ErrCustomConversationElementHandlerFailed, err)
 	}
 
-	return fixed, nil
+	return response, nil
 }
 
 func (a *Agent) handleFunctionCall(ctx context.Context, fn *FunctionCall) (*FunctionCallResp, error) {
