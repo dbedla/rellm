@@ -119,10 +119,9 @@ func (a *Agent) process(ctx context.Context, req *ResponsesAPIReq) (string, erro
 		if err != nil {
 			return "", errors.Join(ErrConversationElementConversion, err)
 		}
-		msg, fnCallsResp, imageHandled, err := a.dispatchConversation(ctx, conversation)
-		for _, fResp := range fnCallsResp {
-			conversation = append(conversation, fResp)
-		}
+		msg, newConversationElements, imageHandled, err := a.dispatchConversation(ctx, conversation)
+		conversation = append(conversation, newConversationElements...)
+
 		raw, errProviderRep := a.provider.ToProviderRepresentation(conversation)
 		if errProviderRep != nil {
 			return "", errors.Join(ErrConversationElementConversion, errProviderRep)
@@ -149,10 +148,10 @@ func (a *Agent) process(ctx context.Context, req *ResponsesAPIReq) (string, erro
 			fmt.Errorf("exceeded %d iterations", a.maxAgentSteps))
 }
 
-func (a *Agent) dispatchConversation(ctx context.Context, conversation []ConversationElement) (string, []*FunctionCallResp, bool, error) {
+func (a *Agent) dispatchConversation(ctx context.Context, conversation []ConversationElement) (string, []ConversationElement, bool, error) {
 
 	var message strings.Builder
-	fnCallsResults := []*FunctionCallResp{}
+	newConversationElements := []ConversationElement{}
 	imageHandled := false
 
 	var outputErr error
@@ -167,6 +166,15 @@ func (a *Agent) dispatchConversation(ctx context.Context, conversation []Convers
 			continue
 		case *Reasoning:
 			continue
+		case *UnknownElement:
+			unknownResp, err := a.executeUnknownConversationCallHandler(ctx, el)
+			if err != nil {
+				return "", nil, false, errors.Join(ErrCustomConversationElementHandlerFailed, err)
+			}
+			if unknownResp != nil {
+				newConversationElements = append(newConversationElements, unknownResp)
+			}
+			continue
 
 		case *FunctionCall:
 			fResp, err := a.handleFunctionCall(ctx, el)
@@ -174,7 +182,7 @@ func (a *Agent) dispatchConversation(ctx context.Context, conversation []Convers
 				outputErr = errors.Join(outputErr, err)
 			}
 			if fResp != nil {
-				fnCallsResults = append(fnCallsResults, fResp)
+				newConversationElements = append(newConversationElements, fResp)
 			}
 
 		case *AssistantMessage:
@@ -182,7 +190,7 @@ func (a *Agent) dispatchConversation(ctx context.Context, conversation []Convers
 			continue
 
 		case *ImageGeneration:
-			err := a.handleImageGenerationCall(ctx, el)
+			err := a.executeImageGenerationCallHandler(ctx, el)
 			if err != nil {
 				outputErr = errors.Join(outputErr, err)
 			}
@@ -194,7 +202,7 @@ func (a *Agent) dispatchConversation(ctx context.Context, conversation []Convers
 		}
 	}
 
-	return message.String(), fnCallsResults, imageHandled, outputErr
+	return message.String(), newConversationElements, imageHandled, outputErr
 }
 
 func messagesFromParts(parts []MessagePart) string {
@@ -205,7 +213,7 @@ func messagesFromParts(parts []MessagePart) string {
 	return msg.String()
 }
 
-func (a *Agent) handleImageGenerationCall(ctx context.Context, image *ImageGeneration) error {
+func (a *Agent) executeImageGenerationCallHandler(ctx context.Context, image *ImageGeneration) error {
 	if a.handleImageGeneration == nil {
 		return ErrNoImageHandler
 	}
@@ -218,6 +226,19 @@ func (a *Agent) handleImageGenerationCall(ctx context.Context, image *ImageGener
 	image.Result = resultNote
 
 	return nil
+}
+
+func (a *Agent) executeUnknownConversationCallHandler(ctx context.Context, el *UnknownElement) (*UnknownElement, error) {
+	if a.handleUnknownConversationElement == nil {
+		return nil, ErrNoUnknownConversationElementHandler
+	}
+
+	fixed, err := a.handleUnknownConversationElement(ctx, el)
+	if err != nil {
+		return nil, errors.Join(ErrCustomConversationElementHandlerFailed, err)
+	}
+
+	return fixed, nil
 }
 
 func (a *Agent) handleFunctionCall(ctx context.Context, fn *FunctionCall) (*FunctionCallResp, error) {

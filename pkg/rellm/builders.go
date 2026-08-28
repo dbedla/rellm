@@ -54,6 +54,11 @@ func (b *AgentBuilder) WithInspectEachResponse(inspect InspectEachResponse) *Age
 	return b
 }
 
+func (b *AgentBuilder) WithUnknownConversationHandler(handler HandleUnknownConversationElement) *AgentBuilder {
+	b.agent.handleUnknownConversationElement = handler
+	return b
+}
+
 func (b *AgentBuilder) Build() (*Agent, error) {
 	if b.agent.provider == nil {
 		return nil, ErrBuildNoProvider
