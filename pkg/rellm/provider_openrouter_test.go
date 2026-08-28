@@ -105,6 +105,48 @@ func TestOpenRouterToConversationElements_FunctionCall(t *testing.T) {
 	assert.Equal(t, `{"query":"test"}`, string(fn.Args))
 }
 
+func TestOpenRouterToConversationElements_Unknown(t *testing.T) {
+	p := &OpenRouterProvider{}
+	tests := []struct {
+		name     string
+		raw      json.RawMessage
+		typeName string
+		role     string
+	}{
+		{name: "type", raw: json.RawMessage(`{"type":"future_output","value":42}`), typeName: "future_output"},
+		{name: "role", raw: json.RawMessage(`{"type":"message","role":"critic","content":"review"}`), typeName: "message", role: "critic"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			elements, err := p.ToConversationElements([]json.RawMessage{tt.raw})
+			assert.NoError(t, err)
+			assert.Len(t, elements, 1)
+
+			unknown, ok := elements[0].(*UnknownElement)
+			assert.True(t, ok)
+			assert.Equal(t, ProviderOpenRouter, unknown.Provider)
+			assert.Equal(t, tt.typeName, unknown.Type)
+			assert.Equal(t, tt.role, unknown.Role)
+			assert.JSONEq(t, string(tt.raw), string(unknown.Raw))
+
+			wire, err := p.ToProviderRepresentation(elements)
+			assert.NoError(t, err)
+			assert.Len(t, wire, 1)
+			assert.JSONEq(t, string(tt.raw), string(wire[0]))
+		})
+	}
+}
+
+func TestOpenRouterToProviderRepresentation_UnknownFromOtherProvider(t *testing.T) {
+	p := &OpenRouterProvider{}
+	element := newUnknownElement(ProviderLMStudio, "future_output", "", json.RawMessage(`{"type":"future_output"}`))
+
+	wire, err := p.ToProviderRepresentation([]ConversationElement{element})
+	assert.ErrorIs(t, err, ErrUnknownElementProviderMismatch)
+	assert.Nil(t, wire)
+}
+
 func TestOpenRouterReasoningContentRoundTrip(t *testing.T) {
 	p := &OpenRouterProvider{}
 	items := []json.RawMessage{

@@ -106,6 +106,24 @@ func TestFilesystemStorage_AppendAndLoad(t *testing.T) {
 	assert.Equal(t, delta[1].Kind(), msgs[1].Kind())
 }
 
+func TestFilesystemStorage_AppendAndLoadUnknownElement(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "conv.jsonl")
+	s := NewFilesystemStorage(path)
+	raw := json.RawMessage(`{"type":"future_output","value":42}`)
+
+	err := s.Append([]ConversationElement{newUnknownElement(ProviderOpenRouter, "future_output", "", raw)})
+	assert.NoError(t, err)
+
+	elements, err := s.Load()
+	assert.NoError(t, err)
+	assert.Len(t, elements, 1)
+	unknown, ok := elements[0].(*UnknownElement)
+	assert.True(t, ok)
+	assert.Equal(t, ProviderOpenRouter, unknown.Provider)
+	assert.Equal(t, "future_output", unknown.Type)
+	assert.JSONEq(t, string(raw), string(unknown.Raw))
+}
+
 func TestFilesystemStorage_LoadMalformedLineReturnsError(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "conv.jsonl")
 	content := `{"kind":"user_message"}` + "\n" + `{broken` + "\n"

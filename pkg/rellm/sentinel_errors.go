@@ -15,6 +15,8 @@ var ErrInConversationResponse = errors.New("error in conversation response")
 var ErrMaxAgentStepsReached = errors.New("max agent steps for single prompt reached")
 var ErrConversationElementConversion = errors.New("error converting conversation element")
 var ErrUnknownConversationElement = errors.New("unknown conversation element")
+var ErrUnknownElementProviderMismatch = errors.New("unknown element provider mismatch")
+var ErrMalformedUnknownElement = errors.New("malformed unknown element")
 
 var ErrEndpointNilResponse = errors.New("endpoint returned nil response")
 var ErrEndpointNilBodyInResponse = errors.New("endpoint returned nil body in response")
