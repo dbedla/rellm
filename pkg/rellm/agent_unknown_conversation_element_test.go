@@ -212,6 +212,48 @@ func TestLMSAgentHiUnknownConversationElHandlerAddAdditionalData(t *testing.T) {
 	assert.Len(t, conversation, 6)
 }
 
+//go:embed testdata/lms/hi_02_gemma_resp_only_unknown_el.json
+var goldenLMS_Hi_02_resp_only_unknown string
+
+func TestLMSAgentHiUnknownConversationElInRespDropNoNewMessages(t *testing.T) {
+	agent, httpDo := buildTestProToolAgentLMSWithUnknownElHandler(t, testDefaultMaxAgentSteps, unknownConversationElementHandlerDrop)
+	defer httpDo.AssertExpectations(t)
+
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Run(func(args mock.Arguments) {
+			req := args.Get(0).(*http.Request)
+
+			b, err := io.ReadAll(req.Body)
+			assert.NoError(t, err, "failed to read request body")
+
+			req.Body = io.NopCloser(bytes.NewBuffer(b))
+
+			assert.JSONEq(t, goldenLMS_Hi_01_req, string(b))
+		}).
+		Return(&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(goldenLMS_Hi_02_resp_only_unknown)),
+		}, nil)
+
+	promptFirst, err := rellm.NewPromptBuilder().
+		WithMessage("hi").
+		WithReasoning(testReasoningEffort).
+		WithTemperature(testTemperature).
+		Build()
+	assert.NoError(t, err)
+
+	ctx := context.Background()
+	respMsg, err := agent.Execute(ctx, promptFirst)
+	assert.Error(t, err)
+	assert.ErrorIs(t, err, rellm.ErrNoNewConversationElementAfterDispatch)
+
+	assert.Equal(t, "", respMsg)
+	conversation, err := agent.CurrentConversation()
+	assert.NoError(t, err)
+	assert.Len(t, conversation, 2)
+}
+
 type unknownConversationElementHandlerTestType int
 
 const (

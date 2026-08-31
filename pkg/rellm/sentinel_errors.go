@@ -9,6 +9,7 @@ var ErrBuildNoAgentName = errors.New("missing agent name")
 var ErrBuildNoConversationStorage = errors.New("missing conversation storage")
 var ErrMalformedConversationStorage = errors.New("malformed conversation storage line")
 
+var ErrNoNewConversationElementAfterDispatch = errors.New("no new conversation element")
 var ErrNoToolsetButToolCallRequested = errors.New("no toolset provided but request to call tool received")
 var ErrWhileDispatchToolCall = errors.New("unable to dispatch tool call")
 var ErrInConversationResponse = errors.New("error in conversation response")
