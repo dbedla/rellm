@@ -121,7 +121,7 @@ func (a *Agent) process(ctx context.Context, req *ResponsesAPIReq) (string, erro
 		}
 		msg, conversation, imageHandled, err := a.dispatchConversation(ctx, conversation)
 		if len(conversation) == 0 {
-			return "", ErrNoNewConversationElementAfterDispatch
+			return "", errors.Join(ErrNoNewConversationElementAfterDispatch, err)
 		}
 
 		raw, errProviderRep := a.provider.ToProviderRepresentation(conversation)
