@@ -35,7 +35,14 @@ type Agent struct {
 type HandleImageGeneration func(ctx context.Context, image *ImageGeneration) (string, error)
 type InspectEachRequest func(*ResponsesAPIReq)
 type InspectEachResponse func(resp *ResponsesAPIResp)
-type HandleUnknownConversationElement func(ctx context.Context, el *UnknownElement) (ConversationElement, error)
+// HandleUnknownConversationElement is called for each provider output item rellm
+// cannot classify. The returned slice replaces the unknown element's slot in
+// the conversation:
+//
+//   - nil or empty: drop the element
+//   - []ConversationElement{el}: keep it unchanged
+//   - any other slice: replace it with those elements
+type HandleUnknownConversationElement func(ctx context.Context, el *UnknownElement) ([]ConversationElement, error)
 
 func (a *Agent) CurrentConversation() ([]ConversationElement, error) {
 	conversation, err := a.conversationStorage.Load()

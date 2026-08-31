@@ -119,8 +119,7 @@ func (a *Agent) process(ctx context.Context, req *ResponsesAPIReq) (string, erro
 		if err != nil {
 			return "", errors.Join(ErrConversationElementConversion, err)
 		}
-		msg, newConversationElements, imageHandled, err := a.dispatchConversation(ctx, conversation)
-		conversation = append(conversation, newConversationElements...)
+		msg, conversation, imageHandled, err := a.dispatchConversation(ctx, conversation)
 
 		raw, errProviderRep := a.provider.ToProviderRepresentation(conversation)
 		if errProviderRep != nil {
@@ -151,7 +150,7 @@ func (a *Agent) process(ctx context.Context, req *ResponsesAPIReq) (string, erro
 func (a *Agent) dispatchConversation(ctx context.Context, conversation []ConversationElement) (string, []ConversationElement, bool, error) {
 
 	var message strings.Builder
-	newConversationElements := []ConversationElement{}
+	processed := make([]ConversationElement, 0, len(conversation)+4)
 	imageHandled := false
 
 	var outputErr error
@@ -159,35 +158,36 @@ func (a *Agent) dispatchConversation(ctx context.Context, conversation []Convers
 	for _, conversationElement := range conversation {
 		switch el := conversationElement.(type) {
 		case *SystemMessage:
-			continue
+			processed = append(processed, el)
 		case *UserMessage:
-			continue
+			processed = append(processed, el)
 		case *FunctionCallResp:
-			continue
+			processed = append(processed, el)
 		case *Reasoning:
-			continue
+			processed = append(processed, el)
 		case *UnknownElement:
 			unknownResp, err := a.executeUnknownConversationCallHandler(ctx, el)
 			if err != nil {
+				// Drop unhandled unknowns instead of persisting them; otherwise
+				// they poison later turns when reloaded from storage.
 				outputErr = errors.Join(outputErr, err)
+				continue
 			}
-			if unknownResp != nil {
-				newConversationElements = append(newConversationElements, unknownResp)
-			}
-			continue
+			processed = append(processed, unknownResp...)
 
 		case *FunctionCall:
 			fResp, err := a.handleFunctionCall(ctx, el)
 			if err != nil {
 				outputErr = errors.Join(outputErr, err)
 			}
+			processed = append(processed, el)
 			if fResp != nil {
-				newConversationElements = append(newConversationElements, fResp)
+				processed = append(processed, fResp)
 			}
 
 		case *AssistantMessage:
 			message.WriteString(messagesFromParts(el.Content))
-			continue
+			processed = append(processed, el)
 
 		case *ImageGeneration:
 			err := a.executeImageGenerationCallHandler(ctx, el)
@@ -195,14 +195,14 @@ func (a *Agent) dispatchConversation(ctx context.Context, conversation []Convers
 				outputErr = errors.Join(outputErr, err)
 			}
 			imageHandled = true
-			continue
+			processed = append(processed, el)
 
 		default:
 			return "", nil, false, ErrUnknownConversationElement
 		}
 	}
 
-	return message.String(), newConversationElements, imageHandled, outputErr
+	return message.String(), processed, imageHandled, outputErr
 }
 
 func messagesFromParts(parts []MessagePart) string {
@@ -228,7 +228,7 @@ func (a *Agent) executeImageGenerationCallHandler(ctx context.Context, image *Im
 	return nil
 }
 
-func (a *Agent) executeUnknownConversationCallHandler(ctx context.Context, el *UnknownElement) (ConversationElement, error) {
+func (a *Agent) executeUnknownConversationCallHandler(ctx context.Context, el *UnknownElement) ([]ConversationElement, error) {
 	if a.handleUnknownConversationElement == nil {
 		return nil, ErrNoUnknownConversationElementHandler
 	}
