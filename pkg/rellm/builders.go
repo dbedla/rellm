@@ -1,5 +1,7 @@
 package rellm
 
+import "context"
+
 type AgentBuilder struct {
 	agent Agent
 }
@@ -54,6 +56,20 @@ func (b *AgentBuilder) WithInspectEachResponse(inspect InspectEachResponse) *Age
 	return b
 }
 
+func (b *AgentBuilder) WithUnknownConversationElementDrop() *AgentBuilder {
+	b.agent.handleUnknownConversationElement = func(ctx context.Context, el *UnknownElement) ([]ConversationElement, error) {
+		return nil, nil
+	}
+	return b
+}
+
+func (b *AgentBuilder) WithUnknownConversationElementKeepInTheLoop() *AgentBuilder {
+	b.agent.handleUnknownConversationElement = func(ctx context.Context, el *UnknownElement) ([]ConversationElement, error) {
+		return []ConversationElement{el}, nil
+	}
+	return b
+}
+
 func (b *AgentBuilder) WithUnknownConversationHandler(handler HandleUnknownConversationElement) *AgentBuilder {
 	b.agent.handleUnknownConversationElement = handler
 	return b
@@ -74,6 +90,12 @@ func (b *AgentBuilder) Build() (*Agent, error) {
 
 	if b.agent.conversationStorage == nil {
 		return nil, ErrBuildNoConversationStorage
+	}
+
+	if b.agent.handleUnknownConversationElement == nil {
+		b.agent.handleUnknownConversationElement = func(ctx context.Context, el *UnknownElement) ([]ConversationElement, error) {
+			return nil, ErrNoUnknownConversationElementHandler
+		}
 	}
 
 	agent := b.agent // copy: builder stays reusable without mutating built agents
