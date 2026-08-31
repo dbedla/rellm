@@ -1,0 +1,113 @@
+{
+  "id": "resp_85f7918264ccd17165946a17a5d36a868d0c2945b85b8646",
+  "object": "response",
+  "created_at": 1785838217,
+  "model": "google/gemma-4-26b-a4b",
+  "status": "completed",
+  "completed_at": 1785838220,
+  "output": [
+    {
+      "id": "rs_omjbfc08iir310s0fv7bt7",
+      "type": "reasoning",
+      "status": "completed",
+      "summary": [],
+      "content": [
+        {
+          "type": "reasoning_text",
+          "text": "The user said \"hi\". This is a standard greeting. I should respond with a friendly and helpful greeting to initiate the conversation.\n\nPlan:\n1. Respond with a polite greeting.\n2. Offer assistance."
+        }
+      ]
+    },
+    {
+      "name": "type",
+      "raw": {
+        "type": "future_output",
+        "value": 42
+      },
+      "typeName": "future_output"
+    },
+    {
+      "id": "msg_rn2l0u1nii7119fztumpw",
+      "type": "message",
+      "role": "assistant",
+      "status": "completed",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "Hello! How can I help you today?",
+          "annotations": [],
+          "logprobs": []
+        }
+      ]
+    }
+  ],
+  "error": null,
+  "incomplete_details": null,
+  "tools": [
+    {
+      "type": "function",
+      "name": "GetDataFor",
+      "description": "Get data for a specific input",
+      "parameters": {
+        "properties": {
+          "input": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "type": "object"
+      },
+      "strict": false
+    },
+    {
+      "type": "function",
+      "name": "GetStaticData",
+      "description": "Get static data",
+      "parameters": {
+        "properties": {},
+        "type": "object"
+      },
+      "strict": false
+    }
+  ],
+  "tool_choice": "auto",
+  "parallel_tool_calls": true,
+  "max_output_tokens": null,
+  "temperature": 0.5,
+  "top_p": 0.95,
+  "presence_penalty": 0,
+  "frequency_penalty": 1.1,
+  "top_logprobs": 0,
+  "max_tool_calls": null,
+  "metadata": {},
+  "background": false,
+  "previous_response_id": null,
+  "service_tier": "default",
+  "truncation": "auto",
+  "store": true,
+  "instructions": null,
+  "text": {
+    "format": {
+      "type": "text"
+    }
+  },
+  "reasoning": {
+    "effort": "low",
+    "summary": null
+  },
+  "safety_identifier": null,
+  "prompt_cache_key": null,
+  "usage": {
+    "input_tokens": 89,
+    "input_tokens_details": {
+      "cached_tokens": 79
+    },
+    "output_tokens": 53,
+    "output_tokens_details": {
+      "reasoning_tokens": 44
+    },
+    "total_tokens": 142
+  }
+}

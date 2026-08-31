@@ -124,15 +124,22 @@ func (p *LMStudioProvider) ToConversationElements(items []json.RawMessage) ([]Co
 			}
 
 		case "message", "": // messages often lack an explicit type field
-			parts := normalizeMessageParts(ParseMessageContent(msg.Content), msg.Role)
 			switch msg.Role {
 			case "assistant":
+				parts := normalizeMessageParts(ParseMessageContent(msg.Content), msg.Role)
 				elements = append(elements, &AssistantMessage{MessageContent{ID: msg.ID, Role: msg.Role, Content: parts}})
 			case "system":
+				parts := normalizeMessageParts(ParseMessageContent(msg.Content), msg.Role)
 				elements = append(elements, &SystemMessage{MessageContent{ID: msg.ID, Role: msg.Role, Content: parts}})
-			default: // "user" or unknown
+			case "user":
+				parts := normalizeMessageParts(ParseMessageContent(msg.Content), msg.Role)
 				elements = append(elements, &UserMessage{MessageContent{ID: msg.ID, Role: msg.Role, Content: parts}})
+			default:
+				elements = append(elements, newUnknownElement(ProviderLMStudio, msg.Type, msg.Role, raw))
 			}
+
+		default:
+			elements = append(elements, newUnknownElement(ProviderLMStudio, msg.Type, msg.Role, raw))
 		}
 	}
 	return elements, nil
@@ -283,6 +290,13 @@ func (p *LMStudioProvider) ToProviderRepresentation(elements []ConversationEleme
 				"result": el.Result,
 			}
 			b, err := json.Marshal(sig)
+			if err != nil {
+				return nil, err
+			}
+			raw = append(raw, b)
+
+		case *UnknownElement:
+			b, err := unknownElementRepresentation(el, ProviderLMStudio)
 			if err != nil {
 				return nil, err
 			}

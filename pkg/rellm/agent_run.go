@@ -119,10 +119,11 @@ func (a *Agent) process(ctx context.Context, req *ResponsesAPIReq) (string, erro
 		if err != nil {
 			return "", errors.Join(ErrConversationElementConversion, err)
 		}
-		msg, fnCallsResp, imageHandled, err := a.dispatchConversation(ctx, conversation)
-		for _, fResp := range fnCallsResp {
-			conversation = append(conversation, fResp)
+		msg, conversation, imageHandled, err := a.dispatchConversation(ctx, conversation)
+		if len(conversation) == 0 {
+			return "", errors.Join(ErrNoNewConversationElementAfterDispatch, err)
 		}
+
 		raw, errProviderRep := a.provider.ToProviderRepresentation(conversation)
 		if errProviderRep != nil {
 			return "", errors.Join(ErrConversationElementConversion, errProviderRep)
@@ -149,10 +150,10 @@ func (a *Agent) process(ctx context.Context, req *ResponsesAPIReq) (string, erro
 			fmt.Errorf("exceeded %d iterations", a.maxAgentSteps))
 }
 
-func (a *Agent) dispatchConversation(ctx context.Context, conversation []ConversationElement) (string, []*FunctionCallResp, bool, error) {
+func (a *Agent) dispatchConversation(ctx context.Context, conversation []ConversationElement) (string, []ConversationElement, bool, error) {
 
 	var message strings.Builder
-	fnCallsResults := []*FunctionCallResp{}
+	processed := make([]ConversationElement, 0, len(conversation)+4)
 	imageHandled := false
 
 	var outputErr error
@@ -160,41 +161,51 @@ func (a *Agent) dispatchConversation(ctx context.Context, conversation []Convers
 	for _, conversationElement := range conversation {
 		switch el := conversationElement.(type) {
 		case *SystemMessage:
-			continue
+			processed = append(processed, el)
 		case *UserMessage:
-			continue
+			processed = append(processed, el)
 		case *FunctionCallResp:
-			continue
+			processed = append(processed, el)
 		case *Reasoning:
-			continue
+			processed = append(processed, el)
+		case *UnknownElement:
+			unknownResp, err := a.executeUnknownConversationElementHandler(ctx, el)
+			if err != nil {
+				// Drop unhandled unknowns instead of persisting them; otherwise
+				// they poison later turns when reloaded from storage.
+				outputErr = errors.Join(outputErr, err)
+				continue
+			}
+			processed = append(processed, unknownResp...)
 
 		case *FunctionCall:
 			fResp, err := a.handleFunctionCall(ctx, el)
 			if err != nil {
 				outputErr = errors.Join(outputErr, err)
 			}
+			processed = append(processed, el)
 			if fResp != nil {
-				fnCallsResults = append(fnCallsResults, fResp)
+				processed = append(processed, fResp)
 			}
 
 		case *AssistantMessage:
 			message.WriteString(messagesFromParts(el.Content))
-			continue
+			processed = append(processed, el)
 
 		case *ImageGeneration:
-			err := a.handleImageGenerationCall(ctx, el)
+			err := a.executeImageGenerationCallHandler(ctx, el)
 			if err != nil {
 				outputErr = errors.Join(outputErr, err)
 			}
 			imageHandled = true
-			continue
+			processed = append(processed, el)
 
 		default:
 			return "", nil, false, ErrUnknownConversationElement
 		}
 	}
 
-	return message.String(), fnCallsResults, imageHandled, outputErr
+	return message.String(), processed, imageHandled, outputErr
 }
 
 func messagesFromParts(parts []MessagePart) string {
@@ -205,7 +216,7 @@ func messagesFromParts(parts []MessagePart) string {
 	return msg.String()
 }
 
-func (a *Agent) handleImageGenerationCall(ctx context.Context, image *ImageGeneration) error {
+func (a *Agent) executeImageGenerationCallHandler(ctx context.Context, image *ImageGeneration) error {
 	if a.handleImageGeneration == nil {
 		return ErrNoImageHandler
 	}
@@ -218,6 +229,19 @@ func (a *Agent) handleImageGenerationCall(ctx context.Context, image *ImageGener
 	image.Result = resultNote
 
 	return nil
+}
+
+func (a *Agent) executeUnknownConversationElementHandler(ctx context.Context, el *UnknownElement) ([]ConversationElement, error) {
+	if a.handleUnknownConversationElement == nil {
+		return nil, ErrNoUnknownConversationElementHandler
+	}
+
+	response, err := a.handleUnknownConversationElement(ctx, el)
+	if err != nil {
+		return nil, errors.Join(ErrCustomConversationElementHandlerFailed, err)
+	}
+
+	return response, nil
 }
 
 func (a *Agent) handleFunctionCall(ctx context.Context, fn *FunctionCall) (*FunctionCallResp, error) {

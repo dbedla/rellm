@@ -101,7 +101,7 @@ func (p *OpenRouterProvider) ToConversationElements(items []json.RawMessage) ([]
 			}
 
 		case "message", "": // messages often lack an explicit type field; infer from role
-			elements = append(elements, p.parseMessage(raw, msg.ID, msg.Role, msg.Content))
+			elements = append(elements, p.parseMessage(raw, msg.ID, msg.Type, msg.Role, msg.Content))
 
 		case "reasoning":
 			elm, err := p.parseReasoning(raw)
@@ -118,7 +118,7 @@ func (p *OpenRouterProvider) ToConversationElements(items []json.RawMessage) ([]
 			elements = append(elements, elem)
 
 		default:
-			// Unknown types pass through unchanged.
+			elements = append(elements, newUnknownElement(ProviderOpenRouter, msg.Type, msg.Role, raw))
 		}
 	}
 	return elements, nil
@@ -126,7 +126,7 @@ func (p *OpenRouterProvider) ToConversationElements(items []json.RawMessage) ([]
 
 // parseMessage parses a message item into a role-typed message. Content is
 // normalized to []MessagePart; ToProviderRepresentation re-serializes per the type's shape rule.
-func (p *OpenRouterProvider) parseMessage(raw json.RawMessage, id, role string, content json.RawMessage) ConversationElement {
+func (p *OpenRouterProvider) parseMessage(raw json.RawMessage, id, itemType, role string, content json.RawMessage) ConversationElement {
 	var statusInfo struct {
 		Status string `json:"status"`
 	}
@@ -140,8 +140,10 @@ func (p *OpenRouterProvider) parseMessage(raw json.RawMessage, id, role string, 
 		return &AssistantMessage{MessageContent{ID: id, Role: role, Status: status, Content: parts}}
 	case "system":
 		return &SystemMessage{MessageContent{ID: id, Role: role, Content: parts}}
-	default: // "user" or unknown
+	case "user":
 		return &UserMessage{MessageContent{ID: id, Role: role, Status: status, Content: parts}}
+	default:
+		return newUnknownElement(ProviderOpenRouter, itemType, role, raw)
 	}
 }
 
@@ -320,6 +322,13 @@ func (p *OpenRouterProvider) ToProviderRepresentation(elements []ConversationEle
 				"result": el.Result,
 			}
 			b, err := json.Marshal(sig)
+			if err != nil {
+				return nil, err
+			}
+			raw = append(raw, b)
+
+		case *UnknownElement:
+			b, err := unknownElementRepresentation(el, ProviderOpenRouter)
 			if err != nil {
 				return nil, err
 			}

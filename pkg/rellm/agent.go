@@ -24,9 +24,10 @@ type Agent struct {
 	conversationStorage ConversationStorage
 	maxAgentSteps       uint64
 
-	handleImageGeneration HandleImageGeneration
-	inspectReq            InspectEachRequest
-	inspectResp           InspectEachResponse
+	handleUnknownConversationElement HandleUnknownConversationElement
+	handleImageGeneration            HandleImageGeneration
+	inspectReq                       InspectEachRequest
+	inspectResp                      InspectEachResponse
 }
 
 // HandleImageGeneration used as a callback for image generation
@@ -34,6 +35,14 @@ type Agent struct {
 type HandleImageGeneration func(ctx context.Context, image *ImageGeneration) (string, error)
 type InspectEachRequest func(*ResponsesAPIReq)
 type InspectEachResponse func(resp *ResponsesAPIResp)
+// HandleUnknownConversationElement is called for each provider output item rellm
+// cannot classify. The returned slice replaces the unknown element's slot in
+// the conversation:
+//
+//   - nil or empty: drop the element
+//   - []ConversationElement{el}: keep it unchanged
+//   - any other slice: replace it with those elements
+type HandleUnknownConversationElement func(ctx context.Context, el *UnknownElement) ([]ConversationElement, error)
 
 func (a *Agent) CurrentConversation() ([]ConversationElement, error) {
 	conversation, err := a.conversationStorage.Load()

@@ -3,6 +3,7 @@ package rellm
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 )
@@ -22,6 +23,12 @@ const (
 	KindFunctionCallResp ElementKind = "function_call_response"
 	KindReasoning        ElementKind = "reasoning"
 	KindImageGeneration  ElementKind = "image_generation"
+	KindUnknown          ElementKind = "unknown"
+)
+
+const (
+	ProviderOpenRouter = "openrouter"
+	ProviderLMStudio   = "lmstudio"
 )
 
 // ConversationElement is a typed item in a conversation. Providers convert their
@@ -109,6 +116,45 @@ type ImageGeneration struct {
 
 func (*ImageGeneration) Kind() ElementKind { return KindImageGeneration }
 
+// UnknownElement preserves a provider output item that rellm does not yet
+// understand. Raw is the original provider representation; Provider identifies
+// the wire format needed to interpret it, while Type and Role are routing hints.
+type UnknownElement struct {
+	Provider string          `json:"provider"`
+	Type     string          `json:"type,omitempty"`
+	Role     string          `json:"role,omitempty"`
+	Raw      json.RawMessage `json:"raw"`
+}
+
+func (*UnknownElement) Kind() ElementKind { return KindUnknown }
+
+func newUnknownElement(provider, itemType, role string, raw json.RawMessage) *UnknownElement {
+	return &UnknownElement{
+		Provider: provider,
+		Type:     itemType,
+		Role:     role,
+		Raw:      append(json.RawMessage(nil), raw...),
+	}
+}
+
+func unknownElementRepresentation(element *UnknownElement, provider string) (json.RawMessage, error) {
+	if element == nil {
+		return nil, fmt.Errorf("%w: nil unknown element", ErrMalformedUnknownElement)
+	}
+	if element.Provider != provider {
+		return nil, fmt.Errorf(
+			"%w: element belongs to %q, target provider is %q",
+			ErrUnknownElementProviderMismatch,
+			element.Provider,
+			provider,
+		)
+	}
+	if !json.Valid(element.Raw) {
+		return nil, fmt.Errorf("%w: invalid raw JSON", ErrMalformedUnknownElement)
+	}
+	return append(json.RawMessage(nil), element.Raw...), nil
+}
+
 // marshalWithKind serializes v and injects the canonical "kind" discriminator.
 func marshalWithKind(kind ElementKind, v any) (json.RawMessage, error) {
 	b, err := json.Marshal(v)
@@ -162,6 +208,11 @@ func (i *ImageGeneration) MarshalJSON() ([]byte, error) {
 	return marshalWithKind(KindImageGeneration, (*plain)(i))
 }
 
+func (u *UnknownElement) MarshalJSON() ([]byte, error) {
+	type plain UnknownElement
+	return marshalWithKind(KindUnknown, (*plain)(u))
+}
+
 // ParseConversationElement decodes a canonical (kind-tagged) element produced
 // by MarshalJSON. The "kind" field itself is ignored by the concrete structs'
 // unmarshaling.
@@ -211,6 +262,12 @@ func ParseConversationElement(raw json.RawMessage) (ConversationElement, error) 
 		return &e, nil
 	case KindImageGeneration:
 		var e ImageGeneration
+		if err := json.Unmarshal(raw, &e); err != nil {
+			return nil, err
+		}
+		return &e, nil
+	case KindUnknown:
+		var e UnknownElement
 		if err := json.Unmarshal(raw, &e); err != nil {
 			return nil, err
 		}

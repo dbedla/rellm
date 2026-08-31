@@ -1,5 +1,7 @@
 package rellm
 
+import "context"
+
 type AgentBuilder struct {
 	agent Agent
 }
@@ -54,6 +56,32 @@ func (b *AgentBuilder) WithInspectEachResponse(inspect InspectEachResponse) *Age
 	return b
 }
 
+// WithUnknownConversationElementDrop configures the agent to drop unknown
+// conversation elements returned by the provider.
+func (b *AgentBuilder) WithUnknownConversationElementDrop() *AgentBuilder {
+	b.agent.handleUnknownConversationElement = func(ctx context.Context, el *UnknownElement) ([]ConversationElement, error) {
+		return nil, nil
+	}
+	return b
+}
+
+// WithUnknownConversationElementKeepInTheLoop configures the agent to keep
+// unknown conversation elements unchanged in the conversation loop.
+func (b *AgentBuilder) WithUnknownConversationElementKeepInTheLoop() *AgentBuilder {
+	b.agent.handleUnknownConversationElement = func(ctx context.Context, el *UnknownElement) ([]ConversationElement, error) {
+		return []ConversationElement{el}, nil
+	}
+	return b
+}
+
+// WithUnknownConversationElementHandler sets a custom handler for unknown conversation
+// elements. The returned slice replaces the unknown element's slot in the
+// conversation; nil or an empty slice drops it.
+func (b *AgentBuilder) WithUnknownConversationElementHandler(handler HandleUnknownConversationElement) *AgentBuilder {
+	b.agent.handleUnknownConversationElement = handler
+	return b
+}
+
 func (b *AgentBuilder) Build() (*Agent, error) {
 	if b.agent.provider == nil {
 		return nil, ErrBuildNoProvider
@@ -69,6 +97,12 @@ func (b *AgentBuilder) Build() (*Agent, error) {
 
 	if b.agent.conversationStorage == nil {
 		return nil, ErrBuildNoConversationStorage
+	}
+
+	if b.agent.handleUnknownConversationElement == nil {
+		b.agent.handleUnknownConversationElement = func(ctx context.Context, el *UnknownElement) ([]ConversationElement, error) {
+			return nil, ErrNoUnknownConversationElementHandler
+		}
 	}
 
 	agent := b.agent // copy: builder stays reusable without mutating built agents
