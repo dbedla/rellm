@@ -169,7 +169,7 @@ func (a *Agent) dispatchConversation(ctx context.Context, conversation []Convers
 		case *Reasoning:
 			processed = append(processed, el)
 		case *UnknownElement:
-			unknownResp, err := a.executeUnknownConversationCallHandler(ctx, el)
+			unknownResp, err := a.executeUnknownConversationElementHandler(ctx, el)
 			if err != nil {
 				// Drop unhandled unknowns instead of persisting them; otherwise
 				// they poison later turns when reloaded from storage.
@@ -231,7 +231,7 @@ func (a *Agent) executeImageGenerationCallHandler(ctx context.Context, image *Im
 	return nil
 }
 
-func (a *Agent) executeUnknownConversationCallHandler(ctx context.Context, el *UnknownElement) ([]ConversationElement, error) {
+func (a *Agent) executeUnknownConversationElementHandler(ctx context.Context, el *UnknownElement) ([]ConversationElement, error) {
 	if a.handleUnknownConversationElement == nil {
 		return nil, ErrNoUnknownConversationElementHandler
 	}

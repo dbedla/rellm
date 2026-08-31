@@ -331,7 +331,7 @@ func buildTestProToolAgentLMSWithUnknownElHandler(
 
 	switch uh {
 	case unknownConversationElementHandlerNil:
-		builder.WithUnknownConversationHandler(nil)
+		builder.WithUnknownConversationElementHandler(nil)
 	case unknownConversationElementHandlerUndef:
 		//intentionally left blank
 	case unknownConversationElementHandlerKeepInTheLoop:
@@ -339,9 +339,9 @@ func buildTestProToolAgentLMSWithUnknownElHandler(
 	case unknownConversationElementHandlerDrop:
 		builder.WithUnknownConversationElementDrop()
 	case unknownConversationElementHandlerAddResp:
-		builder.WithUnknownConversationHandler(twoUnknownElements)
+		builder.WithUnknownConversationElementHandler(twoUnknownElements)
 	case unknownConversationElementHandlerReplace:
-		builder.WithUnknownConversationHandler(replaceWithUserMessage)
+		builder.WithUnknownConversationElementHandler(replaceWithUserMessage)
 	}
 
 	ta, err := builder.Build()

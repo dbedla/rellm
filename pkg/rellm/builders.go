@@ -74,10 +74,10 @@ func (b *AgentBuilder) WithUnknownConversationElementKeepInTheLoop() *AgentBuild
 	return b
 }
 
-// WithUnknownConversationHandler sets a custom handler for unknown conversation
+// WithUnknownConversationElementHandler sets a custom handler for unknown conversation
 // elements. The returned slice replaces the unknown element's slot in the
 // conversation; nil or an empty slice drops it.
-func (b *AgentBuilder) WithUnknownConversationHandler(handler HandleUnknownConversationElement) *AgentBuilder {
+func (b *AgentBuilder) WithUnknownConversationElementHandler(handler HandleUnknownConversationElement) *AgentBuilder {
 	b.agent.handleUnknownConversationElement = handler
 	return b
 }
