@@ -20,6 +20,11 @@ func (b *AgentBuilder) WithToolset(toolset Toolset) *AgentBuilder {
 	return b
 }
 
+func (b *AgentBuilder) WithToolset_X(toolset Toolset_X) *AgentBuilder {
+	b.agent.toolset_X = toolset
+	return b
+}
+
 func (b *AgentBuilder) WithConversationStorage(storage ConversationStorage) *AgentBuilder {
 	b.agent.conversationStorage = storage
 	return b

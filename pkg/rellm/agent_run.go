@@ -35,7 +35,9 @@ func (a *Agent) run(ctx context.Context, msg string, params promptParams) (strin
 
 	req := toBaseResponsesAPIReq(params, a.provider.Model(), wire)
 
-	if a.toolset != nil {
+	if a.toolset_X != nil {
+		req.Tools = a.toolset_X.BuildTools_X()
+	} else if a.toolset != nil {
 		req.Tools = a.toolset.BuildTools()
 	}
 
@@ -179,7 +181,13 @@ func (a *Agent) dispatchConversation(ctx context.Context, conversation []Convers
 			processed = append(processed, unknownResp...)
 
 		case *FunctionCall:
-			fResp, err := a.handleFunctionCall(ctx, el)
+			var fResp *FunctionCallResp
+			var err error
+			if a.toolset_X != nil {
+				fResp, err = a.handleFunctionCall_X(ctx, el)
+			} else {
+				fResp, err = a.handleFunctionCall(ctx, el)
+			}
 			if err != nil {
 				outputErr = errors.Join(outputErr, err)
 			}
@@ -255,6 +263,26 @@ func (a *Agent) handleFunctionCall(ctx context.Context, fn *FunctionCall) (*Func
 		return &funcCallResp, errors.Join(ErrWhileDispatchToolCall, fmt.Errorf("unknown tool name (%s)", fn.Name))
 	}
 
+	return &funcCallResp, nil
+}
+
+func (a *Agent) handleFunctionCall_X(ctx context.Context, fn *FunctionCall) (*FunctionCallResp, error) {
+	if a.toolset_X == nil {
+		return nil, ErrNoToolsetButToolCallRequested
+	}
+
+	result, dispatchErr := a.toolset_X.DispatchTools_X(ctx, fn.Name, fn.Args)
+	if dispatchErr != nil {
+		funcCallResp := invalidFunctionCallResp(fn)
+		return &funcCallResp, errors.Join(ErrWhileDispatchToolCall, dispatchErr)
+	}
+
+	if result.Err != nil {
+		funcCallResp := FuncResultToFunctionCallResp(fn.CallID, result.Err.Error())
+		return &funcCallResp, nil
+	}
+
+	funcCallResp := FuncResultToFunctionCallResp(fn.CallID, result.Value)
 	return &funcCallResp, nil
 }
 

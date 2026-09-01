@@ -10,6 +10,16 @@ type Toolset interface {
 	DispatchTools(ctx context.Context, name string, callID string, arguments json.RawMessage) (FunctionCallResp, bool)
 }
 
+type ToolCallResult struct {
+	Value any
+	Err   error
+}
+
+type Toolset_X interface {
+	BuildTools_X() []Tool
+	DispatchTools_X(ctx context.Context, name string, arguments json.RawMessage) (ToolCallResult, error)
+}
+
 type ConversationStorage interface {
 	Load() ([]ConversationElement, error)
 	Append([]ConversationElement) error
@@ -18,6 +28,7 @@ type ConversationStorage interface {
 type Agent struct {
 	provider  Provider
 	toolset   Toolset
+	toolset_X Toolset_X
 	agentName string
 	sysMsg    string
 
