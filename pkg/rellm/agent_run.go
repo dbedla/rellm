@@ -265,12 +265,7 @@ func (a *Agent) handleFunctionCall(ctx context.Context, fn *FunctionCall) (*Func
 }
 
 func invalidFunctionCallResp(fn *FunctionCall) FunctionCallResp {
-	return FunctionCallResp{
-		Type:   "function_call_output",
-		CallID: fn.CallID,
-		Output: "invalid function call (function not found) " + fn.Name,
-	}
-
+	return FuncResultToFunctionCallResp(fn.CallID, "invalid function call (function not found) "+fn.Name)
 }
 
 func toBaseResponsesAPIReq(params promptParams, model Model, conversation []json.RawMessage) *ResponsesAPIReq {
