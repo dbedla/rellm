@@ -13,6 +13,10 @@ type FSToolset struct {
 	*LimitedFileSystem
 }
 
+func NewFSToolset(lfs *LimitedFileSystem) *FSToolset {
+	return &FSToolset{lfs}
+}
+
 func (f *FSToolset) Definitions() []rellm.ToolDefinition {
 	return []rellm.ToolDefinition{
 		{
