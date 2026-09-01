@@ -24,7 +24,7 @@ func buildProAgent() (*rellm.Agent, error) {
 		WithMaxAgentSteps(20).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage(proAgentSysPrompt).
-		WithToolset(&WeatherToolset{}).
+		WithToolset_X(&WeatherToolset_X{}).
 		WithInspectEachRequest(examplesutils.InspectWithReqLog).
 		WithInspectEachResponse(examplesutils.InspectWithRespLog).
 		Build()

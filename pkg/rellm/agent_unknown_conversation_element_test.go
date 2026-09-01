@@ -327,7 +327,7 @@ func buildTestProToolAgentLMSWithUnknownElHandler(
 		WithMaxAgentSteps(maxAgentSteps).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage("You are a helpful assistant.").
-		WithToolset(&examplesutils.DataSrcToolset{})
+		WithToolset_X(&examplesutils.DataSrcToolset_X{})
 
 	switch uh {
 	case unknownConversationElementHandlerNil:
