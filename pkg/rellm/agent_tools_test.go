@@ -545,7 +545,7 @@ func buildTestProToolAgentLMS(t *testing.T, maxAgentSteps uint64) (*rellm.Agent,
 		WithMaxAgentSteps(maxAgentSteps).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage("You are a helpful assistant.").
-		WithToolset_X(&examplesutils.DataSrcToolset_X{}).
+		WithToolset(&examplesutils.DataSrcToolset{}).
 		Build()
 
 	assert.NoError(t, err, "failed to create agent")
@@ -566,7 +566,7 @@ func buildTestProToolAgentOpenRouter(t *testing.T, model rellm.Model, maxAgentSt
 		WithMaxAgentSteps(maxAgentSteps).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage("You are a helpful assistant.").
-		WithToolset_X(&examplesutils.DataSrcToolset_X{}).
+		WithToolset(&examplesutils.DataSrcToolset{}).
 		Build()
 
 	assert.NoError(t, err, "failed to create agent")

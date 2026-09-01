@@ -15,8 +15,8 @@ func (b *AgentBuilder) WithProvider(provider Provider) *AgentBuilder {
 	return b
 }
 
-func (b *AgentBuilder) WithToolset_X(toolset Toolset_X) *AgentBuilder {
-	b.agent.toolset_X = toolset
+func (b *AgentBuilder) WithToolset(toolset Toolset) *AgentBuilder {
+	b.agent.toolset = toolset
 	return b
 }
 

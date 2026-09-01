@@ -3,16 +3,16 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"rellm/pkg/rellm"
 )
 
 var _ rellm.Toolset = (*WeatherToolset)(nil)
 
-type WeatherToolset struct {
-}
+type WeatherToolset struct{}
 
-func (w *WeatherToolset) BuildTools() []rellm.Tool {
-	return []rellm.Tool{
+func (w *WeatherToolset) Definitions() []rellm.ToolDefinition {
+	return []rellm.ToolDefinition{
 		{
 			Type:        "function",
 			Name:        "WeatherToolset.GetWeather",
@@ -25,14 +25,11 @@ func (w *WeatherToolset) BuildTools() []rellm.Tool {
 	}
 }
 
-func (w *WeatherToolset) DispatchTools(_ context.Context, name string, callID string, arguments json.RawMessage) (rellm.FunctionCallResp, bool) {
+func (w *WeatherToolset) Dispatch(_ context.Context, name string, _ json.RawMessage) (rellm.ToolCallResult, error) {
 	switch name {
 	case "WeatherToolset.GetWeather":
 		res, err := GetWeather()
-		if err != nil {
-			return rellm.FuncResultToFunctionCallResp(callID, err.Error()), true
-		}
-		return rellm.FuncResultToFunctionCallResp(callID, res), true
+		return rellm.ToolCallResult{Value: res, Err: err}, nil
 	}
-	return rellm.FunctionCallResp{}, false
+	return rellm.ToolCallResult{}, fmt.Errorf("unknown tool name (%s)", name)
 }

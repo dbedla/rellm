@@ -16,11 +16,15 @@ func TestFSToolsetDispatchToolsAcceptsStringWrappedArguments(t *testing.T) {
 	arguments := buildStringWrappedArguments(t, readOnlyDir)
 
 	ctx := context.Background()
-	resp, ok := toolset.DispatchTools(ctx, "FSToolset.ListFilesIn", "call_1", arguments)
+	resp, err := toolset.Dispatch(ctx, "FSToolset.ListFilesIn", arguments)
 
+	assert.NoError(t, err)
+	assert.NoError(t, resp.Err)
+
+	rv, ok := resp.Value.([]string)
 	assert.True(t, ok)
-	assert.NotContains(t, resp.Output, "cannot unmarshal string")
-	assert.Contains(t, resp.Output, filepath.Join(readOnlyDir, "file.txt"))
+	assert.Len(t, rv, 1)
+	assert.Contains(t, rv[0], filepath.Join(readOnlyDir, "file.txt"))
 }
 
 func buildToolsetDirs(t *testing.T) (string, string) {
@@ -38,7 +42,7 @@ func buildToolset(t *testing.T, readOnlyDir string, outputDir string) *FSToolset
 	t.Helper()
 	limitedFS, err := NewLimitedFileSystem([]string{readOnlyDir}, outputDir)
 	assert.NoError(t, err)
-	return NewFSToolset(limitedFS)
+	return &FSToolset{limitedFS}
 }
 
 func buildStringWrappedArguments(t *testing.T, path string) json.RawMessage {

@@ -5,19 +5,14 @@ import (
 	"encoding/json"
 )
 
-type Toolset interface {
-	BuildTools() []Tool
-	DispatchTools(ctx context.Context, name string, callID string, arguments json.RawMessage) (FunctionCallResp, bool)
-}
-
 type ToolCallResult struct {
 	Value any
 	Err   error
 }
 
-type Toolset_X interface {
-	BuildTools_X() []Tool
-	DispatchTools_X(ctx context.Context, name string, arguments json.RawMessage) (ToolCallResult, error)
+type Toolset interface {
+	Definitions() []ToolDefinition
+	Dispatch(ctx context.Context, name string, arguments json.RawMessage) (ToolCallResult, error)
 }
 
 type ConversationStorage interface {
@@ -28,7 +23,6 @@ type ConversationStorage interface {
 type Agent struct {
 	provider  Provider
 	toolset   Toolset
-	toolset_X Toolset_X
 	agentName string
 	sysMsg    string
 
@@ -46,6 +40,7 @@ type Agent struct {
 type HandleImageGeneration func(ctx context.Context, image *ImageGeneration) (string, error)
 type InspectEachRequest func(*ResponsesAPIReq)
 type InspectEachResponse func(resp *ResponsesAPIResp)
+
 // HandleUnknownConversationElement is called for each provider output item rellm
 // cannot classify. The returned slice replaces the unknown element's slot in
 // the conversation:

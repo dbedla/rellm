@@ -32,7 +32,7 @@ func buildFSAgent(p rellm.Provider, dirs agentsDirs) (*rellm.Agent, error) {
 		WithAgentName(agentName).
 		WithMaxAgentSteps(20).
 		WithConversationStorage(rellm.NewFilesystemStorage(conversationFilePath)).
-		WithToolset_X(fsToolset).
+		WithToolset(fsToolset).
 		WithSystemMessage(fsAgentSysPrompt).
 		WithInspectEachRequest(examplesutils.InspectWithReqLog).
 		WithInspectEachResponse(examplesutils.InspectWithRespLog).
@@ -57,13 +57,13 @@ func buildOpenRouterProvider() (rellm.Provider, error) {
 	return rellm.NewOpenRouterProvider(apiKey, "google/gemini-3.1-flash-lite")
 }
 
-func buildFSToolset(readOnlyDir, outputDir string) (*agentsutils.FSToolset_X, error) {
+func buildFSToolset(readOnlyDir, outputDir string) (*agentsutils.FSToolset, error) {
 	fs, err := agentsutils.NewLimitedFileSystem([]string{readOnlyDir}, outputDir)
 	if err != nil {
 		return nil, err
 	}
 
-	return &agentsutils.FSToolset_X{LimitedFileSystem: fs}, nil
+	return &agentsutils.FSToolset{LimitedFileSystem: fs}, nil
 }
 
 func buildFsPath() (agentsDirs, error) {
