@@ -44,11 +44,11 @@ func (e *HTTPStatusError) Error() string {
 type ReasoningEffort string
 
 const (
-	ReasoningEffort_None   ReasoningEffort = "none"
-	ReasoningEffort_Low    ReasoningEffort = "low"
-	ReasoningEffort_High   ReasoningEffort = "high"
-	ReasoningEffort_Medium ReasoningEffort = "medium"
-	ReasoningEffort_XHigh  ReasoningEffort = "xhigh"
+	ReasoningEffortNone   ReasoningEffort = "none"
+	ReasoningEffortLow    ReasoningEffort = "low"
+	ReasoningEffortHigh   ReasoningEffort = "high"
+	ReasoningEffortMedium ReasoningEffort = "medium"
+	ReasoningEffortXHigh  ReasoningEffort = "xhigh"
 )
 
 func parseResponsesAPIResponse(rawBody []byte, inspectResp InspectEachResponse) (*ResponsesAPIResp, error) {

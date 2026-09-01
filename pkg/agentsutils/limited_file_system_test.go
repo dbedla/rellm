@@ -194,7 +194,7 @@ func TestGetFileContentAsString(t *testing.T) {
 	})
 }
 
-func TestGetFileContentAsByte(t *testing.T) {
+func TestGetFileContentAsBytes(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	readOnlyDir := filepath.Join(tmpDir, "readonly")
@@ -213,13 +213,13 @@ func TestGetFileContentAsByte(t *testing.T) {
 	assert.NoError(t, err, "failed to create sandbox")
 
 	t.Run("Read file in read-only dir", func(t *testing.T) {
-		content, err := sandbox.GetFileContentAsByte(filepath.Join(readOnlyDir, "file1.txt"))
+		content, err := sandbox.GetFileContentAsBytes(filepath.Join(readOnlyDir, "file1.txt"))
 		assert.NoError(t, err, "expected no error")
 		assert.Equal(t, content1, content)
 	})
 
 	t.Run("Error for non-existent file", func(t *testing.T) {
-		_, err := sandbox.GetFileContentAsByte(filepath.Join(readOnlyDir, "nonexistent.txt"))
+		_, err := sandbox.GetFileContentAsBytes(filepath.Join(readOnlyDir, "nonexistent.txt"))
 		assert.Error(t, err, "expected error for non-existent file")
 	})
 }

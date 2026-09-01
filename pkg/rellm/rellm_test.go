@@ -11,7 +11,7 @@ import (
 const (
 	testBaseUrl              = "http://127.0.0.1"
 	testPort                 = "1234"
-	testReasoningEffort      = rellm.ReasoningEffort_Low
+	testReasoningEffort      = rellm.ReasoningEffortLow
 	testTemperature          = 0.5
 	testDefaultMaxAgentSteps = rellm.DefaultMaxAgentSteps
 )
@@ -30,13 +30,13 @@ func (h *HTTPDoMock) Do(req *http.Request) (*http.Response, error) {
 }
 
 func SetParametersWithReqLog(req *rellm.ResponsesAPIReq) {
-	req.Reasoning = &rellm.ReasoningConfig{Effort: rellm.ReasoningEffort_Medium}
+	req.Reasoning = &rellm.ReasoningConfig{Effort: rellm.ReasoningEffortMedium}
 	req.Temperature = 0.5
 
 	examplesutils.InspectWithReqLog(req)
 }
 
 func SetParametersForTest(req *rellm.ResponsesAPIReq) {
-	req.Reasoning = &rellm.ReasoningConfig{Effort: rellm.ReasoningEffort_Medium}
+	req.Reasoning = &rellm.ReasoningConfig{Effort: rellm.ReasoningEffortMedium}
 	req.Temperature = 0.5
 }
