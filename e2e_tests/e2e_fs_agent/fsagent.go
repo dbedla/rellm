@@ -62,9 +62,8 @@ func buildFSToolset(readOnlyDir, outputDir string) (*agentsutils.FSToolset, erro
 	if err != nil {
 		return nil, err
 	}
-	fsToolset := agentsutils.NewFSToolset(fs)
 
-	return fsToolset, nil
+	return agentsutils.NewFSToolset(fs), nil
 }
 
 func buildFsPath() (agentsDirs, error) {

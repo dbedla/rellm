@@ -35,7 +35,7 @@ type ResponsesAPIReq struct {
 	Seed *int64 `json:"seed,omitempty"`
 
 	// Tools and function calling
-	Tools []Tool `json:"tools,omitempty"`
+	Tools []ToolDefinition `json:"tools,omitempty"`
 	// ToolChoice can be:
 	// - string: "auto", "none", or "required"
 	// - ToolChoiceOption: { "type": "function", "function": { "name": "..." } }
@@ -97,8 +97,8 @@ type InputAudioData struct {
 	Format string `json:"format"`
 }
 
-// Tool defines a tool the model can call.
-type Tool struct {
+// ToolDefinition defines a tool the model can call.
+type ToolDefinition struct {
 	Type        string      `json:"type"`
 	Name        string      `json:"name,omitempty"`
 	Description string      `json:"description,omitempty"`
@@ -211,12 +211,12 @@ type ResponsesAPIResp struct {
 	MaxToolCalls      interface{}       `json:"max_tool_calls"`
 	Metadata          struct {
 	} `json:"metadata"`
-	Background         bool              `json:"background"`
-	PreviousResponseID interface{}       `json:"previous_response_id"`
-	ServiceTier        string            `json:"service_tier"`
-	Truncation         string            `json:"truncation"`
-	Store              bool              `json:"store"`
-	Instructions       interface{}       `json:"instructions"`
+	Background         bool        `json:"background"`
+	PreviousResponseID interface{} `json:"previous_response_id"`
+	ServiceTier        string      `json:"service_tier"`
+	Truncation         string      `json:"truncation"`
+	Store              bool        `json:"store"`
+	Instructions       interface{} `json:"instructions"`
 	Text               struct {
 		Format struct {
 			Type string `json:"type"`

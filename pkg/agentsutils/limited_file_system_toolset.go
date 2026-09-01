@@ -17,8 +17,8 @@ func NewFSToolset(lfs *LimitedFileSystem) *FSToolset {
 	return &FSToolset{lfs}
 }
 
-func (f *FSToolset) BuildTools() []rellm.Tool {
-	return []rellm.Tool{
+func (f *FSToolset) Definitions() []rellm.ToolDefinition {
+	return []rellm.ToolDefinition{
 		{
 			Type:        "function",
 			Name:        "FSToolset.GetReadOnlyPaths",
@@ -131,89 +131,73 @@ func (f *FSToolset) BuildTools() []rellm.Tool {
 	}
 }
 
-func (f *FSToolset) DispatchTools(_ context.Context, name string, callID string, arguments json.RawMessage) (rellm.FunctionCallResp, bool) {
+type fsPathArgs struct {
+	Path string `json:"path"`
+}
+
+type fsWriteStringArgs struct {
+	Content string `json:"content"`
+	Path    string `json:"path"`
+}
+
+type fsWriteBytesArgs struct {
+	Content []byte `json:"content"`
+	Path    string `json:"path"`
+}
+
+func decodeArgs[T any](arguments json.RawMessage) (T, error) {
+	var args T
+	return args, json.Unmarshal(arguments, &args)
+}
+
+func (f *FSToolset) Dispatch(_ context.Context, name string, arguments json.RawMessage) (rellm.ToolCallResult, error) {
 	arguments = normalizeToolArguments(arguments)
 	switch name {
 	case "FSToolset.GetReadOnlyPaths":
-		return rellm.FuncResultToFunctionCallResp(callID, f.GetReadOnlyPaths()), true
+		return rellm.ToolCallResult{Value: f.GetReadOnlyPaths()}, nil
 	case "FSToolset.GetOutputDir":
-		return rellm.FuncResultToFunctionCallResp(callID, f.GetOutputDir()), true
+		return rellm.ToolCallResult{Value: f.GetOutputDir()}, nil
 	case "FSToolset.GetFileContentAsString":
-		var args struct {
-			Path string `json:"path"`
-		}
-		if err := json.Unmarshal(arguments, &args); err != nil {
-			return rellm.FuncResultToFunctionCallResp(callID, fmt.Sprintf("error: %s", err)), true
+		args, err := decodeArgs[fsPathArgs](arguments)
+		if err != nil {
+			return rellm.ToolCallResult{Err: err}, nil
 		}
 		res, err := f.GetFileContentAsString(args.Path)
-		if err != nil {
-			return rellm.FuncResultToFunctionCallResp(callID, fmt.Sprintf("error: %s", err)), true
-		}
-		return rellm.FuncResultToFunctionCallResp(callID, res), true
+		return rellm.ToolCallResult{Value: res, Err: err}, nil
 	case "FSToolset.GetFileContentAsBytes":
-		var args struct {
-			Path string `json:"path"`
-		}
-		if err := json.Unmarshal(arguments, &args); err != nil {
-			return rellm.FuncResultToFunctionCallResp(callID, fmt.Sprintf("error: %s", err)), true
+		args, err := decodeArgs[fsPathArgs](arguments)
+		if err != nil {
+			return rellm.ToolCallResult{Err: err}, nil
 		}
 		res, err := f.GetFileContentAsBytes(args.Path)
-		if err != nil {
-			return rellm.FuncResultToFunctionCallResp(callID, fmt.Sprintf("error: %s", err)), true
-		}
-		return rellm.FuncResultToFunctionCallResp(callID, res), true
+		return rellm.ToolCallResult{Value: res, Err: err}, nil
 	case "FSToolset.WriteStringToFile":
-		var args struct {
-			Content string `json:"content"`
-			Path    string `json:"path"`
-		}
-		if err := json.Unmarshal(arguments, &args); err != nil {
-			return rellm.FuncResultToFunctionCallResp(callID, fmt.Sprintf("error: %s", err)), true
-		}
-		err := f.WriteStringToFile(args.Content, args.Path)
+		args, err := decodeArgs[fsWriteStringArgs](arguments)
 		if err != nil {
-			return rellm.FuncResultToFunctionCallResp(callID, fmt.Sprintf("error: %s", err)), true
+			return rellm.ToolCallResult{Err: err}, nil
 		}
-		return rellm.FuncResultToFunctionCallResp(callID, "ok"), true
+		return rellm.ToolCallResult{Value: "ok", Err: f.WriteStringToFile(args.Content, args.Path)}, nil
 	case "FSToolset.WriteBytesToFile":
-		var args struct {
-			Content []byte `json:"content"`
-			Path    string `json:"path"`
-		}
-		if err := json.Unmarshal(arguments, &args); err != nil {
-			return rellm.FuncResultToFunctionCallResp(callID, fmt.Sprintf("error: %s", err)), true
-		}
-		err := f.WriteBytesToFile(args.Content, args.Path)
+		args, err := decodeArgs[fsWriteBytesArgs](arguments)
 		if err != nil {
-			return rellm.FuncResultToFunctionCallResp(callID, fmt.Sprintf("error: %s", err)), true
+			return rellm.ToolCallResult{Err: err}, nil
 		}
-		return rellm.FuncResultToFunctionCallResp(callID, "ok"), true
+		return rellm.ToolCallResult{Value: "ok", Err: f.WriteBytesToFile(args.Content, args.Path)}, nil
 	case "FSToolset.DeleteFile":
-		var args struct {
-			Path string `json:"path"`
-		}
-		if err := json.Unmarshal(arguments, &args); err != nil {
-			return rellm.FuncResultToFunctionCallResp(callID, fmt.Sprintf("error: %s", err)), true
-		}
-		err := f.DeleteFile(args.Path)
+		args, err := decodeArgs[fsPathArgs](arguments)
 		if err != nil {
-			return rellm.FuncResultToFunctionCallResp(callID, fmt.Sprintf("error: %s", err)), true
+			return rellm.ToolCallResult{Err: err}, nil
 		}
-		return rellm.FuncResultToFunctionCallResp(callID, "ok"), true
+		return rellm.ToolCallResult{Value: "ok", Err: f.DeleteFile(args.Path)}, nil
 	case "FSToolset.ListFilesIn":
-		var args struct {
-			Path string `json:"path"`
-		}
-		if err := json.Unmarshal(arguments, &args); err != nil {
-			return rellm.FuncResultToFunctionCallResp(callID, fmt.Sprintf("error: %s", err)), true
+		args, err := decodeArgs[fsPathArgs](arguments)
+		if err != nil {
+			return rellm.ToolCallResult{Err: err}, nil
 		}
 		res, err := f.ListFilesIn(args.Path)
-		if err != nil {
-			return rellm.FuncResultToFunctionCallResp(callID, fmt.Sprintf("error: %s", err)), true
-		}
-		return rellm.FuncResultToFunctionCallResp(callID, res), true
+		return rellm.ToolCallResult{Value: res, Err: err}, nil
 	}
-	return rellm.FunctionCallResp{}, false
+	return rellm.ToolCallResult{}, fmt.Errorf("unknown tool name (%s)", name)
 }
 
 func normalizeToolArguments(arguments json.RawMessage) json.RawMessage {

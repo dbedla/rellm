@@ -3,23 +3,26 @@ package examplesutils
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"rellm/pkg/rellm"
 )
+
+var _ rellm.Toolset = (*DataSrcToolset)(nil)
 
 type DataSrcToolset struct {
 	TestDataSource
 }
 
-func (d *DataSrcToolset) BuildTools() []rellm.Tool {
-	return []rellm.Tool{
+func (d *DataSrcToolset) Definitions() []rellm.ToolDefinition {
+	return []rellm.ToolDefinition{
 		{
 			Type:        "function",
 			Name:        "GetDataFor",
 			Description: "Get data for a specific input",
-			Parameters: map[string]interface{}{
+			Parameters: map[string]any{
 				"type": "object",
-				"properties": map[string]interface{}{
-					"input": map[string]interface{}{
+				"properties": map[string]any{
+					"input": map[string]any{
 						"type": "string",
 					},
 				},
@@ -30,28 +33,26 @@ func (d *DataSrcToolset) BuildTools() []rellm.Tool {
 			Type:        "function",
 			Name:        "GetStaticData",
 			Description: "Get static data",
-			Parameters: map[string]interface{}{
+			Parameters: map[string]any{
 				"type":       "object",
-				"properties": map[string]interface{}{},
+				"properties": map[string]any{},
 			},
 		},
 	}
 }
 
-func (d *DataSrcToolset) DispatchTools(_ context.Context, name string, callID string, arguments json.RawMessage) (rellm.FunctionCallResp, bool) {
+func (d *DataSrcToolset) Dispatch(_ context.Context, name string, arguments json.RawMessage) (rellm.ToolCallResult, error) {
 	switch name {
 	case "GetDataFor":
 		args, err := parseGetDataForArgs(arguments)
 		if err != nil {
-			return rellm.FuncResultToFunctionCallResp(callID, "invalid arguments"), true
+			return rellm.ToolCallResult{Err: err}, nil
 		}
-		res := d.GetDataFor(args.Input)
-		return rellm.FuncResultToFunctionCallResp(callID, res), true
+		return rellm.ToolCallResult{Value: d.GetDataFor(args.Input)}, nil
 	case "GetStaticData":
-		res := d.GetStaticData()
-		return rellm.FuncResultToFunctionCallResp(callID, res), true
+		return rellm.ToolCallResult{Value: d.GetStaticData()}, nil
 	}
-	return rellm.FunctionCallResp{}, false
+	return rellm.ToolCallResult{}, fmt.Errorf("unknown tool name (%s)", name)
 }
 
 type getDataForArgs struct {
