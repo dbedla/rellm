@@ -26,7 +26,7 @@ func main() {
 
 		prompt, err := rellm.NewPromptBuilder().
 			WithMessage(msg).
-			WithReasoning(rellm.ReasoningEffort_Medium).
+			WithReasoning(rellm.ReasoningEffortMedium).
 			Build()
 
 		if err != nil {

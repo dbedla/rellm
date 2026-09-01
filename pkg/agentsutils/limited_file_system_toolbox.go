@@ -53,8 +53,8 @@ func (f *FSToolset) BuildTools() []rellm.Tool {
 		},
 		{
 			Type:        "function",
-			Name:        "FSToolset.GetFileContentAsByte",
-			Description: "GetFileContentAsByte returns the content of the file at the given path as a []byte\nerror will be returned if the path is outside FSSandbox.readOnlyDirs or FSSandbox.outputDir\nerror will be returned if the path does not exist or is not accessible.",
+			Name:        "FSToolset.GetFileContentAsBytes",
+			Description: "GetFileContentAsBytes returns the content of the file at the given path as a []byte\nerror will be returned if the path is outside FSSandbox.readOnlyDirs or FSSandbox.outputDir\nerror will be returned if the path does not exist or is not accessible.",
 			Parameters: map[string]any{
 				"type": "object",
 				"properties": map[string]any{
@@ -150,14 +150,14 @@ func (f *FSToolset) DispatchTools(_ context.Context, name string, callID string,
 			return rellm.FuncResultToFunctionCallResp(callID, fmt.Sprintf("error: %s", err)), true
 		}
 		return rellm.FuncResultToFunctionCallResp(callID, res), true
-	case "FSToolset.GetFileContentAsByte":
+	case "FSToolset.GetFileContentAsBytes":
 		var args struct {
 			Path string `json:"path"`
 		}
 		if err := json.Unmarshal(arguments, &args); err != nil {
 			return rellm.FuncResultToFunctionCallResp(callID, fmt.Sprintf("error: %s", err)), true
 		}
-		res, err := f.GetFileContentAsByte(args.Path)
+		res, err := f.GetFileContentAsBytes(args.Path)
 		if err != nil {
 			return rellm.FuncResultToFunctionCallResp(callID, fmt.Sprintf("error: %s", err)), true
 		}

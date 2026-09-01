@@ -77,11 +77,6 @@ func (s *LimitedFileSystem) GetFileContentAsBytes(path string) ([]byte, error) {
 	return content, nil
 }
 
-// GetFileContentAsByte is an alias for GetFileContentAsBytes.
-func (s *LimitedFileSystem) GetFileContentAsByte(path string) ([]byte, error) {
-	return s.GetFileContentAsBytes(path)
-}
-
 // WriteBytesToFile writes bytes into a specific file.
 // if the file does not exist, it will be created
 // error will be if the file already exists

@@ -125,7 +125,7 @@ func TestPromptBuilder_AllFields(t *testing.T) {
 			assert.NoError(t, err)
 
 			assert.Equal(t, float32(0.7), req.Temperature)
-			assert.Equal(t, rellm.ReasoningEffort_High, req.Reasoning.Effort)
+			assert.Equal(t, rellm.ReasoningEffortHigh, req.Reasoning.Effort)
 			assert.Equal(t, 512, req.MaxOutputTokens)
 			assert.InDelta(t, 0.9, req.TopP, 0.001)
 			assert.InDelta(t, 1.0, req.PresencePenalty, 0.001)
@@ -143,7 +143,7 @@ func TestPromptBuilder_AllFields(t *testing.T) {
 	prompt, err := rellm.NewPromptBuilder().
 		WithMessage("hi").
 		WithTemperature(0.7).
-		WithReasoning(rellm.ReasoningEffort_High).
+		WithReasoning(rellm.ReasoningEffortHigh).
 		WithMaxOutputTokens(512).
 		WithTopP(0.9).
 		WithPresencePenalty(1.0).
