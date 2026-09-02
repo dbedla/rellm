@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"strings"
 )
 
@@ -58,19 +57,11 @@ func (a *Agent) post(ctx context.Context, req *ResponsesAPIReq) (_ *ResponsesAPI
 		return nil, fmt.Errorf("marshal request: %w", err)
 	}
 
-	apiUrl, err := url.Parse(a.provider.URL())
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, a.provider.URL(), bytes.NewReader(body))
 	if err != nil {
 		return nil, err
 	}
-
-	httpReq := &http.Request{
-		Method: "POST",
-		Header: a.provider.Header(),
-		URL:    apiUrl,
-		Body:   io.NopCloser(bytes.NewReader(body)),
-	}
-
-	httpReq = httpReq.WithContext(ctx)
+	httpReq.Header = a.provider.Header()
 
 	resp, err := a.provider.Do(httpReq)
 	if err != nil {
@@ -92,7 +83,7 @@ func (a *Agent) post(ctx context.Context, req *ResponsesAPIReq) (_ *ResponsesAPI
 	}
 
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
-		return nil, newHTTPStatusError(resp, rawBody, apiUrl.String())
+		return nil, newHTTPStatusError(resp, rawBody, httpReq.URL.String())
 	}
 
 	return parseResponsesAPIResponse(rawBody, a.inspectResp)
