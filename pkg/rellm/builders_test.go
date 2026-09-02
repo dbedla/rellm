@@ -51,6 +51,7 @@ func TestAgentBuilder_Build(t *testing.T) {
 		agent, err := builder.Build()
 		assert.NoError(t, err)
 		assert.NotNil(t, agent)
+		assert.Equal(t, "TestAgent", agent.Name())
 	})
 
 	t.Run("Missing conversation storage", func(t *testing.T) {
@@ -69,15 +70,6 @@ func TestAgentBuilder_Build(t *testing.T) {
 		_, err := builder.Build()
 		assert.Error(t, err)
 		assert.Equal(t, err, rellm.ErrBuildNoProvider)
-	})
-
-	t.Run("Missing agent name", func(t *testing.T) {
-		builder := rellm.NewAgentBuilder().
-			WithProvider(buildProvider())
-
-		_, err := builder.Build()
-		assert.Error(t, err)
-		assert.Equal(t, err, rellm.ErrBuildNoAgentName)
 	})
 
 	t.Run("Build twice does not alias the builder state", func(t *testing.T) {

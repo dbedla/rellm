@@ -103,3 +103,7 @@ func (a *Agent) Ask(ctx context.Context, question string) (string, error) {
 
 	return a.Execute(ctx, prompt)
 }
+
+func (a *Agent) Name() string {
+	return a.agentName
+}

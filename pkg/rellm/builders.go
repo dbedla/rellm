@@ -87,10 +87,6 @@ func (b *AgentBuilder) Build() (*Agent, error) {
 		return nil, ErrBuildNoProvider
 	}
 
-	if b.agent.agentName == "" {
-		return nil, ErrBuildNoAgentName
-	}
-
 	if b.agent.maxAgentSteps == 0 {
 		b.agent.maxAgentSteps = DefaultMaxAgentSteps
 	}

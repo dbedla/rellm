@@ -5,7 +5,6 @@ import (
 )
 
 var ErrBuildNoProvider = errors.New("missing provider")
-var ErrBuildNoAgentName = errors.New("missing agent name")
 var ErrBuildNoConversationStorage = errors.New("missing conversation storage")
 var ErrMalformedConversationStorage = errors.New("malformed conversation storage line")
 
