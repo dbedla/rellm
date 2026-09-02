@@ -1,0 +1,14 @@
+{
+  "input": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "input_text",
+          "text": "Hi"
+        }
+      ]
+    }
+  ],
+  "model": "google/gemma-4-26b-a4b"
+}

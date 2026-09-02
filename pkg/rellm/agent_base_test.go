@@ -50,6 +50,41 @@ func TestAgentAsk(t *testing.T) {
 	assert.Equal(t, "Hello! How can I help you today? \n\nIf you have any questions about the weather, meteorology, climate patterns, or even how certain atmospheric phenomena work, feel free to ask!", respMsg, "response message should match")
 }
 
+//go:embed testdata/base_api_req_hi_no_sys_msg.json
+var goldenReqHiNoSysMsg string
+
+func TestAgentAskNoSysMsg(t *testing.T) {
+	agent, httpDo := buildTestAgentNoSysMsg(t)
+	defer httpDo.AssertExpectations(t)
+
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Run(func(args mock.Arguments) {
+			req := args.Get(0).(*http.Request)
+
+			b, err := io.ReadAll(req.Body)
+			assert.NoError(t, err, "failed to read request body")
+
+			req.Body = io.NopCloser(bytes.NewBuffer(b))
+
+			assert.JSONEq(t, goldenReqHiNoSysMsg, string(b))
+		}).
+		Return(&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(goldenRespHi)),
+		}, nil)
+
+	ctx := context.Background()
+	respMsg, err := agent.Ask(ctx, "Hi")
+	assert.NoError(t, err, "failed to ask")
+	assert.NotNil(t, respMsg, "response message should not be nil")
+	assert.Equal(t, "Hello! How can I help you today? \n\nIf you have any questions about the weather, meteorology, climate patterns, or even how certain atmospheric phenomena work, feel free to ask!", respMsg, "response message should match")
+
+	conversation, err := agent.CurrentConversation()
+	assert.NoError(t, err)
+	assert.Len(t, conversation, 3)
+}
+
 func TestAgentAskContextAlreadyCanceled(t *testing.T) {
 	agent, httpDo := buildTestAgent(t)
 	defer httpDo.AssertExpectations(t)
@@ -231,6 +266,25 @@ func buildTestAgent(t *testing.T) (*rellm.Agent, *HTTPDoMock) {
 		WithMaxAgentSteps(20).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage("You are a helpful assistant with deep weather knowledge.").
+		Build()
+
+	assert.NoError(t, err, "failed to create agent")
+	return ta, mockHttp
+}
+
+func buildTestAgentNoSysMsg(t *testing.T) (*rellm.Agent, *HTTPDoMock) {
+
+	agentName := "TestAgent"
+	mockHttp := new(HTTPDoMock)
+
+	p, err := rellm.NewLMStudioProviderWithHTTPClient("google/gemma-4-26b-a4b", testBaseUrl, testPort, mockHttp)
+	assert.NoError(t, err, "failed to create provider")
+
+	ta, err := rellm.NewAgentBuilder().
+		WithProvider(p).
+		WithAgentName(agentName).
+		WithMaxAgentSteps(20).
+		WithConversationStorage(rellm.NewInMemoryStorage()).
 		Build()
 
 	assert.NoError(t, err, "failed to create agent")

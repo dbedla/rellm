@@ -60,6 +60,10 @@ func (a *Agent) CurrentConversation() ([]ConversationElement, error) {
 		return conversation, nil
 	}
 
+	if len(a.sysMsg) == 0 {
+		return []ConversationElement{}, nil
+	}
+
 	systemMessage, err := PromptMessageToConversation(a.sysMsg, "system")
 	if err != nil {
 		return nil, err
