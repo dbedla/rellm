@@ -17,7 +17,7 @@ const (
 )
 
 func baseRequestMatch(req *http.Request) bool {
-	return req.Method == http.MethodPost
+	return req.Method == http.MethodPost && req.ContentLength != 0
 }
 
 type HTTPDoMock struct {
