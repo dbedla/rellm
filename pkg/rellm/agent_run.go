@@ -12,30 +12,8 @@ import (
 )
 
 func (a *Agent) run(ctx context.Context, msg string, params promptParams) (string, error) {
-	conversation, err := a.CurrentConversation()
+	conversation, err := a.appendConversation(msg)
 	if err != nil {
-		return "", err
-	}
-
-	if len(conversation) == 0 && len(a.sysMsg) != 0 {
-		systemMessage, err := PromptMessageToConversation(a.sysMsg, "system")
-		if err != nil {
-			return "", err
-		}
-		err = a.conversationStorage.Append([]ConversationElement{systemMessage})
-		if err != nil {
-			return "", err
-		}
-		conversation = append(conversation, systemMessage)
-	}
-
-	userMsg, err := PromptMessageToConversation(msg, "user")
-	if err != nil {
-		return "", errors.Join(ErrUserMsgConversionFailed, err)
-	}
-
-	conversation = append(conversation, userMsg)
-	if err := a.conversationStorage.Append([]ConversationElement{userMsg}); err != nil {
 		return "", err
 	}
 
@@ -285,4 +263,35 @@ func toBaseResponsesAPIReq(params promptParams, model Model, conversation []json
 		Logprobs:         params.Logprobs,
 		TopLogprobs:      params.TopLogprobs,
 	}
+}
+
+func (a *Agent) appendConversation(msg string) ([]ConversationElement, error) {
+	conversation, err := a.CurrentConversation()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(conversation) == 0 && len(a.sysMsg) != 0 {
+		systemMessage, err := PromptMessageToConversation(a.sysMsg, "system")
+		if err != nil {
+			return nil, err
+		}
+		err = a.conversationStorage.Append([]ConversationElement{systemMessage})
+		if err != nil {
+			return nil, err
+		}
+		conversation = append(conversation, systemMessage)
+	}
+
+	userMsg, err := PromptMessageToConversation(msg, "user")
+	if err != nil {
+		return nil, errors.Join(ErrUserMsgConversionFailed, err)
+	}
+
+	conversation = append(conversation, userMsg)
+	if err := a.conversationStorage.Append([]ConversationElement{userMsg}); err != nil {
+		return nil, err
+	}
+
+	return conversation, nil
 }
