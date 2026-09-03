@@ -60,19 +60,7 @@ func (a *Agent) CurrentConversation() ([]ConversationElement, error) {
 		return conversation, nil
 	}
 
-	if len(a.sysMsg) == 0 {
-		return []ConversationElement{}, nil
-	}
-
-	systemMessage, err := PromptMessageToConversation(a.sysMsg, "system")
-	if err != nil {
-		return nil, err
-	}
-	err = a.conversationStorage.Append([]ConversationElement{systemMessage})
-	if err != nil {
-		return nil, err
-	}
-	return a.conversationStorage.Load()
+	return []ConversationElement{}, nil
 }
 
 func FuncResultToFunctionCallResp(callID string, funcResult any) FunctionCallResp {

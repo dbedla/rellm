@@ -3,7 +3,6 @@ package rellm_test
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"io"
 	"net/http"
 	"rellm/pkg/rellm"
@@ -37,11 +36,7 @@ func TestAgentAsk_ConversationBeforeAndAfter(t *testing.T) {
 
 	conversationBeforeAsk, err := agent.CurrentConversation()
 	assert.NoError(t, err)
-	assert.Len(t, conversationBeforeAsk, 1)
-
-	beforeAskJSON, err := json.Marshal(conversationBeforeAsk)
-	assert.NoError(t, err)
-	assert.JSONEq(t, `[{"kind":"system_message","role":"system","content":[{"type":"input_text","text":"You are a helpful assistant with deep weather knowledge."}]}]`, string(beforeAskJSON))
+	assert.Len(t, conversationBeforeAsk, 0)
 
 	ctx := context.Background()
 	respMsg, err := agent.Ask(ctx, "Hi")

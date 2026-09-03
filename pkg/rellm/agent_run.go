@@ -17,6 +17,18 @@ func (a *Agent) run(ctx context.Context, msg string, params promptParams) (strin
 		return "", err
 	}
 
+	if len(conversation) == 0 && len(a.sysMsg) != 0 {
+		systemMessage, err := PromptMessageToConversation(a.sysMsg, "system")
+		if err != nil {
+			return "", err
+		}
+		err = a.conversationStorage.Append([]ConversationElement{systemMessage})
+		if err != nil {
+			return "", err
+		}
+		conversation = append(conversation, systemMessage)
+	}
+
 	userMsg, err := PromptMessageToConversation(msg, "user")
 	if err != nil {
 		return "", errors.Join(ErrUserMsgConversionFailed, err)
