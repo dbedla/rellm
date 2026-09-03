@@ -117,5 +117,11 @@ func unmarshal[K any](rawBody []byte) (K, error) {
 }
 
 func closeWithError(err *error, c io.Closer) {
+	if err == nil {
+		return
+	}
+	if c == nil {
+		return
+	}
 	*err = errors.Join(*err, c.Close())
 }
