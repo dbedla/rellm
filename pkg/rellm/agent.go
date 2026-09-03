@@ -16,8 +16,8 @@ type Toolset interface {
 }
 
 type ConversationStorage interface {
-	Load() ([]ConversationElement, error)
-	Append([]ConversationElement) error
+	Load(context.Context) ([]ConversationElement, error)
+	Append(context.Context, []ConversationElement) error
 }
 
 type Agent struct {
@@ -50,8 +50,8 @@ type InspectEachResponse func(resp *ResponsesAPIResp)
 //   - any other slice: replace it with those elements
 type HandleUnknownConversationElement func(ctx context.Context, el *UnknownElement) ([]ConversationElement, error)
 
-func (a *Agent) CurrentConversation() ([]ConversationElement, error) {
-	conversation, err := a.conversationStorage.Load()
+func (a *Agent) CurrentConversation(ctx context.Context) ([]ConversationElement, error) {
+	conversation, err := a.conversationStorage.Load(ctx)
 	if err != nil {
 		return nil, err
 	}

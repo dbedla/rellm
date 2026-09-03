@@ -34,11 +34,11 @@ func TestAgentAsk_ConversationBeforeAndAfter(t *testing.T) {
 			Body:       io.NopCloser(strings.NewReader(goldenRespHi)),
 		}, nil)
 
-	conversationBeforeAsk, err := agent.CurrentConversation()
+	ctx := context.Background()
+	conversationBeforeAsk, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, conversationBeforeAsk, 0)
 
-	ctx := context.Background()
 	respMsg, err := agent.Ask(ctx, "Hi")
 	assert.NoError(t, err)
 	assert.NotNil(t, respMsg)
@@ -49,7 +49,7 @@ func TestAgentAsk_ConversationBeforeAndAfter(t *testing.T) {
 		goldenRespHi)
 	assert.NoError(t, err)
 
-	conversationAfterAsk, err := agent.CurrentConversation()
+	conversationAfterAsk, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 
 	assert.Equal(t, conversationFromGolden, conversationAfterAsk)
@@ -125,7 +125,7 @@ func TestAgentLMS_ToolsCallWithConversationCheck(t *testing.T) {
 	assert.NotNil(t, respMsg, "response message should not be nil")
 	assert.Equal(t, "The first tool call to `GetStaticData` returned the value `42`. The second tool call to `GetDataFor` with the input \"the meaning of 42\" returned a list containing `[\"abc\", \"def\"]`. Therefore, based on these specific tool outputs, the data associated with the value 42 is \"abc\" and \"def\".", respMsg, "response message should match")
 
-	agentConversation, err := agent.CurrentConversation()
+	agentConversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 	assert.Equal(t, 10, len(agentConversation))
 
@@ -207,7 +207,7 @@ func TestAgentLMS_ToolsCallWithConversationCheck_SecondRespFail(t *testing.T) {
 
 	assert.Empty(t, respMsg)
 
-	agentConversation, err := agent.CurrentConversation()
+	agentConversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 	assert.Equal(t, 8, len(agentConversation))
 
@@ -279,7 +279,7 @@ func TestAgentOpenRouterGemma_ConversationCheck(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "I have access to the following tools:\n\n1.  **`GetDataFor`**: This tool allows me to retrieve specific data based on an input string you provide.\n2.  **`GetStaticData`**: This tool allows me to retrieve pre-defined static data.", respMsg)
 
-	agentConversation, err := agent.CurrentConversation()
+	agentConversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 
 	conversationFromGolden, err := buildConversationFromGoldenOpenRouter(
@@ -352,7 +352,7 @@ func TestAgentOpenRouterGemini_ConversationCheck(t *testing.T) {
 	assert.NoError(t, err, "failed to ask with reasoning in conversation")
 	assert.Equal(t, "I have access to the following tools:\n\n*   **`GetDataFor`**: This tool allows me to retrieve specific data based on an input you provide.\n*   **`GetStaticData`**: This tool allows me to retrieve general static information.\n\nHow can I help you use these today?", respMsg)
 
-	agentConversation, err := agent.CurrentConversation()
+	agentConversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 
 	conversationFromGolden, err := buildConversationFromGoldenOpenRouter(

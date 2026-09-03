@@ -80,7 +80,7 @@ func TestAgentAskNoSysMsg(t *testing.T) {
 	assert.NotNil(t, respMsg, "response message should not be nil")
 	assert.Equal(t, "Hello! How can I help you today? \n\nIf you have any questions about the weather, meteorology, climate patterns, or even how certain atmospheric phenomena work, feel free to ask!", respMsg, "response message should match")
 
-	conversation, err := agent.CurrentConversation()
+	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, conversation, 3)
 }
@@ -247,7 +247,7 @@ func TestAgentAsk_RetryAfterProviderFailedMessageStaysInConversation(t *testing.
 	_, err = agent.Ask(ctx, "Hi")
 	assert.NoError(t, err)
 
-	conversation, err := agent.CurrentConversation()
+	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, conversation, 5)
 }

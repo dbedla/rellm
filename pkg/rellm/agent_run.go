@@ -12,7 +12,7 @@ import (
 )
 
 func (a *Agent) run(ctx context.Context, msg string, params promptParams) (string, error) {
-	conversation, err := a.appendConversation(msg)
+	conversation, err := a.appendConversation(ctx, msg)
 	if err != nil {
 		return "", err
 	}
@@ -111,7 +111,7 @@ func (a *Agent) process(ctx context.Context, req *ResponsesAPIReq) (string, erro
 		}
 		req.Input = append(req.Input, raw...)
 
-		conversationErr := a.conversationStorage.Append(conversation)
+		conversationErr := a.conversationStorage.Append(ctx, conversation)
 		if conversationErr != nil {
 			return "", conversationErr
 		}
@@ -265,8 +265,8 @@ func toBaseResponsesAPIReq(params promptParams, model Model, conversation []json
 	}
 }
 
-func (a *Agent) appendConversation(msg string) ([]ConversationElement, error) {
-	conversation, err := a.CurrentConversation()
+func (a *Agent) appendConversation(ctx context.Context, msg string) ([]ConversationElement, error) {
+	conversation, err := a.CurrentConversation(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -276,7 +276,7 @@ func (a *Agent) appendConversation(msg string) ([]ConversationElement, error) {
 		if err != nil {
 			return nil, err
 		}
-		err = a.conversationStorage.Append([]ConversationElement{systemMessage})
+		err = a.conversationStorage.Append(ctx, []ConversationElement{systemMessage})
 		if err != nil {
 			return nil, err
 		}
@@ -289,7 +289,7 @@ func (a *Agent) appendConversation(msg string) ([]ConversationElement, error) {
 	}
 
 	conversation = append(conversation, userMsg)
-	if err := a.conversationStorage.Append([]ConversationElement{userMsg}); err != nil {
+	if err := a.conversationStorage.Append(ctx, []ConversationElement{userMsg}); err != nil {
 		return nil, err
 	}
 

@@ -54,7 +54,7 @@ func TestLMSAgentHiUnknownConversationElInRespNoHandlerGetErr(t *testing.T) {
 	assert.ErrorIs(t, err, rellm.ErrNoUnknownConversationElementHandler)
 
 	assert.Equal(t, "", respMsg)
-	conversation, err := agent.CurrentConversation()
+	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, conversation, 4)
 }
@@ -93,7 +93,7 @@ func TestLMSAgentHiUnknownConversationElHandlerNotProvidedGetErr(t *testing.T) {
 	assert.ErrorIs(t, err, rellm.ErrNoUnknownConversationElementHandler)
 
 	assert.Equal(t, "", respMsg)
-	conversation, err := agent.CurrentConversation()
+	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, conversation, 4)
 }
@@ -131,7 +131,7 @@ func TestLMSAgentHiUnknownConversationElInRespDrop(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, "Hello! How can I help you today?", respMsg)
-	conversation, err := agent.CurrentConversation()
+	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, conversation, 4)
 }
@@ -169,7 +169,7 @@ func TestLMSAgentHiUnknownConversationElInRespKeepInTheLoop(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, "Hello! How can I help you today?", respMsg)
-	conversation, err := agent.CurrentConversation()
+	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, conversation, 5)
 }
@@ -207,7 +207,7 @@ func TestLMSAgentHiUnknownConversationElHandlerAddAdditionalData(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, "Hello! How can I help you today?", respMsg)
-	conversation, err := agent.CurrentConversation()
+	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, conversation, 6)
 }
@@ -249,7 +249,7 @@ func TestLMSAgentHiUnknownConversationElInRespDropNoNewMessages(t *testing.T) {
 	assert.ErrorIs(t, err, rellm.ErrNoNewConversationElementAfterDispatch)
 
 	assert.Equal(t, "", respMsg)
-	conversation, err := agent.CurrentConversation()
+	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, conversation, 2)
 }
@@ -287,7 +287,7 @@ func TestLMSAgentHiUnknownConversationElInRespReplace(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, "Hello! How can I help you today?", respMsg)
-	conversation, err := agent.CurrentConversation()
+	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, conversation, 5)
 

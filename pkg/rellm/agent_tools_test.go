@@ -456,7 +456,7 @@ func TestAgentLMS_DispatchFailurePersistsPartialToolResults(t *testing.T) {
 	assert.Empty(t, respMsg)
 	assert.ErrorIs(t, err, rellm.ErrWhileDispatchToolCall)
 
-	conversation, err := agent.CurrentConversation()
+	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 
 	outputsByCallID := make(map[string]string)
