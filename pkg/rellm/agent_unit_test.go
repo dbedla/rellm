@@ -1,6 +1,7 @@
 package rellm
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 
@@ -87,4 +88,12 @@ type closNoErr struct {
 
 func (c *closNoErr) Close() error {
 	return nil
+}
+
+func TestFuncResultToFunctionCallRespSerializesOutputAsString(t *testing.T) {
+	resp := funcResultToFunctionCallResp("call_123", int64(42))
+
+	jsonResp, err := json.Marshal(resp)
+	assert.NoError(t, err, "failed to marshal function call response")
+	assert.JSONEq(t, `{"type":"function_call_output","call_id":"call_123","output":"42"}`, string(jsonResp))
 }
