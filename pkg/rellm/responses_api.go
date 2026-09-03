@@ -16,11 +16,11 @@ type ResponsesAPIReq struct {
 	Instructions string `json:"instructions,omitempty"`
 
 	// Output controls
-	MaxOutputTokens  int     `json:"max_output_tokens,omitempty"`
-	Temperature      float32 `json:"temperature,omitempty"`
-	TopP             float32 `json:"top_p,omitempty"`
-	PresencePenalty  float32 `json:"presence_penalty,omitempty"`
-	FrequencyPenalty float32 `json:"frequency_penalty,omitempty"`
+	MaxOutputTokens  int      `json:"max_output_tokens,omitempty"`
+	Temperature      *float32 `json:"temperature,omitempty"`
+	TopP             *float32 `json:"top_p,omitempty"`
+	PresencePenalty  *float32 `json:"presence_penalty,omitempty"`
+	FrequencyPenalty *float32 `json:"frequency_penalty,omitempty"`
 
 	// Stop controls
 	// NOTE: Some examples show "stop"; others may reference "stop_sequences".

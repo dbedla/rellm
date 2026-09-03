@@ -13,12 +13,12 @@ type Prompt struct {
 
 // promptParams holds inference parameters configured via WithXxx methods.
 type promptParams struct {
-	Temperature      float32
+	Temperature      *float32
 	Reasoning        *ReasoningConfig
 	MaxOutputTokens  int
-	TopP             float32
-	PresencePenalty  float32
-	FrequencyPenalty float32
+	TopP             *float32
+	PresencePenalty  *float32
+	FrequencyPenalty *float32
 	Seed             *int64
 	Logprobs         bool
 	TopLogprobs      int
@@ -42,7 +42,7 @@ func (b *PromptBuilder) WithMessage(msg string) *PromptBuilder {
 }
 
 func (b *PromptBuilder) WithTemperature(t float32) *PromptBuilder {
-	b.params.Temperature = t
+	b.params.Temperature = &t
 	return b
 }
 
@@ -58,17 +58,17 @@ func (b *PromptBuilder) WithMaxOutputTokens(n int) *PromptBuilder {
 }
 
 func (b *PromptBuilder) WithTopP(t float32) *PromptBuilder {
-	b.params.TopP = t
+	b.params.TopP = &t
 	return b
 }
 
 func (b *PromptBuilder) WithPresencePenalty(p float32) *PromptBuilder {
-	b.params.PresencePenalty = p
+	b.params.PresencePenalty = &p
 	return b
 }
 
 func (b *PromptBuilder) WithFrequencyPenalty(f float32) *PromptBuilder {
-	b.params.FrequencyPenalty = f
+	b.params.FrequencyPenalty = &f
 	return b
 }
 
@@ -105,7 +105,7 @@ func (b *PromptBuilder) Build() (*Prompt, error) {
 	}, nil
 }
 
-func PromptMessageToConversation(prompt, role string) (ConversationElement, error) {
+func promptMessageToConversation(prompt, role string) (ConversationElement, error) {
 	content := []MessagePart{{Type: "input_text", Text: prompt}}
 	switch role {
 	case "user":

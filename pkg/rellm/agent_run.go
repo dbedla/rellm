@@ -1,29 +1,16 @@
 package rellm
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"strings"
 )
 
 func (a *Agent) run(ctx context.Context, msg string, params promptParams) (string, error) {
-	conversation, err := a.CurrentConversation()
+	conversation, err := a.appendConversation(ctx, msg)
 	if err != nil {
-		return "", err
-	}
-
-	userMsg, err := PromptMessageToConversation(msg, "user")
-	if err != nil {
-		return "", errors.Join(ErrUserMsgConversionFailed, err)
-	}
-
-	conversation = append(conversation, userMsg)
-	if err := a.conversationStorage.Append([]ConversationElement{userMsg}); err != nil {
 		return "", err
 	}
 
@@ -45,48 +32,6 @@ func (a *Agent) run(ctx context.Context, msg string, params promptParams) (strin
 	}
 
 	return msgRespFromLLM, nil
-}
-
-func (a *Agent) post(ctx context.Context, req *ResponsesAPIReq) (_ *ResponsesAPIResp, err error) {
-	if a.inspectReq != nil {
-		a.inspectReq(req)
-	}
-
-	body, err := json.Marshal(req)
-	if err != nil {
-		return nil, fmt.Errorf("marshal request: %w", err)
-	}
-
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, a.provider.URL(), bytes.NewReader(body))
-	if err != nil {
-		return nil, err
-	}
-	httpReq.Header = a.provider.Header()
-
-	resp, err := a.provider.Do(httpReq)
-	if err != nil {
-		return nil, err
-	}
-
-	if resp == nil {
-		return nil, ErrEndpointNilResponse
-	}
-
-	if resp.Body == nil {
-		return nil, errors.Join(ErrEndpointNilBodyInResponse, fmt.Errorf("response status: %s", resp.Status))
-	}
-
-	defer closeWithError(&err, resp.Body)
-	rawBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, errors.Join(err, ErrUnableToReadResponseBody, fmt.Errorf("response status: %s", resp.Status))
-	}
-
-	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
-		return nil, newHTTPStatusError(resp, rawBody, httpReq.URL.String())
-	}
-
-	return parseResponsesAPIResponse(rawBody, a.inspectResp)
 }
 
 func (a *Agent) process(ctx context.Context, req *ResponsesAPIReq) (string, error) {
@@ -121,7 +66,7 @@ func (a *Agent) process(ctx context.Context, req *ResponsesAPIReq) (string, erro
 		}
 		req.Input = append(req.Input, raw...)
 
-		conversationErr := a.conversationStorage.Append(conversation)
+		conversationErr := a.conversationStorage.Append(ctx, conversation)
 		if conversationErr != nil {
 			return "", conversationErr
 		}
@@ -247,16 +192,16 @@ func (a *Agent) handleFunctionCall(ctx context.Context, fn *FunctionCall) (*Func
 	}
 
 	if result.Err != nil {
-		funcCallResp := FuncResultToFunctionCallResp(fn.CallID, result.Err.Error())
+		funcCallResp := funcResultToFunctionCallResp(fn.CallID, result.Err.Error())
 		return &funcCallResp, nil
 	}
 
-	funcCallResp := FuncResultToFunctionCallResp(fn.CallID, result.Value)
+	funcCallResp := funcResultToFunctionCallResp(fn.CallID, result.Value)
 	return &funcCallResp, nil
 }
 
 func invalidFunctionCallResp(fn *FunctionCall) FunctionCallResp {
-	return FuncResultToFunctionCallResp(fn.CallID, "invalid function call (function not found) "+fn.Name)
+	return funcResultToFunctionCallResp(fn.CallID, "invalid function call (function not found) "+fn.Name)
 }
 
 func toBaseResponsesAPIReq(params promptParams, model Model, conversation []json.RawMessage) *ResponsesAPIReq {
@@ -273,4 +218,35 @@ func toBaseResponsesAPIReq(params promptParams, model Model, conversation []json
 		Logprobs:         params.Logprobs,
 		TopLogprobs:      params.TopLogprobs,
 	}
+}
+
+func (a *Agent) appendConversation(ctx context.Context, msg string) ([]ConversationElement, error) {
+	conversation, err := a.CurrentConversation(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(conversation) == 0 && len(a.sysMsg) != 0 {
+		systemMessage, err := promptMessageToConversation(a.sysMsg, "system")
+		if err != nil {
+			return nil, err
+		}
+		err = a.conversationStorage.Append(ctx, []ConversationElement{systemMessage})
+		if err != nil {
+			return nil, err
+		}
+		conversation = append(conversation, systemMessage)
+	}
+
+	userMsg, err := promptMessageToConversation(msg, "user")
+	if err != nil {
+		return nil, errors.Join(ErrUserMsgConversionFailed, err)
+	}
+
+	conversation = append(conversation, userMsg)
+	if err := a.conversationStorage.Append(ctx, []ConversationElement{userMsg}); err != nil {
+		return nil, err
+	}
+
+	return conversation, nil
 }

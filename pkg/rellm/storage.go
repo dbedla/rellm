@@ -2,6 +2,7 @@ package rellm
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,21 +11,21 @@ import (
 )
 
 type InMemoryStorage struct {
-	Messages []ConversationElement
+	messages []ConversationElement
 }
 
 func NewInMemoryStorage() *InMemoryStorage {
 	return &InMemoryStorage{}
 }
 
-func (s *InMemoryStorage) Load() ([]ConversationElement, error) {
-	cp := make([]ConversationElement, len(s.Messages))
-	copy(cp, s.Messages)
+func (s *InMemoryStorage) Load(_ context.Context) ([]ConversationElement, error) {
+	cp := make([]ConversationElement, len(s.messages))
+	copy(cp, s.messages)
 	return cp, nil
 }
 
-func (s *InMemoryStorage) Append(delta []ConversationElement) error {
-	s.Messages = append(s.Messages, delta...)
+func (s *InMemoryStorage) Append(_ context.Context, delta []ConversationElement) error {
+	s.messages = append(s.messages, delta...)
 	return nil
 }
 
@@ -36,7 +37,7 @@ func NewFilesystemStorage(path string) *FilesystemStorage {
 	return &FilesystemStorage{path: path}
 }
 
-func (s *FilesystemStorage) Load() ([]ConversationElement, error) {
+func (s *FilesystemStorage) Load(_ context.Context) ([]ConversationElement, error) {
 	data, err := os.ReadFile(s.path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -62,7 +63,7 @@ func (s *FilesystemStorage) Load() ([]ConversationElement, error) {
 	return elements, nil
 }
 
-func (s *FilesystemStorage) Append(delta []ConversationElement) (err error) {
+func (s *FilesystemStorage) Append(_ context.Context, delta []ConversationElement) (finalErr error) {
 	if len(delta) == 0 {
 		return nil
 	}
@@ -91,7 +92,7 @@ func (s *FilesystemStorage) Append(delta []ConversationElement) (err error) {
 	if err != nil {
 		return fmt.Errorf("failed to open storage file %s: %w", s.path, err)
 	}
-	defer closeWithError(&err, f)
+	defer closeWithError(&finalErr, f)
 
 	if _, err = f.Write(buf.Bytes()); err != nil {
 		return fmt.Errorf("failed to write to storage file %s: %w", s.path, err)

@@ -80,7 +80,7 @@ func TestAgentAskNoSysMsg(t *testing.T) {
 	assert.NotNil(t, respMsg, "response message should not be nil")
 	assert.Equal(t, "Hello! How can I help you today? \n\nIf you have any questions about the weather, meteorology, climate patterns, or even how certain atmospheric phenomena work, feel free to ask!", respMsg, "response message should match")
 
-	conversation, err := agent.CurrentConversation()
+	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, conversation, 3)
 }
@@ -159,12 +159,12 @@ func TestPromptBuilder_AllFields(t *testing.T) {
 			err = json.Unmarshal(b, &req)
 			assert.NoError(t, err)
 
-			assert.Equal(t, float32(0.7), req.Temperature)
+			assert.Equal(t, float32(0.7), *req.Temperature)
 			assert.Equal(t, rellm.ReasoningEffortHigh, req.Reasoning.Effort)
 			assert.Equal(t, 512, req.MaxOutputTokens)
-			assert.InDelta(t, 0.9, req.TopP, 0.001)
-			assert.InDelta(t, 1.0, req.PresencePenalty, 0.001)
-			assert.InDelta(t, 0.5, req.FrequencyPenalty, 0.001)
+			assert.InDelta(t, 0.9, *req.TopP, 0.001)
+			assert.InDelta(t, 1.0, *req.PresencePenalty, 0.001)
+			assert.InDelta(t, 0.5, *req.FrequencyPenalty, 0.001)
 			assert.NotNil(t, req.Seed)
 			assert.Equal(t, int64(42), *req.Seed)
 			assert.True(t, req.Logprobs)
@@ -247,7 +247,7 @@ func TestAgentAsk_RetryAfterProviderFailedMessageStaysInConversation(t *testing.
 	_, err = agent.Ask(ctx, "Hi")
 	assert.NoError(t, err)
 
-	conversation, err := agent.CurrentConversation()
+	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, conversation, 5)
 }

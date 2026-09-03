@@ -456,7 +456,7 @@ func TestAgentLMS_DispatchFailurePersistsPartialToolResults(t *testing.T) {
 	assert.Empty(t, respMsg)
 	assert.ErrorIs(t, err, rellm.ErrWhileDispatchToolCall)
 
-	conversation, err := agent.CurrentConversation()
+	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 
 	outputsByCallID := make(map[string]string)
@@ -521,14 +521,6 @@ func TestAgentLMSTooManyFunctionCall(t *testing.T) {
 	_, err = agent.Execute(ctx, prompt)
 	assert.Error(t, err, "expected error when tool iteration budget is exceeded")
 	assert.True(t, errors.Is(err, rellm.ErrMaxAgentStepsReached))
-}
-
-func TestFuncResultToFunctionCallRespSerializesOutputAsString(t *testing.T) {
-	resp := rellm.FuncResultToFunctionCallResp("call_123", int64(42))
-
-	jsonResp, err := json.Marshal(resp)
-	assert.NoError(t, err, "failed to marshal function call response")
-	assert.JSONEq(t, `{"type":"function_call_output","call_id":"call_123","output":"42"}`, string(jsonResp))
 }
 
 func buildTestProToolAgentLMS(t *testing.T, maxAgentSteps uint64) (*rellm.Agent, *HTTPDoMock) {

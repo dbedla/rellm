@@ -51,7 +51,7 @@ func TestAgentPromptToGetImage(t *testing.T) {
 
 	assert.NotNil(t, respMsg, "response message should not be nil")
 
-	conversation, err := agent.CurrentConversation()
+	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 	lastMsg := conversation[len(conversation)-1]
 	imageGeneration, ok := lastMsg.(*rellm.ImageGeneration)

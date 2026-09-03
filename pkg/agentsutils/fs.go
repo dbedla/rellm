@@ -2,7 +2,7 @@ package agentsutils
 
 import (
 	"os"
-	"path"
+	"path/filepath"
 )
 
 func CreateDirInSysTmp(prefix string) (string, error) {
@@ -17,7 +17,7 @@ func CreateDirInSysTmp(prefix string) (string, error) {
 }
 
 func CreateSubDir(basePath, subDirName string) (string, error) {
-	newDirPath := path.Join(basePath, subDirName)
+	newDirPath := filepath.Join(basePath, subDirName)
 	err := os.Mkdir(newDirPath, 0755)
 	if err != nil {
 		return "", err

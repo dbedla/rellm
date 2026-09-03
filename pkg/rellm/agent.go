@@ -3,7 +3,28 @@ package rellm
 import (
 	"context"
 	"encoding/json"
+	"net/http"
 )
+
+type ReasoningEffort string
+
+const (
+	ReasoningEffortNone   ReasoningEffort = "none"
+	ReasoningEffortLow    ReasoningEffort = "low"
+	ReasoningEffortHigh   ReasoningEffort = "high"
+	ReasoningEffortMedium ReasoningEffort = "medium"
+	ReasoningEffortXHigh  ReasoningEffort = "xhigh"
+)
+
+// Model
+// value for models can be found:
+//   - For openrouter: https://openrouter.ai/models (curl --request GET --url 'https://openrouter.ai/api/v1/models?limit=10' | jq)
+//   - For lmstudio: https://lmstudio.ai/models
+//
+// names used by openrouter and lmstudio are not interchangeable:
+//   - lms: "google/gemma-4-26b-a4b"
+//   - openrouter: "google/gemma-4-26b-a4b-it"
+type Model string
 
 type ToolCallResult struct {
 	Value any
@@ -16,8 +37,12 @@ type Toolset interface {
 }
 
 type ConversationStorage interface {
-	Load() ([]ConversationElement, error)
-	Append([]ConversationElement) error
+	Load(context.Context) ([]ConversationElement, error)
+	Append(context.Context, []ConversationElement) error
+}
+
+type HTTPClient interface {
+	Do(request *http.Request) (*http.Response, error)
 }
 
 type Agent struct {
@@ -50,8 +75,8 @@ type InspectEachResponse func(resp *ResponsesAPIResp)
 //   - any other slice: replace it with those elements
 type HandleUnknownConversationElement func(ctx context.Context, el *UnknownElement) ([]ConversationElement, error)
 
-func (a *Agent) CurrentConversation() ([]ConversationElement, error) {
-	conversation, err := a.conversationStorage.Load()
+func (a *Agent) CurrentConversation(ctx context.Context) ([]ConversationElement, error) {
+	conversation, err := a.conversationStorage.Load(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -60,22 +85,10 @@ func (a *Agent) CurrentConversation() ([]ConversationElement, error) {
 		return conversation, nil
 	}
 
-	if len(a.sysMsg) == 0 {
-		return []ConversationElement{}, nil
-	}
-
-	systemMessage, err := PromptMessageToConversation(a.sysMsg, "system")
-	if err != nil {
-		return nil, err
-	}
-	err = a.conversationStorage.Append([]ConversationElement{systemMessage})
-	if err != nil {
-		return nil, err
-	}
-	return a.conversationStorage.Load()
+	return []ConversationElement{}, nil
 }
 
-func FuncResultToFunctionCallResp(callID string, funcResult any) FunctionCallResp {
+func funcResultToFunctionCallResp(callID string, funcResult any) FunctionCallResp {
 	b, err := json.Marshal(funcResult)
 	if err != nil {
 		errorMsg := "unable to execute function; " + err.Error()

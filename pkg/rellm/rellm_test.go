@@ -31,12 +31,12 @@ func (h *HTTPDoMock) Do(req *http.Request) (*http.Response, error) {
 
 func SetParametersWithReqLog(req *rellm.ResponsesAPIReq) {
 	req.Reasoning = &rellm.ReasoningConfig{Effort: rellm.ReasoningEffortMedium}
-	req.Temperature = 0.5
+	req.Temperature = new(float32(0.5))
 
 	examplesutils.InspectWithReqLog(req)
 }
 
 func SetParametersForTest(req *rellm.ResponsesAPIReq) {
 	req.Reasoning = &rellm.ReasoningConfig{Effort: rellm.ReasoningEffortMedium}
-	req.Temperature = 0.5
+	req.Temperature = new(float32(0.5))
 }
