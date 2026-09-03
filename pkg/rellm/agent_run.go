@@ -237,16 +237,16 @@ func (a *Agent) handleFunctionCall(ctx context.Context, fn *FunctionCall) (*Func
 	}
 
 	if result.Err != nil {
-		funcCallResp := FuncResultToFunctionCallResp(fn.CallID, result.Err.Error())
+		funcCallResp := funcResultToFunctionCallResp(fn.CallID, result.Err.Error())
 		return &funcCallResp, nil
 	}
 
-	funcCallResp := FuncResultToFunctionCallResp(fn.CallID, result.Value)
+	funcCallResp := funcResultToFunctionCallResp(fn.CallID, result.Value)
 	return &funcCallResp, nil
 }
 
 func invalidFunctionCallResp(fn *FunctionCall) FunctionCallResp {
-	return FuncResultToFunctionCallResp(fn.CallID, "invalid function call (function not found) "+fn.Name)
+	return funcResultToFunctionCallResp(fn.CallID, "invalid function call (function not found) "+fn.Name)
 }
 
 func toBaseResponsesAPIReq(params promptParams, model Model, conversation []json.RawMessage) *ResponsesAPIReq {
@@ -272,7 +272,7 @@ func (a *Agent) appendConversation(msg string) ([]ConversationElement, error) {
 	}
 
 	if len(conversation) == 0 && len(a.sysMsg) != 0 {
-		systemMessage, err := PromptMessageToConversation(a.sysMsg, "system")
+		systemMessage, err := promptMessageToConversation(a.sysMsg, "system")
 		if err != nil {
 			return nil, err
 		}
@@ -283,7 +283,7 @@ func (a *Agent) appendConversation(msg string) ([]ConversationElement, error) {
 		conversation = append(conversation, systemMessage)
 	}
 
-	userMsg, err := PromptMessageToConversation(msg, "user")
+	userMsg, err := promptMessageToConversation(msg, "user")
 	if err != nil {
 		return nil, errors.Join(ErrUserMsgConversionFailed, err)
 	}

@@ -63,7 +63,7 @@ func (a *Agent) CurrentConversation() ([]ConversationElement, error) {
 	return []ConversationElement{}, nil
 }
 
-func FuncResultToFunctionCallResp(callID string, funcResult any) FunctionCallResp {
+func funcResultToFunctionCallResp(callID string, funcResult any) FunctionCallResp {
 	b, err := json.Marshal(funcResult)
 	if err != nil {
 		errorMsg := "unable to execute function; " + err.Error()

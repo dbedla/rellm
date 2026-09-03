@@ -9,7 +9,7 @@ import (
 func TestPromptMessageToConversationMultimodal(t *testing.T) {
 	prompt := "Hello with an image!"
 	role := "user"
-	msg, err := PromptMessageToConversation(prompt, role)
+	msg, err := promptMessageToConversation(prompt, role)
 	assert.NoError(t, err)
 
 	userMsg, ok := msg.(*UserMessage)

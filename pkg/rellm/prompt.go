@@ -105,7 +105,7 @@ func (b *PromptBuilder) Build() (*Prompt, error) {
 	}, nil
 }
 
-func PromptMessageToConversation(prompt, role string) (ConversationElement, error) {
+func promptMessageToConversation(prompt, role string) (ConversationElement, error) {
 	content := []MessagePart{{Type: "input_text", Text: prompt}}
 	switch role {
 	case "user":
