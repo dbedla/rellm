@@ -11,7 +11,7 @@ import (
 )
 
 type InMemoryStorage struct {
-	Messages []ConversationElement
+	messages []ConversationElement
 }
 
 func NewInMemoryStorage() *InMemoryStorage {
@@ -19,13 +19,13 @@ func NewInMemoryStorage() *InMemoryStorage {
 }
 
 func (s *InMemoryStorage) Load(_ context.Context) ([]ConversationElement, error) {
-	cp := make([]ConversationElement, len(s.Messages))
-	copy(cp, s.Messages)
+	cp := make([]ConversationElement, len(s.messages))
+	copy(cp, s.messages)
 	return cp, nil
 }
 
 func (s *InMemoryStorage) Append(_ context.Context, delta []ConversationElement) error {
-	s.Messages = append(s.Messages, delta...)
+	s.messages = append(s.messages, delta...)
 	return nil
 }
 
