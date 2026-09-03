@@ -3,7 +3,28 @@ package rellm
 import (
 	"context"
 	"encoding/json"
+	"net/http"
 )
+
+type ReasoningEffort string
+
+const (
+	ReasoningEffortNone   ReasoningEffort = "none"
+	ReasoningEffortLow    ReasoningEffort = "low"
+	ReasoningEffortHigh   ReasoningEffort = "high"
+	ReasoningEffortMedium ReasoningEffort = "medium"
+	ReasoningEffortXHigh  ReasoningEffort = "xhigh"
+)
+
+// Model
+// value for models can be found:
+//   - For openrouter: https://openrouter.ai/models (curl --request GET --url 'https://openrouter.ai/api/v1/models?limit=10' | jq)
+//   - For lmstudio: https://lmstudio.ai/models
+//
+// names used by openrouter and lmstudio are not interchangeable:
+//   - lms: "google/gemma-4-26b-a4b"
+//   - openrouter: "google/gemma-4-26b-a4b-it"
+type Model string
 
 type ToolCallResult struct {
 	Value any
@@ -18,6 +39,10 @@ type Toolset interface {
 type ConversationStorage interface {
 	Load(context.Context) ([]ConversationElement, error)
 	Append(context.Context, []ConversationElement) error
+}
+
+type HTTPClient interface {
+	Do(request *http.Request) (*http.Response, error)
 }
 
 type Agent struct {

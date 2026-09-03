@@ -1,13 +1,10 @@
 package rellm
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"strings"
 )
 
@@ -35,48 +32,6 @@ func (a *Agent) run(ctx context.Context, msg string, params promptParams) (strin
 	}
 
 	return msgRespFromLLM, nil
-}
-
-func (a *Agent) post(ctx context.Context, req *ResponsesAPIReq) (_ *ResponsesAPIResp, finalErr error) {
-	if a.inspectReq != nil {
-		a.inspectReq(req)
-	}
-
-	body, err := json.Marshal(req)
-	if err != nil {
-		return nil, fmt.Errorf("marshal request: %w", err)
-	}
-
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, a.provider.URL(), bytes.NewReader(body))
-	if err != nil {
-		return nil, err
-	}
-	httpReq.Header = a.provider.Header()
-
-	resp, err := a.provider.Do(httpReq)
-	if err != nil {
-		return nil, err
-	}
-
-	if resp == nil {
-		return nil, ErrEndpointNilResponse
-	}
-
-	if resp.Body == nil {
-		return nil, errors.Join(ErrEndpointNilBodyInResponse, fmt.Errorf("response status: %s", resp.Status))
-	}
-
-	defer closeWithError(&finalErr, resp.Body)
-	rawBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, errors.Join(err, ErrUnableToReadResponseBody, fmt.Errorf("response status: %s", resp.Status))
-	}
-
-	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
-		return nil, newHTTPStatusError(resp, rawBody, httpReq.URL.String())
-	}
-
-	return parseResponsesAPIResponse(rawBody, a.inspectResp)
 }
 
 func (a *Agent) process(ctx context.Context, req *ResponsesAPIReq) (string, error) {
