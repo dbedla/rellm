@@ -37,7 +37,7 @@ func (a *Agent) run(ctx context.Context, msg string, params promptParams) (strin
 	return msgRespFromLLM, nil
 }
 
-func (a *Agent) post(ctx context.Context, req *ResponsesAPIReq) (_ *ResponsesAPIResp, err error) {
+func (a *Agent) post(ctx context.Context, req *ResponsesAPIReq) (_ *ResponsesAPIResp, finalErr error) {
 	if a.inspectReq != nil {
 		a.inspectReq(req)
 	}
@@ -66,7 +66,7 @@ func (a *Agent) post(ctx context.Context, req *ResponsesAPIReq) (_ *ResponsesAPI
 		return nil, errors.Join(ErrEndpointNilBodyInResponse, fmt.Errorf("response status: %s", resp.Status))
 	}
 
-	defer closeWithError(&err, resp.Body)
+	defer closeWithError(&finalErr, resp.Body)
 	rawBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, errors.Join(err, ErrUnableToReadResponseBody, fmt.Errorf("response status: %s", resp.Status))

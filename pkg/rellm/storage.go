@@ -63,7 +63,7 @@ func (s *FilesystemStorage) Load(_ context.Context) ([]ConversationElement, erro
 	return elements, nil
 }
 
-func (s *FilesystemStorage) Append(_ context.Context, delta []ConversationElement) (err error) {
+func (s *FilesystemStorage) Append(_ context.Context, delta []ConversationElement) (finalErr error) {
 	if len(delta) == 0 {
 		return nil
 	}
@@ -92,7 +92,7 @@ func (s *FilesystemStorage) Append(_ context.Context, delta []ConversationElemen
 	if err != nil {
 		return fmt.Errorf("failed to open storage file %s: %w", s.path, err)
 	}
-	defer closeWithError(&err, f)
+	defer closeWithError(&finalErr, f)
 
 	if _, err = f.Write(buf.Bytes()); err != nil {
 		return fmt.Errorf("failed to write to storage file %s: %w", s.path, err)
