@@ -1,9 +1,12 @@
 package agentsutils
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 )
 
@@ -27,14 +30,14 @@ func NewLimitedFileSystem(readOnlyDirs []string, outputDir string) (*LimitedFile
 	}
 
 	return &LimitedFileSystem{
-		readOnlyDirs: readOnlyDirs,
+		readOnlyDirs: slices.Clone(readOnlyDirs),
 		outputDir:    outputDir,
 	}, nil
 }
 
 // GetReadOnlyPaths returns a list of paths that are allowed to be read-only from
 func (s *LimitedFileSystem) GetReadOnlyPaths() []string {
-	return s.readOnlyDirs
+	return slices.Clone(s.readOnlyDirs)
 }
 
 // GetOutputDir returns the path of the output directory
@@ -82,17 +85,12 @@ func (s *LimitedFileSystem) GetFileContentAsBytes(path string) ([]byte, error) {
 // error will be if the file already exists
 // error will be returned if the path is outside FSSandbox.outputDir
 func (s *LimitedFileSystem) WriteBytesToFile(content []byte, path string) error {
-	absPath, err := s.validateWritePath(path)
+	absPath, err := s.validateInOutputDir(path)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(absPath, content, 0644)
-	if err != nil {
-		return fmt.Errorf("failed to write to file %s: %w", path, err)
-	}
-
-	return nil
+	return writeNewFile(absPath, path, content)
 }
 
 // DeleteFile delete file.
@@ -144,17 +142,12 @@ func (s *LimitedFileSystem) ListFilesIn(path string) ([]string, error) {
 // error will be if the file already exists
 // error will be returned if the path is outside FSSandbox.outputDir
 func (s *LimitedFileSystem) WriteStringToFile(content, path string) error {
-	absPath, err := s.validateWritePath(path)
+	absPath, err := s.validateInOutputDir(path)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(absPath, []byte(content), 0644)
-	if err != nil {
-		return fmt.Errorf("failed to write to file %s: %w", path, err)
-	}
-
-	return nil
+	return writeNewFile(absPath, path, []byte(content))
 }
 
 func validateReadOnlyDirs(dirs []string) error {
@@ -173,7 +166,7 @@ func validateOutputDir(dir string) error {
 	return checkWriteAccess(dir)
 }
 
-func checkReadAccess(path string) error {
+func checkReadAccess(path string) (finalErr error) {
 	info, err := os.Stat(path)
 	if err != nil {
 		return fmt.Errorf("directory %s does not exist or is not accessible: %w", path, err)
@@ -186,29 +179,18 @@ func checkReadAccess(path string) error {
 	if err != nil {
 		return fmt.Errorf("directory %s is not readable: %w", path, err)
 	}
-	err = f.Close()
-	if err != nil {
-		return fmt.Errorf("file %s is not readable: %w", path, err)
-	}
+	defer closeWithError(&finalErr, f)
 	return nil
 }
 
-func checkWriteAccess(path string) error {
-	testFile := filepath.Join(path, ".write_test")
-	f, err := os.Create(testFile)
+func checkWriteAccess(path string) (err error) {
+	f, err := os.CreateTemp(path, ".rellm-write-test-*")
 	if err != nil {
 		return fmt.Errorf("directory %s is not writable: %w", path, err)
 	}
-	err = f.Close()
-	if err != nil {
-		return fmt.Errorf("file %s is not writable: %w", path, err)
-	}
-
-	err = os.Remove(testFile)
-	if err != nil {
-		return fmt.Errorf("failed to remove test file: %w", err)
-	}
-	return nil
+	defer closeWithError(&err, f)
+	testFile := f.Name()
+	return os.Remove(testFile)
 }
 
 func (s *LimitedFileSystem) validatePath(path string, shouldBeDir bool) (string, error) {
@@ -240,17 +222,21 @@ func (s *LimitedFileSystem) validatePath(path string, shouldBeDir bool) (string,
 	return absPath, nil
 }
 
-func (s *LimitedFileSystem) validateWritePath(path string) (string, error) {
-	absPath, err := s.validateInOutputDir(path)
+func writeNewFile(absPath, userPath string, content []byte) (err error) {
+	f, err := os.OpenFile(absPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
 	if err != nil {
-		return "", err
+		if os.IsExist(err) {
+			return fmt.Errorf("file %s already exists", userPath)
+		}
+		return fmt.Errorf("failed to create file %s: %w", userPath, err)
 	}
+	defer closeWithError(&err, f)
 
-	if _, err := os.Stat(absPath); err == nil {
-		return "", fmt.Errorf("file %s already exists", path)
+	if _, werr := f.Write(content); werr != nil {
+		_ = os.Remove(absPath)
+		return fmt.Errorf("failed to write to file %s: %w", userPath, werr)
 	}
-
-	return absPath, nil
+	return nil
 }
 
 func (s *LimitedFileSystem) validateInOutputDir(path string) (string, error) {
@@ -278,6 +264,16 @@ func (s *LimitedFileSystem) validateInOutputDir(path string) (string, error) {
 	}
 
 	return absPath, nil
+}
+
+func closeWithError(err *error, c io.Closer) {
+	if err == nil {
+		return
+	}
+	if c == nil {
+		return
+	}
+	*err = errors.Join(*err, c.Close())
 }
 
 func evalExistingPath(path string) (string, error) {
@@ -323,7 +319,9 @@ func filterFiles(basePath string, entries []os.DirEntry) []string {
 }
 
 func (s *LimitedFileSystem) isAllowed(path string) (bool, error) {
-	allowedDirs := append(s.readOnlyDirs, s.outputDir)
+	allowedDirs := make([]string, 0, len(s.readOnlyDirs)+1)
+	allowedDirs = append(allowedDirs, s.readOnlyDirs...)
+	allowedDirs = append(allowedDirs, s.outputDir)
 	for _, dir := range allowedDirs {
 		absDir, err := evalExistingPath(dir)
 		if err != nil {

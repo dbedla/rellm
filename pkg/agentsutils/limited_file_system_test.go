@@ -381,3 +381,68 @@ func TestDeleteFile(t *testing.T) {
 		assert.Error(t, err, "expected error for directory path")
 	})
 }
+
+func TestCheckWriteAccessNoFixedNameOverwrite(t *testing.T) {
+	tmpDir := t.TempDir()
+	outputDir := filepath.Join(tmpDir, "output")
+	err := os.Mkdir(outputDir, 0755)
+	assert.NoError(t, err)
+
+	baitPath := filepath.Join(outputDir, ".write_test")
+	err = os.WriteFile(baitPath, []byte("do not delete"), 0644)
+	assert.NoError(t, err)
+
+	err = checkWriteAccess(outputDir)
+	assert.NoError(t, err)
+
+	data, err := os.ReadFile(baitPath)
+	assert.NoError(t, err)
+	assert.Equal(t, []byte("do not delete"), data)
+}
+
+func TestReadOnlyDirsSliceIsolation(t *testing.T) {
+	tmpDir := t.TempDir()
+	readOnlyDir := filepath.Join(tmpDir, "readonly")
+	outputDir := filepath.Join(tmpDir, "output")
+	err := os.Mkdir(readOnlyDir, 0755)
+	assert.NoError(t, err)
+	err = os.Mkdir(outputDir, 0755)
+	assert.NoError(t, err)
+
+	inputDirs := []string{readOnlyDir}
+	sandbox, err := NewLimitedFileSystem(inputDirs, outputDir)
+	assert.NoError(t, err)
+
+	// Mutate input slice after construction
+	inputDirs[0] = filepath.Join(tmpDir, "mutated")
+	assert.Equal(t, readOnlyDir, sandbox.GetReadOnlyPaths()[0])
+
+	// Mutate result of getter
+	got := sandbox.GetReadOnlyPaths()
+	got[0] = filepath.Join(tmpDir, "mutated2")
+	assert.Equal(t, readOnlyDir, sandbox.GetReadOnlyPaths()[0])
+}
+
+func TestOperationsDoNotMutateReadOnlyDirs(t *testing.T) {
+	tmpDir := t.TempDir()
+	readOnlyDir := filepath.Join(tmpDir, "readonly")
+	outputDir := filepath.Join(tmpDir, "output")
+	err := os.Mkdir(readOnlyDir, 0755)
+	assert.NoError(t, err)
+	err = os.Mkdir(outputDir, 0755)
+	assert.NoError(t, err)
+
+	sandbox, err := NewLimitedFileSystem([]string{readOnlyDir}, outputDir)
+	assert.NoError(t, err)
+
+	existing := filepath.Join(readOnlyDir, "exists.txt")
+	err = os.WriteFile(existing, []byte("hi"), 0644)
+	assert.NoError(t, err)
+
+	before := sandbox.GetReadOnlyPaths()
+	_, _ = sandbox.GetFileContentAsString(existing)
+	_, _ = sandbox.ListFilesIn(readOnlyDir)
+	after := sandbox.GetReadOnlyPaths()
+
+	assert.Equal(t, before, after, "readOnlyDirs mutated after isAllowed")
+}
