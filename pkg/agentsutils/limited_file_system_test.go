@@ -1,8 +1,9 @@
-package agentsutils
+package agentsutils_test
 
 import (
 	"os"
 	"path/filepath"
+	"rellm/pkg/agentsutils"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -21,18 +22,18 @@ func TestNewFSSandbox(t *testing.T) {
 	assert.NoError(t, err, "failed to create output dir")
 
 	t.Run("Valid directories", func(t *testing.T) {
-		sandbox, err := NewLimitedFileSystem([]string{readOnlyDir}, outputDir)
+		sandbox, err := agentsutils.NewLimitedFileSystem([]string{readOnlyDir}, outputDir)
 		assert.NoError(t, err, "expected no error")
 		assert.NotNil(t, sandbox, "expected sandbox instance")
 	})
 
 	t.Run("ReadOnly dir does not exist", func(t *testing.T) {
-		_, err := NewLimitedFileSystem([]string{filepath.Join(tmpDir, "nonexistent")}, outputDir)
+		_, err := agentsutils.NewLimitedFileSystem([]string{filepath.Join(tmpDir, "nonexistent")}, outputDir)
 		assert.Error(t, err, "expected error for nonexistent readonly dir")
 	})
 
 	t.Run("OutputDir does not exist", func(t *testing.T) {
-		_, err := NewLimitedFileSystem([]string{readOnlyDir}, filepath.Join(tmpDir, "nonexistent_output"))
+		_, err := agentsutils.NewLimitedFileSystem([]string{readOnlyDir}, filepath.Join(tmpDir, "nonexistent_output"))
 		assert.Error(t, err, "expected error for nonexistent output dir")
 	})
 
@@ -45,7 +46,7 @@ func TestNewFSSandbox(t *testing.T) {
 			assert.NoError(t, err, "failed to set permissions for no access dir")
 		}() // cleanup to allow TempDir to be deleted
 
-		_, err = NewLimitedFileSystem([]string{noAccessDir}, outputDir)
+		_, err = agentsutils.NewLimitedFileSystem([]string{noAccessDir}, outputDir)
 		assert.Error(t, err, "expected error for readonly dir with no read access")
 	})
 
@@ -58,7 +59,7 @@ func TestNewFSSandbox(t *testing.T) {
 			assert.NoError(t, err, "failed to set permissions for no write output dir")
 		}() // cleanup
 
-		_, err = NewLimitedFileSystem([]string{readOnlyDir}, noWriteOutputDir)
+		_, err = agentsutils.NewLimitedFileSystem([]string{readOnlyDir}, noWriteOutputDir)
 		assert.Error(t, err, "expected error for output dir with no write access")
 	})
 }
@@ -84,7 +85,7 @@ func TestListFilesIn(t *testing.T) {
 	err = os.WriteFile(filepath.Join(outsideDir, "file3.txt"), []byte("content3"), 0644)
 	assert.NoError(t, err)
 
-	sandbox, err := NewLimitedFileSystem([]string{readOnlyDir}, outputDir)
+	sandbox, err := agentsutils.NewLimitedFileSystem([]string{readOnlyDir}, outputDir)
 	assert.NoError(t, err, "failed to create sandbox")
 
 	t.Run("List files in read-only dir", func(t *testing.T) {
@@ -149,7 +150,7 @@ func TestGetFileContentAsString(t *testing.T) {
 	err = os.WriteFile(filepath.Join(readOnlySiblingDir, "secret.txt"), []byte("secret"), 0644)
 	assert.NoError(t, err)
 
-	sandbox, err := NewLimitedFileSystem([]string{readOnlyDir}, outputDir)
+	sandbox, err := agentsutils.NewLimitedFileSystem([]string{readOnlyDir}, outputDir)
 	assert.NoError(t, err, "failed to create sandbox")
 
 	t.Run("Read file in read-only dir", func(t *testing.T) {
@@ -209,7 +210,7 @@ func TestGetFileContentAsBytes(t *testing.T) {
 	err = os.WriteFile(filepath.Join(readOnlyDir, "file1.txt"), content1, 0644)
 	assert.NoError(t, err)
 
-	sandbox, err := NewLimitedFileSystem([]string{readOnlyDir}, outputDir)
+	sandbox, err := agentsutils.NewLimitedFileSystem([]string{readOnlyDir}, outputDir)
 	assert.NoError(t, err, "failed to create sandbox")
 
 	t.Run("Read file in read-only dir", func(t *testing.T) {
@@ -238,7 +239,7 @@ func TestWriteToFile(t *testing.T) {
 	err = os.Mkdir(outputSiblingDir, 0755)
 	assert.NoError(t, err)
 
-	sandbox, err := NewLimitedFileSystem([]string{readOnlyDir}, outputDir)
+	sandbox, err := agentsutils.NewLimitedFileSystem([]string{readOnlyDir}, outputDir)
 	assert.NoError(t, err, "failed to create sandbox")
 
 	t.Run("Write string to new file in output dir", func(t *testing.T) {
@@ -328,7 +329,7 @@ func TestDeleteFile(t *testing.T) {
 	err = os.Mkdir(outputDir, 0755)
 	assert.NoError(t, err)
 
-	sandbox, err := NewLimitedFileSystem([]string{readOnlyDir}, outputDir)
+	sandbox, err := agentsutils.NewLimitedFileSystem([]string{readOnlyDir}, outputDir)
 	assert.NoError(t, err, "failed to create sandbox")
 
 	t.Run("Delete existing file in output dir", func(t *testing.T) {
@@ -384,16 +385,22 @@ func TestDeleteFile(t *testing.T) {
 
 func TestCheckWriteAccessNoFixedNameOverwrite(t *testing.T) {
 	tmpDir := t.TempDir()
+	readOnlyDir := filepath.Join(tmpDir, "readonly")
 	outputDir := filepath.Join(tmpDir, "output")
-	err := os.Mkdir(outputDir, 0755)
+	err := os.Mkdir(readOnlyDir, 0755)
+	assert.NoError(t, err)
+	err = os.Mkdir(outputDir, 0755)
 	assert.NoError(t, err)
 
 	baitPath := filepath.Join(outputDir, ".write_test")
 	err = os.WriteFile(baitPath, []byte("do not delete"), 0644)
 	assert.NoError(t, err)
 
-	err = checkWriteAccess(outputDir)
+	sandbox, err := agentsutils.NewLimitedFileSystem([]string{readOnlyDir}, outputDir)
 	assert.NoError(t, err)
+	content, err := sandbox.GetFileContentAsString(baitPath)
+	assert.NoError(t, err)
+	assert.Equal(t, content, "do not delete")
 
 	data, err := os.ReadFile(baitPath)
 	assert.NoError(t, err)
@@ -410,7 +417,7 @@ func TestReadOnlyDirsSliceIsolation(t *testing.T) {
 	assert.NoError(t, err)
 
 	inputDirs := []string{readOnlyDir}
-	sandbox, err := NewLimitedFileSystem(inputDirs, outputDir)
+	sandbox, err := agentsutils.NewLimitedFileSystem(inputDirs, outputDir)
 	assert.NoError(t, err)
 
 	// Mutate input slice after construction
@@ -432,7 +439,7 @@ func TestOperationsDoNotMutateReadOnlyDirs(t *testing.T) {
 	err = os.Mkdir(outputDir, 0755)
 	assert.NoError(t, err)
 
-	sandbox, err := NewLimitedFileSystem([]string{readOnlyDir}, outputDir)
+	sandbox, err := agentsutils.NewLimitedFileSystem([]string{readOnlyDir}, outputDir)
 	assert.NoError(t, err)
 
 	existing := filepath.Join(readOnlyDir, "exists.txt")
