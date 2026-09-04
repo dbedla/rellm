@@ -233,8 +233,8 @@ func writeNewFile(absPath, userPath string, content []byte) (err error) {
 	defer closeWithError(&err, f)
 
 	if _, werr := f.Write(content); werr != nil {
-		_ = os.Remove(absPath)
-		return fmt.Errorf("failed to write to file %s: %w", userPath, werr)
+		rmErr := os.Remove(absPath)
+		return errors.Join(fmt.Errorf("failed to write to file %s: %w", userPath, werr), rmErr)
 	}
 	return nil
 }
