@@ -3,6 +3,7 @@ package rellm
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 )
 
@@ -189,71 +190,39 @@ func (p *OpenRouterProvider) ToProviderRepresentation(elements []ConversationEle
 	}
 	raw := make([]json.RawMessage, 0, len(elements))
 	for _, e := range elements {
-		switch el := e.(type) {
-		case *UserMessage:
-			b, err := marshalUserMessageForOpenRouter(el.MessageContent)
-			if err != nil {
-				return nil, err
-			}
-			raw = append(raw, b)
-
-		case *AssistantMessage:
-			b, err := p.marshalTextMessage(el.MessageContent)
-			if err != nil {
-				return nil, err
-			}
-			raw = append(raw, b)
-
-		case *SystemMessage:
-			b, err := p.marshalTextMessage(el.MessageContent)
-			if err != nil {
-				return nil, err
-			}
-			raw = append(raw, b)
-
-		case *FunctionCall:
-			b, err := marshalFunctionCall(el)
-			if err != nil {
-				return nil, err
-			}
-			raw = append(raw, b)
-
-		case *FunctionCallResp:
-			b, err := marshalFunctionCallResp(el)
-			if err != nil {
-				return nil, err
-			}
-			raw = append(raw, b)
-
-		case *Reasoning:
-			b, err := marshalReasoningForOpenRouter(el)
-			if err != nil {
-				return nil, err
-			}
-			if b == nil {
-				continue
-			}
-			raw = append(raw, b)
-
-		case *ImageGeneration:
-			b, err := marshalImageGeneration(el)
-			if err != nil {
-				return nil, err
-			}
-			raw = append(raw, b)
-
-		case *UnknownElement:
-			b, err := unknownElementRepresentation(el, ProviderOpenRouter)
-			if err != nil {
-				return nil, err
-			}
-			raw = append(raw, b)
-
-		default:
-			continue // skip unknown types
+		b, err := p.marshalConversationElement(e)
+		if err != nil {
+			return nil, err
 		}
+		if b == nil {
+			continue
+		}
+		raw = append(raw, b)
 	}
 	return raw, nil
+}
+
+func (p *OpenRouterProvider) marshalConversationElement(element ConversationElement) (json.RawMessage, error) {
+	switch el := element.(type) {
+	case *UserMessage:
+		return marshalUserMessageForOpenRouter(el.MessageContent)
+	case *AssistantMessage:
+		return p.marshalTextMessage(el.MessageContent)
+	case *SystemMessage:
+		return p.marshalTextMessage(el.MessageContent)
+	case *FunctionCall:
+		return marshalFunctionCall(el)
+	case *FunctionCallResp:
+		return marshalFunctionCallResp(el)
+	case *Reasoning:
+		return marshalReasoningForOpenRouter(el)
+	case *ImageGeneration:
+		return marshalImageGeneration(el)
+	case *UnknownElement:
+		return unknownElementRepresentation(el, ProviderOpenRouter)
+	default:
+		return nil, errors.Join(ErrOpenRouterMarshalingConversationElement, fmt.Errorf("unknown element type: %T", el))
+	}
 }
 
 var _ Provider = &OpenRouterProvider{}
