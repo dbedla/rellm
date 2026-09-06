@@ -372,6 +372,56 @@ func messagePartsWithStrings(texts []string) []MessagePart {
 	return parts
 }
 
+func marshalUserMessageForOpenRouter(el MessageContent) (json.RawMessage, error) {
+	payload := map[string]interface{}{
+		"role":    el.Role,
+		"type":    "message",
+		"content": el.Content,
+	}
+	if el.ID != "" {
+		payload["id"] = el.ID
+	}
+	if el.Status != "" {
+		payload["status"] = el.Status
+	}
+	b, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
+}
+
+func marshalReasoningForOpenRouter(el *Reasoning) (json.RawMessage, error) {
+	// A signature-only reasoning item carries provider continuation state
+	// and must be replayed even though it has no user-visible text.
+	if el.Text == "" && el.Signature == "" && len(el.Summary) == 0 {
+		return nil, nil
+	}
+	r := map[string]interface{}{
+		"id":     el.ID,
+		"status": el.Status,
+		"type":   "reasoning",
+	}
+	// Signed reasoning blocks are provider continuation state; preserve
+	// their summary field even when it is empty.
+	if len(el.Summary) > 0 {
+		r["summary"] = el.Summary
+	} else if el.Signature != "" {
+		r["summary"] = []string{}
+	}
+	if el.Text != "" {
+		r["content"] = []MessagePart{{Type: "reasoning_text", Text: el.Text}}
+	}
+	if el.Signature != "" {
+		r["signature"] = el.Signature
+	}
+	b, err := json.Marshal(r)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
+}
+
 // ParseMessageContent normalizes a wire content field (string, []string, or
 // []MessagePart) into []MessagePart. Exported for external providers that need
 // the same content normalization when parsing wire messages.

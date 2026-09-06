@@ -191,18 +191,7 @@ func (p *OpenRouterProvider) ToProviderRepresentation(elements []ConversationEle
 	for _, e := range elements {
 		switch el := e.(type) {
 		case *UserMessage:
-			payload := map[string]interface{}{
-				"role":    el.Role,
-				"type":    "message",
-				"content": el.Content,
-			}
-			if el.ID != "" {
-				payload["id"] = el.ID
-			}
-			if el.Status != "" {
-				payload["status"] = el.Status
-			}
-			b, err := json.Marshal(payload)
+			b, err := marshalUserMessageForOpenRouter(el.MessageContent)
 			if err != nil {
 				return nil, err
 			}
@@ -237,32 +226,12 @@ func (p *OpenRouterProvider) ToProviderRepresentation(elements []ConversationEle
 			raw = append(raw, b)
 
 		case *Reasoning:
-			// A signature-only reasoning item carries provider continuation state
-			// and must be replayed even though it has no user-visible text.
-			if el.Text == "" && el.Signature == "" && len(el.Summary) == 0 {
-				continue
-			}
-			r := map[string]interface{}{
-				"id":     el.ID,
-				"status": el.Status,
-				"type":   "reasoning",
-			}
-			// Signed reasoning blocks are provider continuation state; preserve
-			// their summary field even when it is empty.
-			if len(el.Summary) > 0 {
-				r["summary"] = el.Summary
-			} else if el.Signature != "" {
-				r["summary"] = []string{}
-			}
-			if el.Text != "" {
-				r["content"] = []MessagePart{{Type: "reasoning_text", Text: el.Text}}
-			}
-			if el.Signature != "" {
-				r["signature"] = el.Signature
-			}
-			b, err := json.Marshal(r)
+			b, err := marshalReasoningForOpenRouter(el)
 			if err != nil {
 				return nil, err
+			}
+			if b == nil {
+				continue
 			}
 			raw = append(raw, b)
 
