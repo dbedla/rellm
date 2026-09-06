@@ -215,20 +215,7 @@ func (p *LMStudioProvider) ToProviderRepresentation(elements []ConversationEleme
 			raw = append(raw, b)
 
 		case *Reasoning:
-			// Always include summary field (even if empty) for faithful round-trip.
-			payload := map[string]interface{}{
-				"id":     el.ID,
-				"status": el.Status,
-				"type":   "reasoning",
-			}
-			payload["summary"] = []string{}
-			if len(el.Summary) > 0 {
-				payload["summary"] = el.Summary
-			}
-			if el.Text != "" {
-				payload["content"] = []MessagePart{{Type: "reasoning_text", Text: el.Text}}
-			}
-			b, err := json.Marshal(payload)
+			b, err := marshalReasoningFormLMStudio(el)
 			if err != nil {
 				return nil, err
 			}

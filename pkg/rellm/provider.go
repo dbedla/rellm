@@ -422,6 +422,27 @@ func marshalReasoningForOpenRouter(el *Reasoning) (json.RawMessage, error) {
 	return b, nil
 }
 
+func marshalReasoningFormLMStudio(el *Reasoning) (json.RawMessage, error) {
+	// Always include summary field (even if empty) for faithful round-trip.
+	payload := map[string]interface{}{
+		"id":     el.ID,
+		"status": el.Status,
+		"type":   "reasoning",
+	}
+	payload["summary"] = []string{}
+	if len(el.Summary) > 0 {
+		payload["summary"] = el.Summary
+	}
+	if el.Text != "" {
+		payload["content"] = []MessagePart{{Type: "reasoning_text", Text: el.Text}}
+	}
+	b, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
+}
+
 // ParseMessageContent normalizes a wire content field (string, []string, or
 // []MessagePart) into []MessagePart. Exported for external providers that need
 // the same content normalization when parsing wire messages.
