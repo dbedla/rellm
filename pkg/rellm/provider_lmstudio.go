@@ -113,6 +113,9 @@ func (p *LMStudioProvider) ToProviderRepresentation(elements []ConversationEleme
 		if err != nil {
 			return nil, err
 		}
+		if b == nil {
+			continue
+		}
 		raw = append(raw, b)
 	}
 	return raw, nil
