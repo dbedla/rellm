@@ -2,7 +2,6 @@ package rellm
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -278,17 +277,25 @@ func ParseConversationElement(raw json.RawMessage) (ConversationElement, error) 
 }
 
 // TextFromContent extracts concatenated text from structured parts.
-// Works on both string-based and MessagePart-based content.
 func TextFromContent(parts []MessagePart) string {
+	texts := make([]string, 0, len(parts))
+	for _, p := range parts {
+		texts = append(texts, p.Text)
+	}
+	return JoinTextParts(texts)
+}
+
+// JoinTextParts joins non-empty text parts with spaces.
+func JoinTextParts(parts []string) string {
 	var sb strings.Builder
-	for i, p := range parts {
-		if p.Text == "" {
+	for _, p := range parts {
+		if p == "" {
 			continue
 		}
-		if i > 0 && sb.Len() > 0 {
+		if sb.Len() > 0 {
 			sb.WriteByte(' ')
 		}
-		sb.WriteString(p.Text)
+		sb.WriteString(p)
 	}
 	return sb.String()
 }
@@ -320,165 +327,6 @@ type Provider interface {
 	// Serialize canonical elements back into this backend's wire format for
 	// the next request's Input.
 	ToProviderRepresentation(elements []ConversationElement) ([]json.RawMessage, error)
-}
-
-// marshalFunctionCall serializes a FunctionCall for the Responses wire format.
-// Shared by providers with identical function_call serialization.
-func marshalFunctionCall(el *FunctionCall) (json.RawMessage, error) {
-	fc := map[string]interface{}{
-		"id":        el.ID,
-		"name":      el.Name,
-		"arguments": json.RawMessage(el.Args),
-		"call_id":   el.CallID,
-		"status":    "completed",
-		"type":      "function_call",
-	}
-	return json.Marshal(fc)
-}
-
-// marshalFunctionCallResp serializes a FunctionCallResp for the Responses wire
-// format. Shared by providers with identical function_call_output serialization.
-func marshalFunctionCallResp(el *FunctionCallResp) (json.RawMessage, error) {
-	resp := map[string]interface{}{
-		"call_id": el.CallID,
-		"type":    "function_call_output",
-	}
-	if el.ID != "" {
-		resp["id"] = el.ID
-	}
-	// Use Output which may be JSON-encoded or plain text.
-	resp["output"] = el.Output
-	return json.Marshal(resp)
-}
-
-// marshalImageGeneration serializes an ImageGeneration for the Responses wire
-// format. Shared by providers with identical image_generation_call serialization.
-func marshalImageGeneration(el *ImageGeneration) (json.RawMessage, error) {
-	sig := map[string]interface{}{
-		"id":     el.ID,
-		"type":   "image_generation_call",
-		"status": el.Status,
-		"result": el.Result,
-	}
-	return json.Marshal(sig)
-}
-
-// messagePartsWithStrings creates MessagePart slice from a string list.
-func messagePartsWithStrings(texts []string) []MessagePart {
-	parts := make([]MessagePart, 0, len(texts))
-	for _, t := range texts {
-		parts = append(parts, MessagePart{Type: "input_text", Text: t})
-	}
-	return parts
-}
-
-// ParseMessageContent normalizes a wire content field (string, []string, or
-// []MessagePart) into []MessagePart. Exported for external providers that need
-// the same content normalization when parsing wire messages.
-func ParseMessageContent(content json.RawMessage) []MessagePart {
-	var textStr string
-	if json.Unmarshal(content, &textStr) == nil {
-		return messagePartsWithStrings([]string{textStr})
-	}
-	var textParts []string
-	if json.Unmarshal(content, &textParts) == nil {
-		return messagePartsWithStrings(textParts)
-	}
-	var parts []MessagePart
-	if json.Unmarshal(content, &parts) == nil {
-		return parts
-	}
-	return nil
-}
-
-// normalizeMessageParts canonicalizes provider text parts independently of
-// the shape used on the wire. Providers may replay text as a plain string or
-// return it as an input_text/output_text object; the canonical representation
-// is determined by the message role.
-func normalizeMessageParts(parts []MessagePart, role string) []MessagePart {
-	textType := "input_text"
-	if role == "assistant" {
-		textType = "output_text"
-	}
-
-	for i := range parts {
-		if parts[i].Type == "input_text" || parts[i].Type == "output_text" {
-			parts[i].Type = textType
-		}
-		if len(parts[i].Annotations) == 0 {
-			parts[i].Annotations = nil
-		}
-		if len(parts[i].Logprobs) == 0 {
-			parts[i].Logprobs = nil
-		}
-	}
-
-	return parts
-}
-
-// wireItem mirrors the output-item fields common to Responses API wire items.
-type wireItem struct {
-	Type    string          `json:"type"`
-	Role    string          `json:"role"`
-	ID      string          `json:"id"`
-	Name    string          `json:"name"`
-	CallID  string          `json:"call_id"`
-	Args    json.RawMessage `json:"arguments"`
-	Content json.RawMessage `json:"content"`
-}
-
-// parseWireItem decodes an output item's common fields.
-func parseWireItem(raw json.RawMessage) (wireItem, error) {
-	var msg wireItem
-	err := json.Unmarshal(raw, &msg)
-	return msg, err
-}
-
-// parseFunctionCallItem builds a FunctionCall from a function_call item.
-func parseFunctionCallItem(msg wireItem) *FunctionCall {
-	return &FunctionCall{
-		ID:     msg.ID,
-		Name:   msg.Name,
-		Args:   msg.Args,
-		CallID: msg.CallID,
-	}
-}
-
-// parseFunctionCallRespItem builds a FunctionCallResp from a
-// function_call_output item. The output field is extracted directly from the
-// raw JSON; on failure the content field is used as-is.
-func parseFunctionCallRespItem(raw json.RawMessage, msg wireItem) *FunctionCallResp {
-	var out struct {
-		Output string `json:"output"`
-	}
-	if err := json.Unmarshal(raw, &out); err == nil {
-		return &FunctionCallResp{
-			ID:     msg.ID,
-			Type:   "function_call_output",
-			CallID: msg.CallID,
-			Output: out.Output,
-		}
-	}
-	return &FunctionCallResp{
-		ID:     msg.ID,
-		Type:   "function_call_output",
-		CallID: msg.CallID,
-		Output: string(msg.Content),
-	}
-}
-
-// parseImageGeneration parses an image_generation_call wire item into an
-// ImageGeneration element.
-func parseImageGeneration(raw json.RawMessage) (ConversationElement, error) {
-	var ig struct {
-		ID     string `json:"id"`
-		Status string `json:"status"`
-		Result string `json:"result"`
-	}
-	if err := json.Unmarshal(raw, &ig); err != nil {
-		return nil, errors.Join(ErrImageParsingFailed, err)
-	}
-	return &ImageGeneration{ID: ig.ID, Status: ig.Status, Result: ig.Result}, nil
 }
 
 type ImageURL struct {

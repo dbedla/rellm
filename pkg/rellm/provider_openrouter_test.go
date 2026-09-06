@@ -223,6 +223,19 @@ func TestOpenRouterToProviderRepresentation_UserStructuredContent(t *testing.T) 
 	assert.Len(t, wire.Content, 2)
 }
 
+func TestOpenRouterToProviderRepresentation_UserEmptyContent(t *testing.T) {
+	p := &OpenRouterProvider{}
+	msg := UserMessage{MessageContent{Role: "user", Content: nil}}
+	raw, err := p.ToProviderRepresentation([]ConversationElement{&msg})
+	assert.NoError(t, err)
+	assert.Len(t, raw, 1)
+
+	var wire map[string]interface{}
+	err = json.Unmarshal(raw[0], &wire)
+	assert.NoError(t, err)
+	assert.Equal(t, []interface{}{}, wire["content"])
+}
+
 func TestOpenRouterToProviderRepresentation_FunctionCall(t *testing.T) {
 	p := &OpenRouterProvider{}
 	fc := FunctionCall{

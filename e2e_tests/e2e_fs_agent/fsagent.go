@@ -54,7 +54,7 @@ func buildOpenRouterProvider() (rellm.Provider, error) {
 		return nil, fmt.Errorf("missing apikey for OPENROUTER_API_KEY")
 	}
 
-	return rellm.NewOpenRouterProvider(apiKey, "z-ai/glm-5.3-flash")
+	return rellm.NewOpenRouterProvider(apiKey, "google/gemini-3.1-flash-lite")
 }
 
 func buildFSToolset(readOnlyDir, outputDir string) (*agentsutils.FSToolset, error) {

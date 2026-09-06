@@ -125,7 +125,7 @@ func (a *Agent) dispatchConversation(ctx context.Context, conversation []Convers
 			}
 
 		case *AssistantMessage:
-			message.WriteString(messagesFromParts(el.Content))
+			message.WriteString(TextFromContent(el.Content))
 			processed = append(processed, el)
 
 		case *ImageGeneration:
@@ -142,14 +142,6 @@ func (a *Agent) dispatchConversation(ctx context.Context, conversation []Convers
 	}
 
 	return message.String(), processed, imageHandled, outputErr
-}
-
-func messagesFromParts(parts []MessagePart) string {
-	var msg strings.Builder
-	for _, part := range parts {
-		msg.WriteString(part.Text)
-	}
-	return msg.String()
 }
 
 func (a *Agent) executeImageGenerationCallHandler(ctx context.Context, image *ImageGeneration) error {
