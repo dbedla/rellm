@@ -278,17 +278,25 @@ func ParseConversationElement(raw json.RawMessage) (ConversationElement, error) 
 }
 
 // TextFromContent extracts concatenated text from structured parts.
-// Works on both string-based and MessagePart-based content.
 func TextFromContent(parts []MessagePart) string {
+	texts := make([]string, 0, len(parts))
+	for _, p := range parts {
+		texts = append(texts, p.Text)
+	}
+	return JoinTextParts(texts)
+}
+
+// JoinTextParts joins non-empty text parts with spaces.
+func JoinTextParts(parts []string) string {
 	var sb strings.Builder
-	for i, p := range parts {
-		if p.Text == "" {
+	for _, p := range parts {
+		if p == "" {
 			continue
 		}
-		if i > 0 && sb.Len() > 0 {
+		if sb.Len() > 0 {
 			sb.WriteByte(' ')
 		}
-		sb.WriteString(p.Text)
+		sb.WriteString(p)
 	}
 	return sb.String()
 }

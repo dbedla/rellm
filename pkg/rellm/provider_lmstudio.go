@@ -212,18 +212,3 @@ func (p *LMStudioProvider) marshalConversationElement(element ConversationElemen
 }
 
 var _ Provider = &LMStudioProvider{}
-
-// JoinTextParts joins text parts with spaces.
-func JoinTextParts(parts []string) string {
-	var sb strings.Builder
-	for i, p := range parts {
-		if p == "" {
-			continue
-		}
-		if i > 0 && sb.Len() > 0 {
-			sb.WriteByte(' ')
-		}
-		sb.WriteString(p)
-	}
-	return sb.String()
-}
