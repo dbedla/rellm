@@ -17,6 +17,7 @@ var ErrConversationElementConversion = errors.New("error converting conversation
 var ErrUnknownConversationElement = errors.New("unknown conversation element")
 var ErrUnknownElementProviderMismatch = errors.New("unknown element provider mismatch")
 var ErrMalformedUnknownElement = errors.New("malformed unknown element")
+var ErrLMSMarshalingConversationElement = errors.New("error marshaling conversation element")
 
 var ErrEndpointNilResponse = errors.New("endpoint returned nil response")
 var ErrEndpointNilBodyInResponse = errors.New("endpoint returned nil body in response")

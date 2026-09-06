@@ -2,6 +2,7 @@ package rellm
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -178,68 +179,36 @@ func (p *LMStudioProvider) ToProviderRepresentation(elements []ConversationEleme
 	}
 	raw := make([]json.RawMessage, 0, len(elements))
 	for _, e := range elements {
-		switch el := e.(type) {
-		case *UserMessage:
-			b, err := p.marshalMessage(el.MessageContent)
-			if err != nil {
-				return nil, err
-			}
-			raw = append(raw, b)
-
-		case *AssistantMessage:
-			b, err := p.marshalMessage(el.MessageContent)
-			if err != nil {
-				return nil, err
-			}
-			raw = append(raw, b)
-
-		case *SystemMessage:
-			b, err := p.marshalMessage(el.MessageContent)
-			if err != nil {
-				return nil, err
-			}
-			raw = append(raw, b)
-
-		case *FunctionCall:
-			b, err := marshalFunctionCall(el)
-			if err != nil {
-				return nil, err
-			}
-			raw = append(raw, b)
-
-		case *FunctionCallResp:
-			b, err := marshalFunctionCallResp(el)
-			if err != nil {
-				return nil, err
-			}
-			raw = append(raw, b)
-
-		case *Reasoning:
-			b, err := marshalReasoningFormLMStudio(el)
-			if err != nil {
-				return nil, err
-			}
-			raw = append(raw, b)
-
-		case *ImageGeneration:
-			b, err := marshalImageGeneration(el)
-			if err != nil {
-				return nil, err
-			}
-			raw = append(raw, b)
-
-		case *UnknownElement:
-			b, err := unknownElementRepresentation(el, ProviderLMStudio)
-			if err != nil {
-				return nil, err
-			}
-			raw = append(raw, b)
-
-		default:
-			continue // skip unknown types
+		b, err := p.marshalConversationElement(e)
+		if err != nil {
+			return nil, err
 		}
+		raw = append(raw, b)
 	}
 	return raw, nil
+}
+
+func (p *LMStudioProvider) marshalConversationElement(element ConversationElement) (json.RawMessage, error) {
+	switch el := element.(type) {
+	case *UserMessage:
+		return p.marshalMessage(el.MessageContent)
+	case *AssistantMessage:
+		return p.marshalMessage(el.MessageContent)
+	case *SystemMessage:
+		return p.marshalMessage(el.MessageContent)
+	case *FunctionCall:
+		return marshalFunctionCall(el)
+	case *FunctionCallResp:
+		return marshalFunctionCallResp(el)
+	case *Reasoning:
+		return marshalReasoningFormLMStudio(el)
+	case *ImageGeneration:
+		return marshalImageGeneration(el)
+	case *UnknownElement:
+		return unknownElementRepresentation(el, ProviderLMStudio)
+	default:
+		return nil, errors.Join(ErrLMSMarshalingConversationElement, fmt.Errorf("unknown conversation element type: %T", el))
+	}
 }
 
 var _ Provider = &LMStudioProvider{}
