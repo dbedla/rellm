@@ -70,27 +70,14 @@ func (p *LMStudioProvider) Do(r *http.Request) (*http.Response, error) {
 func (p *LMStudioProvider) ToConversationElements(items []json.RawMessage) ([]ConversationElement, error) {
 	elements := make([]ConversationElement, 0, len(items))
 	for _, raw := range items {
-		var msg struct {
-			Type    string          `json:"type"`
-			Role    string          `json:"role"`
-			ID      string          `json:"id"`
-			Name    string          `json:"name"`
-			CallID  string          `json:"call_id"`
-			Args    json.RawMessage `json:"arguments"`
-			Content json.RawMessage `json:"content"`
-		}
-		if err := json.Unmarshal(raw, &msg); err != nil {
+		msg, err := parseWireItem(raw)
+		if err != nil {
 			return nil, err
 		}
 
 		switch msg.Type {
 		case "function_call":
-			elements = append(elements, &FunctionCall{
-				ID:     msg.ID,
-				Name:   msg.Name,
-				Args:   msg.Args,
-				CallID: msg.CallID,
-			})
+			elements = append(elements, parseFunctionCallItem(msg))
 
 		case "reasoning":
 			elements = append(elements, p.parseReasoning(raw))
@@ -103,25 +90,7 @@ func (p *LMStudioProvider) ToConversationElements(items []json.RawMessage) ([]Co
 			elements = append(elements, elem)
 
 		case "function_call_output":
-			// Extract output field directly from raw JSON
-			var out struct {
-				Output string `json:"output"`
-			}
-			if err := json.Unmarshal(raw, &out); err == nil {
-				elements = append(elements, &FunctionCallResp{
-					ID:     msg.ID,
-					Type:   "function_call_output",
-					CallID: msg.CallID,
-					Output: out.Output,
-				})
-			} else {
-				elements = append(elements, &FunctionCallResp{
-					ID:     msg.ID,
-					Type:   "function_call_output",
-					CallID: msg.CallID,
-					Output: string(msg.Content),
-				})
-			}
+			elements = append(elements, parseFunctionCallRespItem(raw, msg))
 
 		case "message", "": // messages often lack an explicit type field
 			switch msg.Role {
@@ -232,31 +201,14 @@ func (p *LMStudioProvider) ToProviderRepresentation(elements []ConversationEleme
 			raw = append(raw, b)
 
 		case *FunctionCall:
-			fc := map[string]interface{}{
-				"id":        el.ID,
-				"name":      el.Name,
-				"arguments": json.RawMessage(el.Args),
-				"call_id":   el.CallID,
-				"status":    "completed",
-				"type":      "function_call",
-			}
-			b, err := json.Marshal(fc)
+			b, err := marshalFunctionCall(el)
 			if err != nil {
 				return nil, err
 			}
 			raw = append(raw, b)
 
 		case *FunctionCallResp:
-			resp := map[string]interface{}{
-				"call_id": el.CallID,
-				"type":    "function_call_output",
-			}
-			if el.ID != "" {
-				resp["id"] = el.ID
-			}
-			// Use Output which may be JSON-encoded or plain text.
-			resp["output"] = el.Output
-			b, err := json.Marshal(resp)
+			b, err := marshalFunctionCallResp(el)
 			if err != nil {
 				return nil, err
 			}
@@ -283,13 +235,7 @@ func (p *LMStudioProvider) ToProviderRepresentation(elements []ConversationEleme
 			raw = append(raw, b)
 
 		case *ImageGeneration:
-			sig := map[string]interface{}{
-				"id":     el.ID,
-				"type":   "image_generation_call",
-				"status": el.Status,
-				"result": el.Result,
-			}
-			b, err := json.Marshal(sig)
+			b, err := marshalImageGeneration(el)
 			if err != nil {
 				return nil, err
 			}

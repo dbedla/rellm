@@ -322,6 +322,47 @@ type Provider interface {
 	ToProviderRepresentation(elements []ConversationElement) ([]json.RawMessage, error)
 }
 
+// marshalFunctionCall serializes a FunctionCall for the Responses wire format.
+// Shared by providers with identical function_call serialization.
+func marshalFunctionCall(el *FunctionCall) (json.RawMessage, error) {
+	fc := map[string]interface{}{
+		"id":        el.ID,
+		"name":      el.Name,
+		"arguments": json.RawMessage(el.Args),
+		"call_id":   el.CallID,
+		"status":    "completed",
+		"type":      "function_call",
+	}
+	return json.Marshal(fc)
+}
+
+// marshalFunctionCallResp serializes a FunctionCallResp for the Responses wire
+// format. Shared by providers with identical function_call_output serialization.
+func marshalFunctionCallResp(el *FunctionCallResp) (json.RawMessage, error) {
+	resp := map[string]interface{}{
+		"call_id": el.CallID,
+		"type":    "function_call_output",
+	}
+	if el.ID != "" {
+		resp["id"] = el.ID
+	}
+	// Use Output which may be JSON-encoded or plain text.
+	resp["output"] = el.Output
+	return json.Marshal(resp)
+}
+
+// marshalImageGeneration serializes an ImageGeneration for the Responses wire
+// format. Shared by providers with identical image_generation_call serialization.
+func marshalImageGeneration(el *ImageGeneration) (json.RawMessage, error) {
+	sig := map[string]interface{}{
+		"id":     el.ID,
+		"type":   "image_generation_call",
+		"status": el.Status,
+		"result": el.Result,
+	}
+	return json.Marshal(sig)
+}
+
 // messagePartsWithStrings creates MessagePart slice from a string list.
 func messagePartsWithStrings(texts []string) []MessagePart {
 	parts := make([]MessagePart, 0, len(texts))
@@ -373,6 +414,57 @@ func normalizeMessageParts(parts []MessagePart, role string) []MessagePart {
 	}
 
 	return parts
+}
+
+// wireItem mirrors the output-item fields common to Responses API wire items.
+type wireItem struct {
+	Type    string          `json:"type"`
+	Role    string          `json:"role"`
+	ID      string          `json:"id"`
+	Name    string          `json:"name"`
+	CallID  string          `json:"call_id"`
+	Args    json.RawMessage `json:"arguments"`
+	Content json.RawMessage `json:"content"`
+}
+
+// parseWireItem decodes an output item's common fields.
+func parseWireItem(raw json.RawMessage) (wireItem, error) {
+	var msg wireItem
+	err := json.Unmarshal(raw, &msg)
+	return msg, err
+}
+
+// parseFunctionCallItem builds a FunctionCall from a function_call item.
+func parseFunctionCallItem(msg wireItem) *FunctionCall {
+	return &FunctionCall{
+		ID:     msg.ID,
+		Name:   msg.Name,
+		Args:   msg.Args,
+		CallID: msg.CallID,
+	}
+}
+
+// parseFunctionCallRespItem builds a FunctionCallResp from a
+// function_call_output item. The output field is extracted directly from the
+// raw JSON; on failure the content field is used as-is.
+func parseFunctionCallRespItem(raw json.RawMessage, msg wireItem) *FunctionCallResp {
+	var out struct {
+		Output string `json:"output"`
+	}
+	if err := json.Unmarshal(raw, &out); err == nil {
+		return &FunctionCallResp{
+			ID:     msg.ID,
+			Type:   "function_call_output",
+			CallID: msg.CallID,
+			Output: out.Output,
+		}
+	}
+	return &FunctionCallResp{
+		ID:     msg.ID,
+		Type:   "function_call_output",
+		CallID: msg.CallID,
+		Output: string(msg.Content),
+	}
 }
 
 // parseImageGeneration parses an image_generation_call wire item into an
