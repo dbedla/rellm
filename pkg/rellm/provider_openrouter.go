@@ -71,10 +71,10 @@ func (p *OpenRouterProvider) ToConversationElements(items []json.RawMessage) ([]
 			elements = append(elements, parseFunctionCallRespItem(raw, msg))
 
 		case "message", "": // messages often lack an explicit type field; infer from role
-			elements = append(elements, p.parseMessage(raw, msg.ID, msg.Type, msg.Role, msg.Content))
+			elements = append(elements, parseMessageWithStatus(raw, ProviderOpenRouter, msg.ID, msg.Type, msg.Role, msg.Content))
 
 		case "reasoning":
-			elm, err := p.parseReasoning(raw)
+			elm, err := parseReasoningSigned(raw)
 			if err != nil {
 				return nil, err
 			}
@@ -92,96 +92,6 @@ func (p *OpenRouterProvider) ToConversationElements(items []json.RawMessage) ([]
 		}
 	}
 	return elements, nil
-}
-
-// parseMessage parses a message item into a role-typed message. Content is
-// normalized to []MessagePart; ToProviderRepresentation re-serializes per the type's shape rule.
-func (p *OpenRouterProvider) parseMessage(raw json.RawMessage, id, itemType, role string, content json.RawMessage) ConversationElement {
-	var statusInfo struct {
-		Status string `json:"status"`
-	}
-	status := ""
-	if err := json.Unmarshal(raw, &statusInfo); err == nil {
-		status = statusInfo.Status
-	}
-	parts := normalizeMessageParts(ParseMessageContent(content), role)
-	switch role {
-	case "assistant":
-		return &AssistantMessage{MessageContent{ID: id, Role: role, Status: status, Content: parts}}
-	case "system":
-		return &SystemMessage{MessageContent{ID: id, Role: role, Content: parts}}
-	case "user":
-		return &UserMessage{MessageContent{ID: id, Role: role, Status: status, Content: parts}}
-	default:
-		return newUnknownElement(ProviderOpenRouter, itemType, role, raw)
-	}
-}
-
-// marshalTextMessage serializes an assistant/system message for OpenRouter:
-// text-only content becomes a string (matching the observed wire format,
-// which stringifies output_text parts too); multimodal stays an array.
-func (p *OpenRouterProvider) marshalTextMessage(mc MessageContent) (json.RawMessage, error) {
-	payload := map[string]interface{}{
-		"role": mc.Role,
-		"type": "message",
-	}
-	if mc.ID != "" {
-		payload["id"] = mc.ID
-	}
-	if mc.Status != "" {
-		payload["status"] = mc.Status
-	}
-	if len(mc.Content) == 0 {
-		payload["content"] = ""
-	} else if hasImageParts(mc.Content) {
-		payload["content"] = mc.Content
-	} else {
-		payload["content"] = TextFromContent(mc.Content)
-	}
-	return json.Marshal(payload)
-}
-
-// hasImageParts reports whether any part carries an image (multimodal content
-// that must stay a structured array).
-func hasImageParts(parts []MessagePart) bool {
-	for _, p := range parts {
-		if p.ImageURL != nil {
-			return true
-		}
-	}
-	return false
-}
-
-// parseReasoning extracts reasoning text, summary, and provider continuation state.
-func (p *OpenRouterProvider) parseReasoning(raw json.RawMessage) (ConversationElement, error) {
-	var item struct {
-		ID        string                 `json:"id"`
-		Status    string                 `json:"status"`
-		Summary   []string               `json:"summary"`
-		Content   []ReasoningContentPart `json:"content"`
-		Signature string                 `json:"signature"`
-	}
-	if err := json.Unmarshal(raw, &item); err != nil {
-		return nil, errors.Join(ErrReasoningParsingFailed, err) // skip malformed items
-	}
-
-	textParts := make([]string, 0, len(item.Content))
-	for _, part := range item.Content {
-		if part.Type == "reasoning_text" || part.Type == "text" {
-			textParts = append(textParts, part.Text)
-		}
-	}
-	if len(item.Summary) == 0 {
-		item.Summary = nil
-	}
-
-	return &Reasoning{
-		ID:        item.ID,
-		Status:    item.Status,
-		Summary:   item.Summary,
-		Text:      JoinTextParts(textParts),
-		Signature: item.Signature,
-	}, nil
 }
 
 func (p *OpenRouterProvider) ToProviderRepresentation(elements []ConversationElement) ([]json.RawMessage, error) {
@@ -205,17 +115,17 @@ func (p *OpenRouterProvider) ToProviderRepresentation(elements []ConversationEle
 func (p *OpenRouterProvider) marshalConversationElement(element ConversationElement) (json.RawMessage, error) {
 	switch el := element.(type) {
 	case *UserMessage:
-		return marshalUserMessageForOpenRouter(el.MessageContent)
+		return marshalMessageAsTypedParts(el.MessageContent)
 	case *AssistantMessage:
-		return p.marshalTextMessage(el.MessageContent)
+		return marshalMessageAsTypedText(el.MessageContent)
 	case *SystemMessage:
-		return p.marshalTextMessage(el.MessageContent)
+		return marshalMessageAsTypedText(el.MessageContent)
 	case *FunctionCall:
 		return marshalFunctionCall(el)
 	case *FunctionCallResp:
 		return marshalFunctionCallResp(el)
 	case *Reasoning:
-		return marshalReasoningForOpenRouter(el)
+		return marshalReasoningWithSignature(el)
 	case *ImageGeneration:
 		return marshalImageGeneration(el)
 	case *UnknownElement:
@@ -226,8 +136,3 @@ func (p *OpenRouterProvider) marshalConversationElement(element ConversationElem
 }
 
 var _ Provider = &OpenRouterProvider{}
-
-type ReasoningContentPart struct {
-	Type string `json:"type"`
-	Text string `json:"text,omitempty"`
-}

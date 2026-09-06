@@ -81,7 +81,7 @@ func (p *LMStudioProvider) ToConversationElements(items []json.RawMessage) ([]Co
 			elements = append(elements, parseFunctionCallItem(msg))
 
 		case "reasoning":
-			elements = append(elements, p.parseReasoning(raw))
+			elements = append(elements, parseReasoningBasic(raw))
 
 		case "image_generation_call":
 			elem, err := parseImageGeneration(raw)
@@ -94,83 +94,13 @@ func (p *LMStudioProvider) ToConversationElements(items []json.RawMessage) ([]Co
 			elements = append(elements, parseFunctionCallRespItem(raw, msg))
 
 		case "message", "": // messages often lack an explicit type field
-			switch msg.Role {
-			case "assistant":
-				parts := normalizeMessageParts(ParseMessageContent(msg.Content), msg.Role)
-				elements = append(elements, &AssistantMessage{MessageContent{ID: msg.ID, Role: msg.Role, Content: parts}})
-			case "system":
-				parts := normalizeMessageParts(ParseMessageContent(msg.Content), msg.Role)
-				elements = append(elements, &SystemMessage{MessageContent{ID: msg.ID, Role: msg.Role, Content: parts}})
-			case "user":
-				parts := normalizeMessageParts(ParseMessageContent(msg.Content), msg.Role)
-				elements = append(elements, &UserMessage{MessageContent{ID: msg.ID, Role: msg.Role, Content: parts}})
-			default:
-				elements = append(elements, newUnknownElement(ProviderLMStudio, msg.Type, msg.Role, raw))
-			}
+			elements = append(elements, parseMessageByRole(raw, ProviderLMStudio, msg.ID, msg.Type, msg.Role, msg.Content))
 
 		default:
 			elements = append(elements, newUnknownElement(ProviderLMStudio, msg.Type, msg.Role, raw))
 		}
 	}
 	return elements, nil
-}
-
-// parseReasoning extracts reasoning text and summary from a raw item.
-func (p *LMStudioProvider) parseReasoning(raw json.RawMessage) ConversationElement {
-	r := &Reasoning{}
-
-	// Extract id, status, summary from top level
-	var meta struct {
-		ID      string   `json:"id"`
-		Status  string   `json:"status"`
-		Summary []string `json:"summary"`
-	}
-	if err := json.Unmarshal(raw, &meta); err == nil {
-		r.ID = meta.ID
-		r.Status = meta.Status
-		if len(meta.Summary) > 0 {
-			r.Summary = meta.Summary
-		}
-	}
-
-	// Extract text from content array (reasoning_text items)
-	var msg struct {
-		Content []struct {
-			Type string `json:"type"`
-			Text string `json:"text"`
-		} `json:"content"`
-	}
-	if err := json.Unmarshal(raw, &msg); err == nil {
-		var textParts []string
-		for _, c := range msg.Content {
-			if c.Type == "reasoning_text" || c.Type == "text" {
-				textParts = append(textParts, c.Text)
-			}
-		}
-		r.Text = JoinTextParts(textParts)
-	}
-
-	return r
-}
-
-// marshalMessage serializes any role-typed message for LM Studio: content is
-// always a structured array (LM Studio does not use the "type":"message" field).
-func (p *LMStudioProvider) marshalMessage(mc MessageContent) (json.RawMessage, error) {
-	payload := map[string]interface{}{
-		"role": mc.Role,
-	}
-	if mc.ID != "" {
-		payload["id"] = mc.ID
-	}
-	if mc.Status != "" {
-		payload["status"] = mc.Status
-	}
-	if len(mc.Content) == 0 {
-		payload["content"] = []MessagePart{}
-	} else {
-		payload["content"] = mc.Content
-	}
-	return json.Marshal(payload)
 }
 
 func (p *LMStudioProvider) ToProviderRepresentation(elements []ConversationElement) ([]json.RawMessage, error) {
@@ -191,17 +121,17 @@ func (p *LMStudioProvider) ToProviderRepresentation(elements []ConversationEleme
 func (p *LMStudioProvider) marshalConversationElement(element ConversationElement) (json.RawMessage, error) {
 	switch el := element.(type) {
 	case *UserMessage:
-		return p.marshalMessage(el.MessageContent)
+		return marshalMessageAsUntypedParts(el.MessageContent)
 	case *AssistantMessage:
-		return p.marshalMessage(el.MessageContent)
+		return marshalMessageAsUntypedParts(el.MessageContent)
 	case *SystemMessage:
-		return p.marshalMessage(el.MessageContent)
+		return marshalMessageAsUntypedParts(el.MessageContent)
 	case *FunctionCall:
 		return marshalFunctionCall(el)
 	case *FunctionCallResp:
 		return marshalFunctionCallResp(el)
 	case *Reasoning:
-		return marshalReasoningFormLMStudio(el)
+		return marshalReasoningWithSummary(el)
 	case *ImageGeneration:
 		return marshalImageGeneration(el)
 	case *UnknownElement:
