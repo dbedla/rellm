@@ -321,15 +321,19 @@ func marshalMessageAsUntypedParts(mc MessageContent) (json.RawMessage, error) {
 // (OpenRouter user-message shape).
 func marshalMessageAsTypedParts(mc MessageContent) (json.RawMessage, error) {
 	payload := map[string]interface{}{
-		"role":    mc.Role,
-		"type":    "message",
-		"content": mc.Content,
+		"role": mc.Role,
+		"type": "message",
 	}
 	if mc.ID != "" {
 		payload["id"] = mc.ID
 	}
 	if mc.Status != "" {
 		payload["status"] = mc.Status
+	}
+	if len(mc.Content) == 0 {
+		payload["content"] = []MessagePart{}
+	} else {
+		payload["content"] = mc.Content
 	}
 	return json.Marshal(payload)
 }
