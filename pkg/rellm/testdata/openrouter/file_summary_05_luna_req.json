@@ -54,6 +54,32 @@
       "call_id": "call_VoCYo5DHQ5eRZC0xLnu3sEnc",
       "output": "\"/var/folders/nj/bkj2m2nx3292lgx0x2zsh35h0000gn/T/agent-log-2091192720/output\"",
       "type": "function_call_output"
+    },
+    {
+      "arguments": "{\"path\":\"/var/folders/nj/bkj2m2nx3292lgx0x2zsh35h0000gn/T/agent-log-2091192720/readonly_agent_input\"}",
+      "call_id": "call_48EJCtqtWjGxawi7SEEX3AQ4",
+      "id": "fc_tmp_shn8u24rtxg",
+      "name": "FSToolset_ListFilesIn",
+      "status": "completed",
+      "type": "function_call"
+    },
+    {
+      "call_id": "call_48EJCtqtWjGxawi7SEEX3AQ4",
+      "output": "[\"/private/var/folders/nj/bkj2m2nx3292lgx0x2zsh35h0000gn/T/agent-log-2091192720/readonly_agent_input/locations.txt\",\"/private/var/folders/nj/bkj2m2nx3292lgx0x2zsh35h0000gn/T/agent-log-2091192720/readonly_agent_input/names.txt\"]",
+      "type": "function_call_output"
+    },
+    {
+      "arguments": "{\"path\":\"/var/folders/nj/bkj2m2nx3292lgx0x2zsh35h0000gn/T/agent-log-2091192720/output\"}",
+      "call_id": "call_L2QUXm1b6GmuSZ1dZ3rQRO3e",
+      "id": "fc_tmp_2liaqraasku",
+      "name": "FSToolset_ListFilesIn",
+      "status": "completed",
+      "type": "function_call"
+    },
+    {
+      "call_id": "call_L2QUXm1b6GmuSZ1dZ3rQRO3e",
+      "output": "null",
+      "type": "function_call_output"
     }
   ],
   "tools": [

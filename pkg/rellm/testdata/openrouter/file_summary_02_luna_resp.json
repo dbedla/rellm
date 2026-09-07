@@ -1,32 +1,37 @@
 {
-  "id": "gen-1788775168-qScJaeAZDYSq7AzgKGLP",
+  "id": "gen-1788783626-repEvlL8dHjUjt9Cahxo",
   "object": "response",
-  "created_at": 1788775168,
+  "created_at": 1788783626,
   "model": "openai/gpt-5.6-luna",
   "status": "completed",
-  "completed_at": 1788775169,
+  "completed_at": 1788783628,
   "output": [
     {
-      "id": "rs_0dec1f2d9264351c016a9e8b00cbe887d1bfd4911010386ccb",
+      "id": "rs_0a258cd7bd03e4d3016a9eac0b063887d1a7e9c71eb50c3e7d",
       "type": "reasoning",
       "status": "completed",
-      "summary": [],
-      "encrypted_content": "gAAAAABqnosBcsq1z6OX_VhLjWmJHUbwM6CRCDLeYs8B1OASaBBjYsWitCbzImhAXkyjsFmWneIrt0SSAg6v5htPZEZxGmk2mvzzhyshVUYQjRXlPDojGpThC9EWeea6Am8QtY_wrtpZo_HEi83mHrgaoFHTjFA8Vwlf4GAdSMgHP4zAUfd-WYrNhkKRdntDNbW364SIEASWmUenZZNOYjUN7ydkKUPsHeIdFhKEJ3TVKGpcwInD6W9qhl6CvcRJHPRbYzwpToRW6AtT19DkKmnK4K94_fSqG7RpRWLi48RCdyGZRdWjm40B2N3vTCCIe1GtDzpsm8H3MoMK4mo0Gyh9bW0eU3wPmDM5b-Le_cC66zUY3PVL-ktNH8ZbuBtEDaC_l6-B10ZDw6_5IDibFGBAZNiv2hhnKsZ_JF4osSCg-qHKXvKHQiUH5Twm_GVY0NiASZp6lUZA66ymk_052Izeoxs9rE9uFFiW1PALtg6UI7_mlxoHtdSdjNiVqFCtu5G14p9yCEoVdgt1u1efIA2v0Q9FOB2_ogMoFsMKZB3uI2VvtOWMroayVcg2Vq8wtJJlYIR-nkLHTT0jGRTBcPeDK8MZ--pDMK_DqhLbpeZDM-n0d5FLSz3lHSt19WQzGthBoHqv1nJtR3bAt5UZnfaQga5PWLAPHX7FojfTTYKFHQdvO6SAneIx8twgPfRjAscftGjloM8Sr3MP-s8IDHHCVYhPuVEZgKZ1GS6aZ0DWhLY_Ce_T8-Yew0cD0tXGg_801SdzJcvQwmsHs2BNMMbQR1q5m0KMjvt3EPvx5iRPEI8zp2xHOIYfoQCZYfiXlRmteFlOJ2OqUWOB6vGJStF5cfWM5Re7qwtpqxecIOXD5t8mREaYcQ_s97lggBM_xlt2fYUTqfgnjv03Zd848lZcGNa-6fltYXfoButGPjcG9RHVhrn7JJGdkL25e7qIFPJT5I50A_Uqx86XEcjRpAs94HA1jfdcOEKymEiLlR4esHUT0hqv2XqHvKvq8oIHQiNX9-5K3EbPKVvsOVb_E99V8VjxKxefInH1B5eET5IlhIjnf0JQamFE8JYNnkYnuAqBpf9JimH2RLAW9gcn50txvgx8_BdQ8p4vk0YfTodR0dTzjfe887jea7v4V_FHIFBh0WdrPBTDNi_Pv95uy5r2Rc-JRIiyQhCTxHVtrR2dbHHWafuNoQG2CUdPBfTmvVi2sS4hZ9ovUtcfkzqkfkwNsvuFRcFKAwURMb9c3yHRQBz0j3WfBxesbUEoluJRVQAkUMfGRI5RD_bp_njsmR9X_o_pKgfsQxK3GP_l4fNYVtrU9r9lsnRxM56D0gUoJl8ZPhPHgYA6fnpwJx5fuwpMeQQCWUH_M6CzguhFq5n_dR6fHL8gCcRgqow-ttEjsiVAR0oSwskKrvzbyXaTVLyNqkfc-pvIhA==.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC01LjYtbHVuYS0yMDI2MDcwOXxvcGVuYWkifQ",
+      "summary": [
+        {
+          "type": "summary_text",
+          "text": "**Inspecting allowed paths**\n\nI need to check what paths are allowed. First, I’ll call the read-only paths and then output the directory. Once I have that, I can create a list of the paths to see what's available. This will help clarify any restrictions or available operations. Let’s see what those paths reveal to us!"
+        }
+      ],
+      "encrypted_content": "gAAAAABqnqwLO-RzfC5V8TOq_R0286z7hKBXy_ZHhNDKxZX_ljuPRCXN98ZdbgO8FLkgrn5Cg9fDO2x9C3HWKWxvXlLqd87zXHYNGoBtjq0HD8kSqJGE4XQNu2La4fsnP_fh6XEygs8symWyV_nkdJFowriQr1E-LHbuM9s7xGc1rwyJ3Y6qYdaieRHCShnd-Blk6X2mFjBDFMJj8F-d1Gogy3HoC2xAbMh8HV6fnjGnLg_Jo5dd3YbdidFrjiaWYbwqGIfaeDCYq2dU4aP2aLTm_9_QiMQYe7q-Gzn5qRUn5N4Y51nW2a1eAWQY90LSVbcsoHaSWC7V_v2_Sv5gJLFXbu_1KwoKHL17NYanp9EsLpb3GQPbJ94RFX8j1o2R9fuF0dEl_VdwX1BbdJcro81WffqGrJE60vibZeFvbIdZAECWvg4hWzY-ihANcla6gGWMsz6ebU0S0YB96Vw9_KfNNOhs1Yc6R4D_X6OXLAah_aeE1dTnGplHNuH4BfH5HwoyOfnBYR02tbNsZ-JvETszeqoQqa_E3EFptkMgOL88x7YzYSR1-gt_xXoK-4PCAR03WqMX5FyHTQelF2ci1UtFb8sk6UD4WRtMKgY2DDTT3mKIkHC8L9zeyr48JHPXjj8bsMtKOCXpI4yFsKQETQhoK_nD2LSQVAgSiZsxnZpUFkxcV9HbmXksA4gqCyrxKGpST26o_XaK5_1nIdRIdwbw5gPZ68b7p3eGiVD3KrfDYBzn0WgOsdBW6Bd4md58KILHfi0pvYRncLQtKY2qTJABSePON0ZbmWcWZCfdVREt_UV6ddOADnwox0O-AeKxW0spATFUZdcS8LtIIHIki0r349XHvq1Wy7YxfxZ5mi6XWNDi2h6MTJFfo-GA2xoSuKoTlSbuKSxbff7t8Tzytlj-aeBNoSq1X8oz0VvEABzUDjh4ZSj8rUotoDkTXfFozbwjPkaC-LOG9Ejw6-5pfqW5um5Zb1lyI7K7TuAybSDfLrtD3f4Bfm6puaB3P7H6YNwjq2tv_dswuSud3eodKHyJA1fRanjhkoEIy6RahRsQ3y1E5aWTNB04D2mXTqRTv1TENvlOJN9dakx4K8ruevzJgnxdcO1FsUl457zZyaBuSr2889RTjSpulRk2sOV-bcmpUK3plblVZwsI8oiRoXLjAyia3i7GrEy46gaQg8hH_DWml5xc5QphdoyJKz80QycHcPnbzcSvK7mnBySmuPPLRe2vUzuv3w-1dpFx4x7zH_wG7dW_kEhTJ-ttlerpEJbrVtP8e34Ce-JL7V79djmiDobbfEOHnUaI-MVpRCWxAT9M4ICrf9lrMeEOG_-sILLDy2XKrnTD0b6eBeB77Ay-92g9W0wP9mCp0D2Aw2cUt-gFmCBc8cCE1Fjyzz4Vft2v0aBp1Sa-yp6VSh8CGmDWQwbl3ynzC0xHBUQZ2dYfbMli3A8ABiHf0dO88DiQ5wLRBIawAhf0.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC01LjYtbHVuYS0yMDI2MDcwOXxvcGVuYWkifQ",
       "format": "openai-responses-v1"
     },
     {
-      "id": "fc_tmp_mmglvodfqv",
+      "id": "fc_tmp_wqck0n8ccs9",
       "type": "function_call",
       "status": "completed",
-      "call_id": "call_kzvyos5xtZEd7Q3yJkBiqAYx",
+      "call_id": "call_vBTnbcAdrjr9GqmKWxTAQ7k6",
       "name": "FSToolset_GetReadOnlyPaths",
       "arguments": "{}"
     },
     {
-      "id": "fc_tmp_sfw3pgw0r4",
+      "id": "fc_tmp_0wek4r0caiw",
       "type": "function_call",
       "status": "completed",
-      "call_id": "call_80TvmnHwOMCWu5QVJmHVQq4R",
+      "call_id": "call_VoCYo5DHQ5eRZC0xLnu3sEnc",
       "name": "FSToolset_GetOutputDir",
       "arguments": "{}"
     }
@@ -200,17 +205,17 @@
     "input_tokens_details": {
       "cached_tokens": 0
     },
-    "output_tokens": 72,
+    "output_tokens": 77,
     "output_tokens_details": {
-      "reasoning_tokens": 16
+      "reasoning_tokens": 21
     },
-    "total_tokens": 633,
-    "cost": 0.0001986,
+    "total_tokens": 638,
+    "cost": 0.0002046,
     "is_byok": false,
     "cost_details": {
-      "upstream_inference_cost": 0.0001986,
+      "upstream_inference_cost": 0.0002046,
       "upstream_inference_input_cost": 0.0001122,
-      "upstream_inference_output_cost": 0.0000864
+      "upstream_inference_output_cost": 0.0000924
     }
   }
 }

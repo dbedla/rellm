@@ -381,6 +381,12 @@ var goldenFS03LunaReq string
 //go:embed testdata/openrouter/file_summary_04_luna_resp.json
 var goldenFS04LunaResp string
 
+//go:embed testdata/openrouter/file_summary_05_luna_req.json
+var goldenFS05LunaReq string
+
+//go:embed testdata/openrouter/file_summary_06_luna_resp.json
+var goldenFS06LunaResp string
+
 func TestAgentAskGetSummaryFromOpenAiWithFsToolset(t *testing.T) {
 
 	t.Chdir(t.TempDir())
@@ -446,11 +452,28 @@ func TestAgentAskGetSummaryFromOpenAiWithFsToolset(t *testing.T) {
 			Body:       io.NopCloser(strings.NewReader(goldenFS04LunaResp)),
 		}, nil)
 
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Run(func(args mock.Arguments) {
+			req := args.Get(0).(*http.Request)
+
+			b, err := io.ReadAll(req.Body)
+			assert.NoError(t, err, "failed to read request body")
+
+			req.Body = io.NopCloser(bytes.NewBuffer(b))
+
+			assert.JSONEq(t, goldenFS05LunaReq, string(b))
+		}).
+		Return(&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(goldenFS06LunaResp)),
+		}, nil)
+
 	ctx := context.Background()
 	respMsg, err := agent.Ask(ctx, "what files do you see")
 	assert.NoError(t, err)
-	assert.NotNil(t, respMsg, "response message should not be nil")
-	assert.Equal(t, "Hello! How can I help you today? \n\nIf you have any questions about the weather, meteorology, climate patterns, or even how certain atmospheric phenomena work, feel free to ask!", respMsg, "response message should match")
+	assert.NotNil(t, respMsg)
+	assert.Equal(t, "I can see these files:\n\n- `locations.txt`\n- `names.txt`\n\nThe output directory is currently empty.", respMsg)
 }
 
 func buildTestFileSystemAgentOpenRouter(t *testing.T, model rellm.Model, maxAgentSteps uint64, fst *agentsutils.FSToolset) (*rellm.Agent, *HTTPDoMock) {

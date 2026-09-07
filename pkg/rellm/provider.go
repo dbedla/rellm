@@ -94,13 +94,21 @@ type FunctionCallResp struct {
 
 func (*FunctionCallResp) Kind() ElementKind { return KindFunctionCallResp }
 
-// Reasoning captures model chain-of-thought output.
+// ReasoningSummaryPart is a text summary supplied by a reasoning model.
+type ReasoningSummaryPart struct {
+	Type string `json:"type"`
+	Text string `json:"text"`
+}
+
+// Reasoning captures reasoning output and opaque provider continuation state.
 type Reasoning struct {
-	ID        string   `json:"id,omitempty"`
-	Status    string   `json:"status,omitempty"`
-	Summary   []string `json:"summary,omitempty"`
-	Text      string   `json:"text"`
-	Signature string   `json:"signature,omitempty"` // OpenRouter-only signing key
+	ID               string                 `json:"id,omitempty"`
+	Status           string                 `json:"status,omitempty"`
+	Summary          []ReasoningSummaryPart `json:"summary,omitempty"`
+	Text             string                 `json:"text"`
+	Signature        string                 `json:"signature,omitempty"` // OpenRouter-only signing key
+	EncryptedContent string                 `json:"encrypted_content,omitempty"`
+	Format           string                 `json:"format,omitempty"`
 }
 
 func (*Reasoning) Kind() ElementKind { return KindReasoning }
