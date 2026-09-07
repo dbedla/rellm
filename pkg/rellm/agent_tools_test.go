@@ -106,7 +106,7 @@ var goldenOR_Hi_03_req string
 var goldenOR_Hi_04_resp string
 
 func TestOpenRouterAgentHiWithToolsNoCallGemma(t *testing.T) {
-	agent, httpDo := buildTestProToolAgentOpenRouter(t, "google/gemma-4-26b-a4b-it", &examplesutils.DataSrcToolset{}, testDefaultMaxAgentSteps)
+	agent, httpDo := buildTestProToolAgentOpenRouter(t, "google/gemma-4-26b-a4b-it", testDefaultMaxAgentSteps)
 	defer httpDo.AssertExpectations(t)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
@@ -180,7 +180,7 @@ var goldenOR_Hi_gemini_03_req string
 var goldenOR_Hi_gemini_04_resp string
 
 func TestOpenRouterAgentHiWithToolsNoCallGemini(t *testing.T) {
-	agent, httpDo := buildTestProToolAgentOpenRouter(t, "google/gemini-3.1-flash-lite", &examplesutils.DataSrcToolset{}, testDefaultMaxAgentSteps)
+	agent, httpDo := buildTestProToolAgentOpenRouter(t, "google/gemini-3.1-flash-lite", testDefaultMaxAgentSteps)
 	defer httpDo.AssertExpectations(t)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
@@ -544,7 +544,7 @@ func buildTestProToolAgentLMS(t *testing.T, maxAgentSteps uint64) (*rellm.Agent,
 	return ta, mockHttp
 }
 
-func buildTestProToolAgentOpenRouter(t *testing.T, model rellm.Model, toolset rellm.Toolset, maxAgentSteps uint64) (*rellm.Agent, *HTTPDoMock) {
+func buildTestProToolAgentOpenRouter(t *testing.T, model rellm.Model, maxAgentSteps uint64) (*rellm.Agent, *HTTPDoMock) {
 
 	agentName := "TestProAgent"
 	mockHttp := new(HTTPDoMock)
@@ -558,8 +558,7 @@ func buildTestProToolAgentOpenRouter(t *testing.T, model rellm.Model, toolset re
 		WithMaxAgentSteps(maxAgentSteps).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage("You are a helpful assistant.").
-		//&examplesutils.DataSrcToolset{}
-		WithToolset(toolset).
+		WithToolset(&examplesutils.DataSrcToolset{}).
 		Build()
 
 	assert.NoError(t, err, "failed to create agent")

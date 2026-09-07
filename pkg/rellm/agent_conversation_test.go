@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"rellm/internal/examplesutils"
 	"rellm/pkg/agentsutils"
 	"rellm/pkg/rellm"
 	"strings"
@@ -225,7 +224,7 @@ func TestAgentLMS_ToolsCallWithConversationCheck_SecondRespFail(t *testing.T) {
 }
 
 func TestAgentOpenRouterGemma_ConversationCheck(t *testing.T) {
-	agent, httpDo := buildTestProToolAgentOpenRouter(t, "google/gemma-4-26b-a4b-it", &examplesutils.DataSrcToolset{}, testDefaultMaxAgentSteps)
+	agent, httpDo := buildTestProToolAgentOpenRouter(t, "google/gemma-4-26b-a4b-it", testDefaultMaxAgentSteps)
 	defer httpDo.AssertExpectations(t)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
@@ -298,7 +297,7 @@ func TestAgentOpenRouterGemma_ConversationCheck(t *testing.T) {
 }
 
 func TestAgentOpenRouterGemini_ConversationCheck(t *testing.T) {
-	agent, httpDo := buildTestProToolAgentOpenRouter(t, "google/gemini-3.1-flash-lite", &examplesutils.DataSrcToolset{}, testDefaultMaxAgentSteps)
+	agent, httpDo := buildTestProToolAgentOpenRouter(t, "google/gemini-3.1-flash-lite", testDefaultMaxAgentSteps)
 	defer httpDo.AssertExpectations(t)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
@@ -382,10 +381,14 @@ var goldenFS03LunaReq string
 //go:embed testdata/openrouter/file_summary_04_luna_resp.json
 var goldenFS04LunaResp string
 
-func disableTestAgentAskGetSummaryFromOpenAiWithFsToolset(t *testing.T) {
+func TestAgentAskGetSummaryFromOpenAiWithFsToolset(t *testing.T) {
 
-	readOnlyDir := t.TempDir()
-	outputDir := t.TempDir()
+	t.Chdir(t.TempDir())
+	readOnlyDir := "input"
+	outputDir := "output"
+
+	assert.NoError(t, os.Mkdir(readOnlyDir, 0755))
+	assert.NoError(t, os.Mkdir(outputDir, 0755))
 
 	createFile := func(locationPath, fname, content string) error {
 		filePath := filepath.Join(locationPath, fname)
@@ -406,7 +409,7 @@ func disableTestAgentAskGetSummaryFromOpenAiWithFsToolset(t *testing.T) {
 	fsToolset := agentsutils.NewFSToolset(fs)
 	assert.NoError(t, err)
 
-	agent, httpDo := buildTestProToolAgentOpenRouter(t, rellm.Model("openai/gpt-5.6-luna"), fsToolset, testDefaultMaxAgentSteps)
+	agent, httpDo := buildTestFileSystemAgentOpenRouter(t, rellm.Model("openai/gpt-5.6-luna"), testDefaultMaxAgentSteps, fsToolset)
 	defer httpDo.AssertExpectations(t)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
@@ -448,4 +451,25 @@ func disableTestAgentAskGetSummaryFromOpenAiWithFsToolset(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, respMsg, "response message should not be nil")
 	assert.Equal(t, "Hello! How can I help you today? \n\nIf you have any questions about the weather, meteorology, climate patterns, or even how certain atmospheric phenomena work, feel free to ask!", respMsg, "response message should match")
+}
+
+func buildTestFileSystemAgentOpenRouter(t *testing.T, model rellm.Model, maxAgentSteps uint64, fst *agentsutils.FSToolset) (*rellm.Agent, *HTTPDoMock) {
+
+	agentName := "TestProAgent"
+	mockHttp := new(HTTPDoMock)
+
+	p, err := rellm.NewOpenRouterProviderWithHTTPClient("test-key", model, mockHttp)
+	assert.NoError(t, err)
+
+	ta, err := rellm.NewAgentBuilder().
+		WithProvider(p).
+		WithAgentName(agentName).
+		WithMaxAgentSteps(maxAgentSteps).
+		WithConversationStorage(rellm.NewInMemoryStorage()).
+		WithSystemMessage("You are a helpful assistant, with limited access to the file system.").
+		WithToolset(fst).
+		Build()
+
+	assert.NoError(t, err, "failed to create agent")
+	return ta, mockHttp
 }
