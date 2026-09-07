@@ -16,7 +16,7 @@ func TestFSToolsetDispatchToolsAcceptsStringWrappedArguments(t *testing.T) {
 	arguments := buildStringWrappedArguments(t, readOnlyDir)
 
 	ctx := context.Background()
-	resp, err := toolset.Dispatch(ctx, "FSToolset.ListFilesIn", arguments)
+	resp, err := toolset.Dispatch(ctx, "FSToolset_ListFilesIn", arguments)
 
 	assert.NoError(t, err)
 	assert.NoError(t, resp.Err)

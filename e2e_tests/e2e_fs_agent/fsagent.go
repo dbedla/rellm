@@ -43,7 +43,7 @@ func buildLMSProvider() (rellm.Provider, error) {
 	return rellm.NewLMStudioProvider("google/gemma-4-26b-a4b", "http://127.0.0.1", "1234")
 }
 
-func buildOpenRouterProvider() (rellm.Provider, error) {
+func buildOpenRouterProvider(model rellm.Model) (rellm.Provider, error) {
 	err := godotenv.Load()
 	if err != nil {
 		return nil, fmt.Errorf("cannot load .env: %w", err)
@@ -54,7 +54,7 @@ func buildOpenRouterProvider() (rellm.Provider, error) {
 		return nil, fmt.Errorf("missing apikey for OPENROUTER_API_KEY")
 	}
 
-	return rellm.NewOpenRouterProvider(apiKey, "google/gemini-3.1-flash-lite")
+	return rellm.NewOpenRouterProvider(apiKey, model)
 }
 
 func buildFSToolset(readOnlyDir, outputDir string) (*agentsutils.FSToolset, error) {
@@ -121,8 +121,10 @@ func providerForFlag(fl flag) (rellm.Provider, error) {
 	switch fl {
 	case flag_LMS:
 		return buildLMSProvider()
-	case flag_OpenRouter:
-		return buildOpenRouterProvider()
+	case flag_OpenRouterGemini:
+		return buildOpenRouterProvider("google/gemini-3.1-flash-lite")
+	case flag_OpenRouterOpenAILuna:
+		return buildOpenRouterProvider("openai/gpt-5.6-luna")
 	default:
 		return nil, fmt.Errorf("unknown flag provided: %s", fl)
 	}
@@ -143,15 +145,17 @@ func createFile(locationPath, fname, content string) error {
 type flag string
 
 const (
-	flag_LMS        flag = "--lms"
-	flag_OpenRouter flag = "--openrouter"
-	flag_Invalid    flag = "NO_FLAG"
+	flag_LMS                  flag = "--lms"
+	flag_OpenRouterGemini     flag = "--or-google-gemini"
+	flag_OpenRouterOpenAILuna flag = "--or-openai-luna"
+	flag_Invalid              flag = "NO_FLAG"
 )
 
 func help() {
 	color.Yellow("allowed args:")
 	color.Yellow("\t %s", flag_LMS)
-	color.Yellow("\t %s", flag_OpenRouter)
+	color.Yellow("\t %s", flag_OpenRouterGemini)
+	color.Yellow("\t %s", flag_OpenRouterOpenAILuna)
 }
 
 func argsToFlag(args []string) flag {
@@ -160,7 +164,7 @@ func argsToFlag(args []string) flag {
 	}
 
 	f := flag(args[1])
-	if f == flag_LMS || f == flag_OpenRouter {
+	if f == flag_LMS || f == flag_OpenRouterGemini || f == flag_OpenRouterOpenAILuna {
 		return f
 	}
 

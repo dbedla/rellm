@@ -3,11 +3,15 @@ package rellm_test
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"io"
 	"net/http"
+	"rellm/pkg/agentsutils"
 	"rellm/pkg/rellm"
 	"strings"
 	"testing"
+
+	_ "embed"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -362,4 +366,120 @@ func TestAgentOpenRouterGemini_ConversationCheck(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, conversationFromGolden, agentConversation)
+}
+
+//go:embed testdata/openrouter/file_summary_01_luna_req.json
+var goldenFS01LunaReq string
+
+//go:embed testdata/openrouter/file_summary_02_luna_resp.json
+var goldenFS02LunaResp string
+
+//go:embed testdata/openrouter/file_summary_03_luna_req.json
+var goldenFS03LunaReq string
+
+//go:embed testdata/openrouter/file_summary_04_luna_resp.json
+var goldenFS04LunaResp string
+
+//go:embed testdata/openrouter/file_summary_05_luna_req.json
+var goldenFS05LunaReq string
+
+//go:embed testdata/openrouter/file_summary_06_luna_resp.json
+var goldenFS06LunaResp string
+
+func TestAgentAskGetSummaryFromOpenAiWithFsToolset(t *testing.T) {
+	fsToolset := new(ToolsetMock)
+	fsToolset.Test(t)
+	defer fsToolset.AssertExpectations(t)
+
+	fsToolset.On("Definitions").
+		Return(agentsutils.NewFSToolset(nil).Definitions()).Once()
+	fsToolset.On("Dispatch", mock.Anything, "FSToolset_GetReadOnlyPaths", json.RawMessage(`"{}"`)).
+		Return(rellm.ToolCallResult{Value: []string{"/input"}}, nil).Once()
+	fsToolset.On("Dispatch", mock.Anything, "FSToolset_GetOutputDir", json.RawMessage(`"{}"`)).
+		Return(rellm.ToolCallResult{Value: "/output"}, nil).Once()
+	fsToolset.On("Dispatch", mock.Anything, "FSToolset_ListFilesIn", json.RawMessage(`"{\"path\":\"/input\"}"`)).
+		Return(rellm.ToolCallResult{Value: []string{"/input/locations.txt", "/input/names.txt"}}, nil).Once()
+	fsToolset.On("Dispatch", mock.Anything, "FSToolset_ListFilesIn", json.RawMessage(`"{\"path\":\"/output\"}"`)).
+		Return(rellm.ToolCallResult{Value: []string(nil)}, nil).Once()
+
+	agent, httpDo := buildTestFileSystemAgentOpenRouter(t, rellm.Model("openai/gpt-5.6-luna"), testDefaultMaxAgentSteps, fsToolset)
+	defer httpDo.AssertExpectations(t)
+
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Run(func(args mock.Arguments) {
+			req := args.Get(0).(*http.Request)
+
+			b, err := io.ReadAll(req.Body)
+			assert.NoError(t, err, "failed to read request body")
+
+			req.Body = io.NopCloser(bytes.NewBuffer(b))
+
+			assert.JSONEq(t, goldenFS01LunaReq, string(b))
+		}).
+		Return(&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(goldenFS02LunaResp)),
+		}, nil)
+
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Run(func(args mock.Arguments) {
+			req := args.Get(0).(*http.Request)
+
+			b, err := io.ReadAll(req.Body)
+			assert.NoError(t, err, "failed to read request body")
+
+			req.Body = io.NopCloser(bytes.NewBuffer(b))
+
+			assert.JSONEq(t, goldenFS03LunaReq, string(b))
+		}).
+		Return(&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(goldenFS04LunaResp)),
+		}, nil)
+
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Run(func(args mock.Arguments) {
+			req := args.Get(0).(*http.Request)
+
+			b, err := io.ReadAll(req.Body)
+			assert.NoError(t, err, "failed to read request body")
+
+			req.Body = io.NopCloser(bytes.NewBuffer(b))
+
+			assert.JSONEq(t, goldenFS05LunaReq, string(b))
+		}).
+		Return(&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(goldenFS06LunaResp)),
+		}, nil)
+
+	ctx := context.Background()
+	respMsg, err := agent.Ask(ctx, "what files do you see")
+	assert.NoError(t, err)
+	assert.NotNil(t, respMsg)
+	assert.Equal(t, "I can see these files:\n\n- `locations.txt`\n- `names.txt`\n\nThe output directory is currently empty.", respMsg)
+}
+
+func buildTestFileSystemAgentOpenRouter(t *testing.T, model rellm.Model, maxAgentSteps uint64, fst rellm.Toolset) (*rellm.Agent, *HTTPDoMock) {
+
+	agentName := "TestProAgent"
+	mockHttp := new(HTTPDoMock)
+
+	p, err := rellm.NewOpenRouterProviderWithHTTPClient("test-key", model, mockHttp)
+	assert.NoError(t, err)
+
+	ta, err := rellm.NewAgentBuilder().
+		WithProvider(p).
+		WithAgentName(agentName).
+		WithMaxAgentSteps(maxAgentSteps).
+		WithConversationStorage(rellm.NewInMemoryStorage()).
+		WithSystemMessage("You are a helpful assistant, with limited access to the file system.").
+		WithToolset(fst).
+		Build()
+
+	assert.NoError(t, err, "failed to create agent")
+	return ta, mockHttp
 }

@@ -124,21 +124,28 @@ func parseMessageWithStatus(raw json.RawMessage, provider, id, itemType, role st
 // parseReasoningBasic extracts reasoning text and summary from a raw item,
 // ignoring unmarshal errors field by field (LM Studio wire shape: no
 // signature).
-func parseReasoningBasic(raw json.RawMessage) ConversationElement {
+func parseReasoningBasic(raw json.RawMessage) (ConversationElement, error) {
 	r := &Reasoning{}
 
-	// Extract id, status, summary from top level
+	// Extract metadata and continuation state from the top level.
 	var meta struct {
-		ID      string   `json:"id"`
-		Status  string   `json:"status"`
-		Summary []string `json:"summary"`
+		ID               string                 `json:"id"`
+		Status           string                 `json:"status"`
+		Summary          []ReasoningSummaryPart `json:"summary"`
+		EncryptedContent string                 `json:"encrypted_content"`
+		Format           string                 `json:"format"`
 	}
-	if err := json.Unmarshal(raw, &meta); err == nil {
-		r.ID = meta.ID
-		r.Status = meta.Status
-		if len(meta.Summary) > 0 {
-			r.Summary = meta.Summary
-		}
+	err := json.Unmarshal(raw, &meta)
+	if err != nil {
+		return nil, errors.Join(ErrReasoningParsingFailed, err)
+	}
+
+	r.ID = meta.ID
+	r.Status = meta.Status
+	r.EncryptedContent = meta.EncryptedContent
+	r.Format = meta.Format
+	if len(meta.Summary) > 0 {
+		r.Summary = meta.Summary
 	}
 
 	// Extract text from content array (reasoning_text items)
@@ -158,7 +165,7 @@ func parseReasoningBasic(raw json.RawMessage) ConversationElement {
 		r.Text = JoinTextParts(textParts)
 	}
 
-	return r
+	return r, nil
 }
 
 // ReasoningContentPart is a content part of a reasoning wire item.
@@ -168,14 +175,16 @@ type ReasoningContentPart struct {
 }
 
 // parseReasoningSigned extracts reasoning text, summary, and provider
-// continuation signature; fails on malformed items (OpenRouter wire shape).
+// continuation state; fails on malformed items (OpenRouter wire shape).
 func parseReasoningSigned(raw json.RawMessage) (ConversationElement, error) {
 	var item struct {
-		ID        string                 `json:"id"`
-		Status    string                 `json:"status"`
-		Summary   []string               `json:"summary"`
-		Content   []ReasoningContentPart `json:"content"`
-		Signature string                 `json:"signature"`
+		ID               string                 `json:"id"`
+		Status           string                 `json:"status"`
+		Summary          []ReasoningSummaryPart `json:"summary"`
+		Content          []ReasoningContentPart `json:"content"`
+		Signature        string                 `json:"signature"`
+		EncryptedContent string                 `json:"encrypted_content"`
+		Format           string                 `json:"format"`
 	}
 	if err := json.Unmarshal(raw, &item); err != nil {
 		return nil, errors.Join(ErrReasoningParsingFailed, err) // skip malformed items
@@ -192,11 +201,13 @@ func parseReasoningSigned(raw json.RawMessage) (ConversationElement, error) {
 	}
 
 	return &Reasoning{
-		ID:        item.ID,
-		Status:    item.Status,
-		Summary:   item.Summary,
-		Text:      JoinTextParts(textParts),
-		Signature: item.Signature,
+		ID:               item.ID,
+		Status:           item.Status,
+		Summary:          item.Summary,
+		Text:             JoinTextParts(textParts),
+		Signature:        item.Signature,
+		EncryptedContent: item.EncryptedContent,
+		Format:           item.Format,
 	}, nil
 }
 
@@ -376,13 +387,13 @@ func hasImageParts(parts []MessagePart) bool {
 }
 
 // marshalReasoningWithSignature serializes a Reasoning item carrying provider
-// continuation state (signature); returns (nil, nil) for an item with no
-// user-visible content and no signature, which the caller skips
+// continuation state; returns (nil, nil) for an item with no
+// user-visible content and no continuation state, which the caller skips
 // (OpenRouter shape).
 func marshalReasoningWithSignature(el *Reasoning) (json.RawMessage, error) {
-	// A signature-only reasoning item carries provider continuation state
+	// A signature-only or encrypted-only item carries provider continuation state
 	// and must be replayed even though it has no user-visible text.
-	if el.Text == "" && el.Signature == "" && len(el.Summary) == 0 {
+	if el.Text == "" && el.Signature == "" && el.EncryptedContent == "" && len(el.Summary) == 0 {
 		return nil, nil
 	}
 	r := map[string]interface{}{
@@ -390,18 +401,24 @@ func marshalReasoningWithSignature(el *Reasoning) (json.RawMessage, error) {
 		"status": el.Status,
 		"type":   "reasoning",
 	}
-	// Signed reasoning blocks are provider continuation state; preserve
+	// Signed and encrypted reasoning blocks are provider continuation state; preserve
 	// their summary field even when it is empty.
 	if len(el.Summary) > 0 {
 		r["summary"] = el.Summary
-	} else if el.Signature != "" {
-		r["summary"] = []string{}
+	} else if el.Signature != "" || el.EncryptedContent != "" {
+		r["summary"] = []ReasoningSummaryPart{}
 	}
 	if el.Text != "" {
 		r["content"] = []MessagePart{{Type: "reasoning_text", Text: el.Text}}
 	}
 	if el.Signature != "" {
 		r["signature"] = el.Signature
+	}
+	if el.EncryptedContent != "" {
+		r["encrypted_content"] = el.EncryptedContent
+	}
+	if el.Format != "" {
+		r["format"] = el.Format
 	}
 	return json.Marshal(r)
 }
@@ -415,12 +432,18 @@ func marshalReasoningWithSummary(el *Reasoning) (json.RawMessage, error) {
 		"status": el.Status,
 		"type":   "reasoning",
 	}
-	payload["summary"] = []string{}
+	payload["summary"] = []ReasoningSummaryPart{}
 	if len(el.Summary) > 0 {
 		payload["summary"] = el.Summary
 	}
 	if el.Text != "" {
 		payload["content"] = []MessagePart{{Type: "reasoning_text", Text: el.Text}}
+	}
+	if el.EncryptedContent != "" {
+		payload["encrypted_content"] = el.EncryptedContent
+	}
+	if el.Format != "" {
+		payload["format"] = el.Format
 	}
 	return json.Marshal(payload)
 }

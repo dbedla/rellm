@@ -1,0 +1,210 @@
+{
+  "model": "openai/gpt-5.6-luna",
+  "input": [
+    {
+      "content": "You are a helpful assistant, with limited access to the file system.",
+      "role": "system",
+      "type": "message"
+    },
+    {
+      "content": [
+        {
+          "type": "input_text",
+          "text": "what files do you see"
+        }
+      ],
+      "role": "user",
+      "type": "message"
+    },
+    {
+      "encrypted_content": "gAAAAABqnqwLO-RzfC5V8TOq_R0286z7hKBXy_ZHhNDKxZX_ljuPRCXN98ZdbgO8FLkgrn5Cg9fDO2x9C3HWKWxvXlLqd87zXHYNGoBtjq0HD8kSqJGE4XQNu2La4fsnP_fh6XEygs8symWyV_nkdJFowriQr1E-LHbuM9s7xGc1rwyJ3Y6qYdaieRHCShnd-Blk6X2mFjBDFMJj8F-d1Gogy3HoC2xAbMh8HV6fnjGnLg_Jo5dd3YbdidFrjiaWYbwqGIfaeDCYq2dU4aP2aLTm_9_QiMQYe7q-Gzn5qRUn5N4Y51nW2a1eAWQY90LSVbcsoHaSWC7V_v2_Sv5gJLFXbu_1KwoKHL17NYanp9EsLpb3GQPbJ94RFX8j1o2R9fuF0dEl_VdwX1BbdJcro81WffqGrJE60vibZeFvbIdZAECWvg4hWzY-ihANcla6gGWMsz6ebU0S0YB96Vw9_KfNNOhs1Yc6R4D_X6OXLAah_aeE1dTnGplHNuH4BfH5HwoyOfnBYR02tbNsZ-JvETszeqoQqa_E3EFptkMgOL88x7YzYSR1-gt_xXoK-4PCAR03WqMX5FyHTQelF2ci1UtFb8sk6UD4WRtMKgY2DDTT3mKIkHC8L9zeyr48JHPXjj8bsMtKOCXpI4yFsKQETQhoK_nD2LSQVAgSiZsxnZpUFkxcV9HbmXksA4gqCyrxKGpST26o_XaK5_1nIdRIdwbw5gPZ68b7p3eGiVD3KrfDYBzn0WgOsdBW6Bd4md58KILHfi0pvYRncLQtKY2qTJABSePON0ZbmWcWZCfdVREt_UV6ddOADnwox0O-AeKxW0spATFUZdcS8LtIIHIki0r349XHvq1Wy7YxfxZ5mi6XWNDi2h6MTJFfo-GA2xoSuKoTlSbuKSxbff7t8Tzytlj-aeBNoSq1X8oz0VvEABzUDjh4ZSj8rUotoDkTXfFozbwjPkaC-LOG9Ejw6-5pfqW5um5Zb1lyI7K7TuAybSDfLrtD3f4Bfm6puaB3P7H6YNwjq2tv_dswuSud3eodKHyJA1fRanjhkoEIy6RahRsQ3y1E5aWTNB04D2mXTqRTv1TENvlOJN9dakx4K8ruevzJgnxdcO1FsUl457zZyaBuSr2889RTjSpulRk2sOV-bcmpUK3plblVZwsI8oiRoXLjAyia3i7GrEy46gaQg8hH_DWml5xc5QphdoyJKz80QycHcPnbzcSvK7mnBySmuPPLRe2vUzuv3w-1dpFx4x7zH_wG7dW_kEhTJ-ttlerpEJbrVtP8e34Ce-JL7V79djmiDobbfEOHnUaI-MVpRCWxAT9M4ICrf9lrMeEOG_-sILLDy2XKrnTD0b6eBeB77Ay-92g9W0wP9mCp0D2Aw2cUt-gFmCBc8cCE1Fjyzz4Vft2v0aBp1Sa-yp6VSh8CGmDWQwbl3ynzC0xHBUQZ2dYfbMli3A8ABiHf0dO88DiQ5wLRBIawAhf0.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC01LjYtbHVuYS0yMDI2MDcwOXxvcGVuYWkifQ",
+      "format": "openai-responses-v1",
+      "id": "rs_0a258cd7bd03e4d3016a9eac0b063887d1a7e9c71eb50c3e7d",
+      "status": "completed",
+      "summary": [
+        {
+          "type": "summary_text",
+          "text": "**Inspecting allowed paths**\n\nI need to check what paths are allowed. First, I’ll call the read-only paths and then output the directory. Once I have that, I can create a list of the paths to see what's available. This will help clarify any restrictions or available operations. Let’s see what those paths reveal to us!"
+        }
+      ],
+      "type": "reasoning"
+    },
+    {
+      "arguments": "{}",
+      "call_id": "call_vBTnbcAdrjr9GqmKWxTAQ7k6",
+      "id": "fc_tmp_wqck0n8ccs9",
+      "name": "FSToolset_GetReadOnlyPaths",
+      "status": "completed",
+      "type": "function_call"
+    },
+    {
+      "call_id": "call_vBTnbcAdrjr9GqmKWxTAQ7k6",
+      "output": "[\"/input\"]",
+      "type": "function_call_output"
+    },
+    {
+      "arguments": "{}",
+      "call_id": "call_VoCYo5DHQ5eRZC0xLnu3sEnc",
+      "id": "fc_tmp_0wek4r0caiw",
+      "name": "FSToolset_GetOutputDir",
+      "status": "completed",
+      "type": "function_call"
+    },
+    {
+      "call_id": "call_VoCYo5DHQ5eRZC0xLnu3sEnc",
+      "output": "\"/output\"",
+      "type": "function_call_output"
+    },
+    {
+      "arguments": "{\"path\":\"/input\"}",
+      "call_id": "call_48EJCtqtWjGxawi7SEEX3AQ4",
+      "id": "fc_tmp_shn8u24rtxg",
+      "name": "FSToolset_ListFilesIn",
+      "status": "completed",
+      "type": "function_call"
+    },
+    {
+      "call_id": "call_48EJCtqtWjGxawi7SEEX3AQ4",
+      "output": "[\"/input/locations.txt\",\"/input/names.txt\"]",
+      "type": "function_call_output"
+    },
+    {
+      "arguments": "{\"path\":\"/output\"}",
+      "call_id": "call_L2QUXm1b6GmuSZ1dZ3rQRO3e",
+      "id": "fc_tmp_2liaqraasku",
+      "name": "FSToolset_ListFilesIn",
+      "status": "completed",
+      "type": "function_call"
+    },
+    {
+      "call_id": "call_L2QUXm1b6GmuSZ1dZ3rQRO3e",
+      "output": "null",
+      "type": "function_call_output"
+    }
+  ],
+  "tools": [
+    {
+      "type": "function",
+      "name": "FSToolset_GetReadOnlyPaths",
+      "description": "GetReadOnlyPaths returns a list of paths that are allowed to be read-only from",
+      "parameters": {
+        "properties": {},
+        "type": "object"
+      }
+    },
+    {
+      "type": "function",
+      "name": "FSToolset_GetOutputDir",
+      "description": "GetOutputDir returns the path of the output directory\nin this directory read, write and delete operation are allowed",
+      "parameters": {
+        "properties": {},
+        "type": "object"
+      }
+    },
+    {
+      "type": "function",
+      "name": "FSToolset_GetFileContentAsString",
+      "description": "GetFileContentAsString returns the content of the file at the given path as a string\nerror will be returned if the path is outside FSSandbox.readOnlyDirs or FSSandbox.outputDir\nerror will be returned if the path does not exist or is not accessible.",
+      "parameters": {
+        "properties": {
+          "path": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "type": "function",
+      "name": "FSToolset_GetFileContentAsBytes",
+      "description": "GetFileContentAsBytes returns the content of the file at the given path as a []byte\nerror will be returned if the path is outside FSSandbox.readOnlyDirs or FSSandbox.outputDir\nerror will be returned if the path does not exist or is not accessible.",
+      "parameters": {
+        "properties": {
+          "path": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "type": "function",
+      "name": "FSToolset_WriteStringToFile",
+      "description": "WriteStringToFile writes a given string into a specific file.\nif the file does not exist, it will be created\nerror will be if the file already exists\nerror will be returned if the path is outside FSSandbox.outputDir",
+      "parameters": {
+        "properties": {
+          "content": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "content",
+          "path"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "type": "function",
+      "name": "FSToolset_WriteBytesToFile",
+      "description": "WriteBytesToFile writes bytes into a specific file.\nif the file does not exist, it will be created\nerror will be if the file already exists\nerror will be returned if the path is outside FSSandbox.outputDir",
+      "parameters": {
+        "properties": {
+          "content": {
+            "description": "base64 encoded bytes",
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "content",
+          "path"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "type": "function",
+      "name": "FSToolset_DeleteFile",
+      "description": "DeleteFile delete file.\nerror will be returned if the path is outside FSSandbox.outputDir\nerror will be returned in any other standard case during deletion",
+      "parameters": {
+        "properties": {
+          "path": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "type": "object"
+      }
+    },
+    {
+      "type": "function",
+      "name": "FSToolset_ListFilesIn",
+      "description": "ListFilesIn returns a list of files in the given path\nerror will be returned if the path does not exist or is not accessible.\nerror will be returned if the path is not a directory\nerror will be returned if the path is outside FSSandbox.readOnlyDirs or FSSandbox.outputDir",
+      "parameters": {
+        "properties": {
+          "path": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "type": "object"
+      }
+    }
+  ]
+}

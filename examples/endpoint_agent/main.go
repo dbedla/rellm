@@ -13,7 +13,7 @@ import (
 func main() {
 
 	if len(os.Args) < 2 {
-		color.Red("please provide a provider option: --or-gemma, --or-gemini, --lms")
+		color.Red("please provide a provider option: --or-luna, --or-gemma, --or-gemini, --lms")
 		return
 	}
 
@@ -59,6 +59,8 @@ func main() {
 
 func agentForProvider(provider string) (*rellm.Agent, error) {
 	switch provider {
+	case "--or-luna":
+		return buildOpenRouterAgent("openai/gpt-5.6-luna")
 	case "--or-gemma":
 		return buildOpenRouterAgent("google/gemma-4-26b-a4b-it")
 	case "--or-gemini":
@@ -66,6 +68,6 @@ func agentForProvider(provider string) (*rellm.Agent, error) {
 	case "--lms":
 		return buildLMSAgent()
 	default:
-		return nil, fmt.Errorf("provider %s not supported, available options: --or-gemma, --or-gemini, --lms", provider)
+		return nil, fmt.Errorf("provider %s not supported, available options: --or-luna, --or-gemma, --or-gemini, --lms", provider)
 	}
 }

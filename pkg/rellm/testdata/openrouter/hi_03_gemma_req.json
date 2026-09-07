@@ -25,7 +25,8 @@
           "type": "reasoning_text",
           "text": "The user said \"hi\".\nThis is a simple greeting.\nThe appropriate response is a friendly greeting and an offer to help.\n\nPlan:\n1. Greet the user.\n2. Ask how I can assist them."
         }
-      ]
+      ],
+      "format": "unknown"
     },
     {
       "type": "message",
