@@ -2,6 +2,7 @@ package rellm
 
 import "encoding/json"
 
+// ResponsesAPIReq structure used for communication with llm via Responses API
 type ResponsesAPIReq struct {
 	// Required
 	Model string `json:"model"`
@@ -189,6 +190,7 @@ type ResponseTool struct {
 	Strict      bool   `json:"strict"`
 }
 
+// ResponsesAPIResp structure used for communication with llm via Responses API
 type ResponsesAPIResp struct {
 	ID                string            `json:"id"`
 	Object            string            `json:"object"`

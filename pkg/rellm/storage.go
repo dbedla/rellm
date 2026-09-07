@@ -10,33 +10,46 @@ import (
 	"path/filepath"
 )
 
+// InMemoryStorage is a storage implementation that stores conversation elements in memory.
+// minimal and basic, no concurrency support
 type InMemoryStorage struct {
 	messages []ConversationElement
 }
 
+// NewInMemoryStorage creates a new instance of InMemoryStorage.
 func NewInMemoryStorage() *InMemoryStorage {
 	return &InMemoryStorage{}
 }
 
+// Load loads conversation elements from memory. Context ignored
+// elements are copy of the internal storage
 func (s *InMemoryStorage) Load(_ context.Context) ([]ConversationElement, error) {
 	cp := make([]ConversationElement, len(s.messages))
 	copy(cp, s.messages)
 	return cp, nil
 }
 
+// Append appends conversation elements to memory. Context ignored
 func (s *InMemoryStorage) Append(_ context.Context, delta []ConversationElement) error {
 	s.messages = append(s.messages, delta...)
 	return nil
 }
 
+// FilesystemStorage provides a storage implementation that reads and writes conversation elements to a file.
+// no concurrency support
+// basic implementation with data persistance, file corruption during Load or Append makes further work impossible
 type FilesystemStorage struct {
 	path string
 }
 
+// NewFilesystemStorage creates a new FilesystemStorage instance.
+// path to file where data are or will be stored
 func NewFilesystemStorage(path string) *FilesystemStorage {
 	return &FilesystemStorage{path: path}
 }
 
+// Load returns conversation elements from file
+// Context ignored
 func (s *FilesystemStorage) Load(_ context.Context) ([]ConversationElement, error) {
 	data, err := os.ReadFile(s.path)
 	if err != nil {
@@ -63,6 +76,8 @@ func (s *FilesystemStorage) Load(_ context.Context) ([]ConversationElement, erro
 	return elements, nil
 }
 
+// Append append new conversation elements to file, context ignored
+// if no file exists, it will be created
 func (s *FilesystemStorage) Append(_ context.Context, delta []ConversationElement) (finalErr error) {
 	if len(delta) == 0 {
 		return nil
