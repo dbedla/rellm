@@ -12,7 +12,7 @@
       "status": "completed",
       "call_id": "call_48EJCtqtWjGxawi7SEEX3AQ4",
       "name": "FSToolset_ListFilesIn",
-      "arguments": "{\"path\":\"/var/folders/nj/bkj2m2nx3292lgx0x2zsh35h0000gn/T/agent-log-2091192720/readonly_agent_input\"}"
+      "arguments": "{\"path\":\"/input\"}"
     },
     {
       "id": "fc_tmp_2liaqraasku",
@@ -20,7 +20,7 @@
       "status": "completed",
       "call_id": "call_L2QUXm1b6GmuSZ1dZ3rQRO3e",
       "name": "FSToolset_ListFilesIn",
-      "arguments": "{\"path\":\"/var/folders/nj/bkj2m2nx3292lgx0x2zsh35h0000gn/T/agent-log-2091192720/output\"}"
+      "arguments": "{\"path\":\"/output\"}"
     }
   ],
   "error": null,

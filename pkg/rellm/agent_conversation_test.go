@@ -3,10 +3,9 @@ package rellm_test
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"io"
 	"net/http"
-	"os"
-	"path/filepath"
 	"rellm/pkg/agentsutils"
 	"rellm/pkg/rellm"
 	"strings"
@@ -388,32 +387,20 @@ var goldenFS05LunaReq string
 var goldenFS06LunaResp string
 
 func TestAgentAskGetSummaryFromOpenAiWithFsToolset(t *testing.T) {
+	fsToolset := new(ToolsetMock)
+	fsToolset.Test(t)
+	defer fsToolset.AssertExpectations(t)
 
-	t.Chdir(t.TempDir())
-	readOnlyDir := "input"
-	outputDir := "output"
-
-	assert.NoError(t, os.Mkdir(readOnlyDir, 0755))
-	assert.NoError(t, os.Mkdir(outputDir, 0755))
-
-	createFile := func(locationPath, fname, content string) error {
-		filePath := filepath.Join(locationPath, fname)
-		return os.WriteFile(filePath, []byte(content), 0644)
-	}
-
-	f1Name := "names.txt"
-	f1Content := "John Smith"
-	err := createFile(readOnlyDir, f1Name, f1Content)
-	assert.NoError(t, err)
-
-	f2Name := "locations.txt"
-	f2Content := "London"
-	err = createFile(readOnlyDir, f2Name, f2Content)
-	assert.NoError(t, err)
-
-	fs, err := agentsutils.NewLimitedFileSystem([]string{readOnlyDir}, outputDir)
-	fsToolset := agentsutils.NewFSToolset(fs)
-	assert.NoError(t, err)
+	fsToolset.On("Definitions").
+		Return(agentsutils.NewFSToolset(nil).Definitions()).Once()
+	fsToolset.On("Dispatch", mock.Anything, "FSToolset_GetReadOnlyPaths", json.RawMessage(`"{}"`)).
+		Return(rellm.ToolCallResult{Value: []string{"/input"}}, nil).Once()
+	fsToolset.On("Dispatch", mock.Anything, "FSToolset_GetOutputDir", json.RawMessage(`"{}"`)).
+		Return(rellm.ToolCallResult{Value: "/output"}, nil).Once()
+	fsToolset.On("Dispatch", mock.Anything, "FSToolset_ListFilesIn", json.RawMessage(`"{\"path\":\"/input\"}"`)).
+		Return(rellm.ToolCallResult{Value: []string{"/input/locations.txt", "/input/names.txt"}}, nil).Once()
+	fsToolset.On("Dispatch", mock.Anything, "FSToolset_ListFilesIn", json.RawMessage(`"{\"path\":\"/output\"}"`)).
+		Return(rellm.ToolCallResult{Value: []string(nil)}, nil).Once()
 
 	agent, httpDo := buildTestFileSystemAgentOpenRouter(t, rellm.Model("openai/gpt-5.6-luna"), testDefaultMaxAgentSteps, fsToolset)
 	defer httpDo.AssertExpectations(t)
@@ -476,7 +463,7 @@ func TestAgentAskGetSummaryFromOpenAiWithFsToolset(t *testing.T) {
 	assert.Equal(t, "I can see these files:\n\n- `locations.txt`\n- `names.txt`\n\nThe output directory is currently empty.", respMsg)
 }
 
-func buildTestFileSystemAgentOpenRouter(t *testing.T, model rellm.Model, maxAgentSteps uint64, fst *agentsutils.FSToolset) (*rellm.Agent, *HTTPDoMock) {
+func buildTestFileSystemAgentOpenRouter(t *testing.T, model rellm.Model, maxAgentSteps uint64, fst rellm.Toolset) (*rellm.Agent, *HTTPDoMock) {
 
 	agentName := "TestProAgent"
 	mockHttp := new(HTTPDoMock)

@@ -39,7 +39,7 @@
     },
     {
       "call_id": "call_vBTnbcAdrjr9GqmKWxTAQ7k6",
-      "output": "[\"/var/folders/nj/bkj2m2nx3292lgx0x2zsh35h0000gn/T/agent-log-2091192720/readonly_agent_input\"]",
+      "output": "[\"/input\"]",
       "type": "function_call_output"
     },
     {
@@ -52,7 +52,7 @@
     },
     {
       "call_id": "call_VoCYo5DHQ5eRZC0xLnu3sEnc",
-      "output": "\"/var/folders/nj/bkj2m2nx3292lgx0x2zsh35h0000gn/T/agent-log-2091192720/output\"",
+      "output": "\"/output\"",
       "type": "function_call_output"
     }
   ],

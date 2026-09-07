@@ -1,6 +1,8 @@
 package rellm_test
 
 import (
+	"context"
+	"encoding/json"
 	"net/http"
 	"rellm/internal/examplesutils"
 	"rellm/pkg/rellm"
@@ -27,6 +29,22 @@ type HTTPDoMock struct {
 func (h *HTTPDoMock) Do(req *http.Request) (*http.Response, error) {
 	args := h.Called(req)
 	return args.Get(0).(*http.Response), args.Error(1)
+}
+
+type ToolsetMock struct {
+	mock.Mock
+}
+
+var _ rellm.Toolset = (*ToolsetMock)(nil)
+
+func (m *ToolsetMock) Definitions() []rellm.ToolDefinition {
+	args := m.Called()
+	return args.Get(0).([]rellm.ToolDefinition)
+}
+
+func (m *ToolsetMock) Dispatch(ctx context.Context, name string, arguments json.RawMessage) (rellm.ToolCallResult, error) {
+	args := m.Called(ctx, name, arguments)
+	return args.Get(0).(rellm.ToolCallResult), args.Error(1)
 }
 
 func SetParametersWithReqLog(req *rellm.ResponsesAPIReq) {
