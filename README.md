@@ -46,3 +46,5 @@ make go-build
  - [Open Router responses api](https://openrouter.ai/docs/api/reference/responses/overview)
  - [LM Studio: Use OpenAI's Responses API with local models](https://lmstudio.ai/blog/lmstudio-v0.3.29)
  - [LM Studio cli](https://lmstudio.ai/docs/cli)
+ - [OpenAI API · OpenAPI specification - github](https://github.com/openai/openai-openapi)
+ - [OpenAI API Overview](https://developers.openai.com/api/reference/overview)

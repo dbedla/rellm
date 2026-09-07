@@ -31,6 +31,9 @@ type ToolCallResult struct {
 	Err   error
 }
 
+// Toolset
+// openai endpoints enforce tool name to match with regex: ^[a-zA-Z0-9_-]+$
+// meta endpoint enforce tool name to match with regex: ^[a-zA-Z0-9_.-]+$
 type Toolset interface {
 	Definitions() []ToolDefinition
 	Dispatch(ctx context.Context, name string, arguments json.RawMessage) (ToolCallResult, error)

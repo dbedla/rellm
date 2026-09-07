@@ -14,8 +14,11 @@ go-build:
 e2e-lms: go-clean-build
 	$(BIN_PATH)e2e_fs_agent --lms
 
-e2e-openrouter: go-clean-build
-	$(BIN_PATH)e2e_fs_agent --openrouter
+e2e-or-luna: go-clean-build
+	$(BIN_PATH)e2e_fs_agent --or-openai-luna
+
+e2e-or-gemini: go-clean-build
+	$(BIN_PATH)e2e_fs_agent --or-google-gemini
 
 go-test:
 	go test -v ./...

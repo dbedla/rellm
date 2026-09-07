@@ -1,0 +1,221 @@
+{
+  "id": "gen-1788775169-Y3SZ6mHyP0hxiKv5pVGW",
+  "object": "response",
+  "created_at": 1788775169,
+  "model": "openai/gpt-5.6-luna",
+  "status": "completed",
+  "completed_at": 1788775171,
+  "output": [
+    {
+      "id": "rs_04e75655b58a7bca016a9e8b02565887d1bc206f5d738c5bb9",
+      "type": "reasoning",
+      "status": "completed",
+      "summary": [
+        {
+          "type": "summary_text",
+          "text": "**Listing files in readonly path**\n\nI need to list files in a readonly path and output the results. To do this efficiently, it might make sense to call the listing function multiple times in parallel. I want to ensure that I gather all the files properly without missing anything, so planning the calls for parallel execution is key. Let’s focus on getting the file list accurately while maintaining the readonly requirements!"
+        }
+      ],
+      "encrypted_content": "gAAAAABqnosD33Mwu_3wf9YogpHTQeDDzSzAxDrAzMK3V-1KfH3W_oK5cYv8yQBY9lvKpp9o89BxP8aZUMz1UHpt5oReqomkOPOvlBHWLn-8gW-THGgjIZXwH6Q5vV2rRzh2J5t5lHTWlTJdbf1VnDQu-2z-8HRgqUaOwxAQjT-l80Far_IQN5CW-djl5XPG-gSpq50y3JSDCTXPW4hqsxn8RIo6J4LabwTL5i2mrHRpz4UFyt24UDOmn6xwEO7TGEaLFwmgKFqSKyr2JW9JzFeUWahihUUkJzcp0WAdt8mZysd8affM_s0nPkazRetDzpWIlg7hAJ6GY_MNQDKp2w_-_gXa0L2jCbqj6rbsvQ0TITRxkOwANp1ndhiBR71vD71vu9e_MvqLTBvajLLX1l02S2CXvZKceEYhMEOLADPpNOwikjt9gtMp5RRQR0y0KhBA698MsxUURf5P1YN-Li48oZJ9DVKWg__m8ksif79fio1CGmzb8PJs3YFancEqOkxLlWU9N8pers8o_Psrj9gxZPbLJBHoYW0T12xSZeQ24Bs0jHT6CePCrQceA3QvCpSBsdQPpRPR0pfGR8ZAtetK8MqaV4Mp-OQfX6BiCpcnjGWOAutYXYYooxlR97eOJOA2gyoMyMHCmwSDkJMEAd_kMhQ3Aw-5yKoVClFpyQUeHiRTotKCV9ZbTN_3aIef1S8hzcuk7-4YLaAbZMffTRzco6hwQeG3Ot9n6n64FHSogxwtTcGpASNFJNBivW8sjQsJegLbDHpMDW9p08Pcy3Y-_FRpiTUIEiyJmUhov59iAn4E8fYDaJhx33zvX_L8wpNvgTSUMSSpp3349eoFSmEdMZPzcd37HlMxhhd-Jzm_zXYE3Qh9DiRc_qRbqhdT_55396r9Xzn3pBKVGi0MtPRE6NV1GzWKYswOZETQja-jO8B_9ky-JYaiWDOSTJen91tKa2GSnYirhPjMz9XCOlJBngnWBkZSWttElAd3_KWwXvno1_-bcgknBwQ0RjA0NU8DY2xZd1hWf3_lTJQq7HxDeyvRmGGRlpvAymUhdysUJiY8OhQ_Llspl-D5FW9NdRkKHQG09rYmyqeSFB4P8-MuaOLuDJ2VZFILVn62OlUsaTINg1WmKRNP2hWBCD6RlNt6nNjlp2b4JmMJ1eM9L-5eKGV0NCLTApm-lGRmXTo5zTaMs3qhB0OpC0AtmqZLRg_vmt5HaSGZaP5PyZjeB7cmZyJPMh6DGsIsSPCNZebBuQmLZB8SKlwP4GXx_ASl8NElhWAYPF8_da0mesffp7rGj7mRLL1_W0GKJOVFsNSNj-egXw799V9FWn3mxZuFiXch_CMEygLIbXj_OkWsXXKmDiE0ePeLQTJHOlLwE2dY5JPhEWxO4WBbxzxP21xqleSS_CYX_QyNmfy6un816pOuaJs4taufRZKrprkCfVGb_9k8RzgqLFHtZpYWnOz8D7GjcdZIi18O.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC01LjYtbHVuYS0yMDI2MDcwOXxvcGVuYWkifQ",
+      "format": "openai-responses-v1"
+    },
+    {
+      "id": "fc_tmp_mlxdzg1z4c",
+      "type": "function_call",
+      "status": "completed",
+      "call_id": "call_t5WxsApgRfwnjPbCli81Kj3m",
+      "name": "FSToolset_ListFilesIn",
+      "arguments": "{\"path\":\"/var/folders/nj/bkj2m2nx3292lgx0x2zsh35h0000gn/T/agent-log-946175008/readonly_agent_input\"}"
+    },
+    {
+      "id": "fc_tmp_l4h47md1ngp",
+      "type": "function_call",
+      "status": "completed",
+      "call_id": "call_u1jsSdpgORd8EmEqi6Gnake3",
+      "name": "FSToolset_ListFilesIn",
+      "arguments": "{\"path\":\"/var/folders/nj/bkj2m2nx3292lgx0x2zsh35h0000gn/T/agent-log-946175008/output\"}"
+    }
+  ],
+  "error": null,
+  "incomplete_details": null,
+  "tools": [
+    {
+      "type": "function",
+      "name": "FSToolset_GetReadOnlyPaths",
+      "description": "GetReadOnlyPaths returns a list of paths that are allowed to be read-only from",
+      "parameters": {
+        "properties": {},
+        "type": "object"
+      },
+      "strict": false
+    },
+    {
+      "type": "function",
+      "name": "FSToolset_GetOutputDir",
+      "description": "GetOutputDir returns the path of the output directory\nin this directory read, write and delete operation are allowed",
+      "parameters": {
+        "properties": {},
+        "type": "object"
+      },
+      "strict": false
+    },
+    {
+      "type": "function",
+      "name": "FSToolset_GetFileContentAsString",
+      "description": "GetFileContentAsString returns the content of the file at the given path as a string\nerror will be returned if the path is outside FSSandbox.readOnlyDirs or FSSandbox.outputDir\nerror will be returned if the path does not exist or is not accessible.",
+      "parameters": {
+        "properties": {
+          "path": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "type": "object"
+      },
+      "strict": false
+    },
+    {
+      "type": "function",
+      "name": "FSToolset_GetFileContentAsBytes",
+      "description": "GetFileContentAsBytes returns the content of the file at the given path as a []byte\nerror will be returned if the path is outside FSSandbox.readOnlyDirs or FSSandbox.outputDir\nerror will be returned if the path does not exist or is not accessible.",
+      "parameters": {
+        "properties": {
+          "path": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "type": "object"
+      },
+      "strict": false
+    },
+    {
+      "type": "function",
+      "name": "FSToolset_WriteStringToFile",
+      "description": "WriteStringToFile writes a given string into a specific file.\nif the file does not exist, it will be created\nerror will be if the file already exists\nerror will be returned if the path is outside FSSandbox.outputDir",
+      "parameters": {
+        "properties": {
+          "content": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "content",
+          "path"
+        ],
+        "type": "object"
+      },
+      "strict": false
+    },
+    {
+      "type": "function",
+      "name": "FSToolset_WriteBytesToFile",
+      "description": "WriteBytesToFile writes bytes into a specific file.\nif the file does not exist, it will be created\nerror will be if the file already exists\nerror will be returned if the path is outside FSSandbox.outputDir",
+      "parameters": {
+        "properties": {
+          "content": {
+            "description": "base64 encoded bytes",
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "content",
+          "path"
+        ],
+        "type": "object"
+      },
+      "strict": false
+    },
+    {
+      "type": "function",
+      "name": "FSToolset_DeleteFile",
+      "description": "DeleteFile delete file.\nerror will be returned if the path is outside FSSandbox.outputDir\nerror will be returned in any other standard case during deletion",
+      "parameters": {
+        "properties": {
+          "path": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "type": "object"
+      },
+      "strict": false
+    },
+    {
+      "type": "function",
+      "name": "FSToolset_ListFilesIn",
+      "description": "ListFilesIn returns a list of files in the given path\nerror will be returned if the path does not exist or is not accessible.\nerror will be returned if the path is not a directory\nerror will be returned if the path is outside FSSandbox.readOnlyDirs or FSSandbox.outputDir",
+      "parameters": {
+        "properties": {
+          "path": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "type": "object"
+      },
+      "strict": false
+    }
+  ],
+  "tool_choice": "auto",
+  "parallel_tool_calls": true,
+  "max_output_tokens": null,
+  "temperature": 1,
+  "top_p": 1,
+  "presence_penalty": 0,
+  "frequency_penalty": 0,
+  "top_logprobs": 0,
+  "max_tool_calls": null,
+  "metadata": {},
+  "background": false,
+  "previous_response_id": null,
+  "service_tier": "default",
+  "truncation": "disabled",
+  "store": false,
+  "instructions": null,
+  "text": {
+    "format": {
+      "type": "text"
+    }
+  },
+  "reasoning": {
+    "context": "all_turns",
+    "effort": "medium",
+    "mode": "standard",
+    "summary": "detailed"
+  },
+  "safety_identifier": null,
+  "prompt_cache_key": null,
+  "usage": {
+    "input_tokens": 709,
+    "input_tokens_details": {
+      "cached_tokens": 0
+    },
+    "output_tokens": 152,
+    "output_tokens_details": {
+      "reasoning_tokens": 21
+    },
+    "total_tokens": 861,
+    "cost": 0.0003242,
+    "is_byok": false,
+    "cost_details": {
+      "upstream_inference_cost": 0.0003242,
+      "upstream_inference_input_cost": 0.0001418,
+      "upstream_inference_output_cost": 0.0001824
+    }
+  }
+}

@@ -5,9 +5,15 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"os"
+	"path/filepath"
+	"rellm/internal/examplesutils"
+	"rellm/pkg/agentsutils"
 	"rellm/pkg/rellm"
 	"strings"
 	"testing"
+
+	_ "embed"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -219,7 +225,7 @@ func TestAgentLMS_ToolsCallWithConversationCheck_SecondRespFail(t *testing.T) {
 }
 
 func TestAgentOpenRouterGemma_ConversationCheck(t *testing.T) {
-	agent, httpDo := buildTestProToolAgentOpenRouter(t, "google/gemma-4-26b-a4b-it", testDefaultMaxAgentSteps)
+	agent, httpDo := buildTestProToolAgentOpenRouter(t, "google/gemma-4-26b-a4b-it", &examplesutils.DataSrcToolset{}, testDefaultMaxAgentSteps)
 	defer httpDo.AssertExpectations(t)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
@@ -292,7 +298,7 @@ func TestAgentOpenRouterGemma_ConversationCheck(t *testing.T) {
 }
 
 func TestAgentOpenRouterGemini_ConversationCheck(t *testing.T) {
-	agent, httpDo := buildTestProToolAgentOpenRouter(t, "google/gemini-3.1-flash-lite", testDefaultMaxAgentSteps)
+	agent, httpDo := buildTestProToolAgentOpenRouter(t, "google/gemini-3.1-flash-lite", &examplesutils.DataSrcToolset{}, testDefaultMaxAgentSteps)
 	defer httpDo.AssertExpectations(t)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
@@ -362,4 +368,84 @@ func TestAgentOpenRouterGemini_ConversationCheck(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, conversationFromGolden, agentConversation)
+}
+
+//go:embed testdata/openrouter/file_summary_01_luna_req.json
+var goldenFS01LunaReq string
+
+//go:embed testdata/openrouter/file_summary_02_luna_resp.json
+var goldenFS02LunaResp string
+
+//go:embed testdata/openrouter/file_summary_03_luna_req.json
+var goldenFS03LunaReq string
+
+//go:embed testdata/openrouter/file_summary_04_luna_resp.json
+var goldenFS04LunaResp string
+
+func disableTestAgentAskGetSummaryFromOpenAiWithFsToolset(t *testing.T) {
+
+	readOnlyDir := t.TempDir()
+	outputDir := t.TempDir()
+
+	createFile := func(locationPath, fname, content string) error {
+		filePath := filepath.Join(locationPath, fname)
+		return os.WriteFile(filePath, []byte(content), 0644)
+	}
+
+	f1Name := "names.txt"
+	f1Content := "John Smith"
+	err := createFile(readOnlyDir, f1Name, f1Content)
+	assert.NoError(t, err)
+
+	f2Name := "locations.txt"
+	f2Content := "London"
+	err = createFile(readOnlyDir, f2Name, f2Content)
+	assert.NoError(t, err)
+
+	fs, err := agentsutils.NewLimitedFileSystem([]string{readOnlyDir}, outputDir)
+	fsToolset := agentsutils.NewFSToolset(fs)
+	assert.NoError(t, err)
+
+	agent, httpDo := buildTestProToolAgentOpenRouter(t, rellm.Model("openai/gpt-5.6-luna"), fsToolset, testDefaultMaxAgentSteps)
+	defer httpDo.AssertExpectations(t)
+
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Run(func(args mock.Arguments) {
+			req := args.Get(0).(*http.Request)
+
+			b, err := io.ReadAll(req.Body)
+			assert.NoError(t, err, "failed to read request body")
+
+			req.Body = io.NopCloser(bytes.NewBuffer(b))
+
+			assert.JSONEq(t, goldenFS01LunaReq, string(b))
+		}).
+		Return(&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(goldenFS02LunaResp)),
+		}, nil)
+
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Run(func(args mock.Arguments) {
+			req := args.Get(0).(*http.Request)
+
+			b, err := io.ReadAll(req.Body)
+			assert.NoError(t, err, "failed to read request body")
+
+			req.Body = io.NopCloser(bytes.NewBuffer(b))
+
+			assert.JSONEq(t, goldenFS03LunaReq, string(b))
+		}).
+		Return(&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(goldenFS04LunaResp)),
+		}, nil)
+
+	ctx := context.Background()
+	respMsg, err := agent.Ask(ctx, "what files do you see")
+	assert.NoError(t, err)
+	assert.NotNil(t, respMsg, "response message should not be nil")
+	assert.Equal(t, "Hello! How can I help you today? \n\nIf you have any questions about the weather, meteorology, climate patterns, or even how certain atmospheric phenomena work, feel free to ask!", respMsg, "response message should match")
 }
