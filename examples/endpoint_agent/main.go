@@ -68,6 +68,6 @@ func agentForProvider(provider string) (*rellm.Agent, error) {
 	case "--lms":
 		return buildLMSAgent()
 	default:
-		return nil, fmt.Errorf("provider %s not supported, available options: --or-gemma, --or-gemini, --lms", provider)
+		return nil, fmt.Errorf("provider %s not supported, available options: --or-luna, --or-gemma, --or-gemini, --lms", provider)
 	}
 }
