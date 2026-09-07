@@ -124,7 +124,7 @@ func parseMessageWithStatus(raw json.RawMessage, provider, id, itemType, role st
 // parseReasoningBasic extracts reasoning text and summary from a raw item,
 // ignoring unmarshal errors field by field (LM Studio wire shape: no
 // signature).
-func parseReasoningBasic(raw json.RawMessage) ConversationElement {
+func parseReasoningBasic(raw json.RawMessage) (ConversationElement, error) {
 	r := &Reasoning{}
 
 	// Extract metadata and continuation state from the top level.
@@ -135,14 +135,17 @@ func parseReasoningBasic(raw json.RawMessage) ConversationElement {
 		EncryptedContent string                 `json:"encrypted_content"`
 		Format           string                 `json:"format"`
 	}
-	if err := json.Unmarshal(raw, &meta); err == nil {
-		r.ID = meta.ID
-		r.Status = meta.Status
-		r.EncryptedContent = meta.EncryptedContent
-		r.Format = meta.Format
-		if len(meta.Summary) > 0 {
-			r.Summary = meta.Summary
-		}
+	err := json.Unmarshal(raw, &meta)
+	if err != nil {
+		return nil, errors.Join(ErrReasoningParsingFailed, err)
+	}
+
+	r.ID = meta.ID
+	r.Status = meta.Status
+	r.EncryptedContent = meta.EncryptedContent
+	r.Format = meta.Format
+	if len(meta.Summary) > 0 {
+		r.Summary = meta.Summary
 	}
 
 	// Extract text from content array (reasoning_text items)
@@ -162,7 +165,7 @@ func parseReasoningBasic(raw json.RawMessage) ConversationElement {
 		r.Text = JoinTextParts(textParts)
 	}
 
-	return r
+	return r, nil
 }
 
 // ReasoningContentPart is a content part of a reasoning wire item.
