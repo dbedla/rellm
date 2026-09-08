@@ -10,8 +10,8 @@ import (
 	"path/filepath"
 )
 
-// InMemoryStorage is a storage implementation that stores conversation elements in memory.
-// minimal and basic, no concurrency support
+// InMemoryStorage stores conversation elements in memory. Not safe for
+// concurrent use; data is lost when the process exits.
 type InMemoryStorage struct {
 	messages []ConversationElement
 }
@@ -21,35 +21,32 @@ func NewInMemoryStorage() *InMemoryStorage {
 	return &InMemoryStorage{}
 }
 
-// Load loads conversation elements from memory. Context ignored
-// elements are copy of the internal storage
+// Load returns a copy of the stored conversation elements. ctx is ignored.
 func (s *InMemoryStorage) Load(_ context.Context) ([]ConversationElement, error) {
 	cp := make([]ConversationElement, len(s.messages))
 	copy(cp, s.messages)
 	return cp, nil
 }
 
-// Append appends conversation elements to memory. Context ignored
+// Append adds elements to the in-memory history. ctx is ignored.
 func (s *InMemoryStorage) Append(_ context.Context, delta []ConversationElement) error {
 	s.messages = append(s.messages, delta...)
 	return nil
 }
 
-// FilesystemStorage provides a storage implementation that reads and writes conversation elements to a file.
-// no concurrency support
-// basic implementation with data persistance, file corruption during Load or Append makes further work impossible
+// FilesystemStorage persists conversation elements as JSON lines in a file.
+// Not safe for concurrent use. A corrupted line makes Load fail.
 type FilesystemStorage struct {
 	path string
 }
 
-// NewFilesystemStorage creates a new FilesystemStorage instance.
-// path to file where data are or will be stored
+// NewFilesystemStorage returns a storage using the file at path.
 func NewFilesystemStorage(path string) *FilesystemStorage {
 	return &FilesystemStorage{path: path}
 }
 
-// Load returns conversation elements from file
-// Context ignored
+// Load reads conversation elements from the file. A missing file yields an
+// empty conversation. ctx is ignored.
 func (s *FilesystemStorage) Load(_ context.Context) ([]ConversationElement, error) {
 	data, err := os.ReadFile(s.path)
 	if err != nil {
@@ -76,8 +73,8 @@ func (s *FilesystemStorage) Load(_ context.Context) ([]ConversationElement, erro
 	return elements, nil
 }
 
-// Append append new conversation elements to file, context ignored
-// if no file exists, it will be created
+// Append writes the given elements to the file, one JSON object per line,
+// creating the file and parent directories if missing. ctx is ignored.
 func (s *FilesystemStorage) Append(_ context.Context, delta []ConversationElement) (finalErr error) {
 	if len(delta) == 0 {
 		return nil

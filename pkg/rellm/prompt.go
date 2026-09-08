@@ -5,9 +5,9 @@ import (
 	"strings"
 )
 
-// Prompt holds the instruction and parameters for a single LLM interaction.
-// interaction can consist of multiple message exchange agent <-> llm (usualy tool cals)
-// Prompt should be build via PromptBuilder
+// Prompt holds the instruction and inference parameters for one interaction
+// with the agent. An interaction may involve multiple provider round-trips
+// (e.g. tool calls). Build prompts with PromptBuilder.
 type Prompt struct {
 	msg    string
 	params promptParams
@@ -26,92 +26,88 @@ type promptParams struct {
 	TopLogprobs      int
 }
 
-// PromptBuilder is used to construct a prompt with specific parameters.
+// PromptBuilder constructs a Prompt, validating its fields on Build.
 type PromptBuilder struct {
 	msg    string
 	params promptParams
 }
 
-// NewPromptBuilder creates a new PromptBuilder with default parameters. first method in chain
+// NewPromptBuilder starts a prompt builder chain with default parameters.
 func NewPromptBuilder() *PromptBuilder {
 	return &PromptBuilder{
 		params: promptParams{},
 	}
 }
 
-// WithMessage sets the message for the prompt. mandatory field
+// WithMessage sets the user message. Required.
 func (b *PromptBuilder) WithMessage(msg string) *PromptBuilder {
 	b.msg = msg
 	return b
 }
 
-// WithTemperature sets the temperature for the prompt. optional
-// todo: add description what is temperature responsible for
+// WithTemperature sets the sampling temperature (usually 0..2). Higher values
+// make output more random; lower values more deterministic. Optional.
 func (b *PromptBuilder) WithTemperature(t float32) *PromptBuilder {
 	b.params.Temperature = &t
 	return b
 }
 
-// WithReasoning sets the reasoning configuration for the prompt. optional
-// todo: add description what is reasoning responsible for
+// WithReasoning sets the reasoning effort for models that support it. Optional.
 func (b *PromptBuilder) WithReasoning(effort ReasoningEffort) *PromptBuilder {
 
 	b.params.Reasoning = &ReasoningConfig{Effort: effort}
 	return b
 }
 
-// WithMaxOutputTokens sets the maximum number of output tokens for the prompt. optional
-// Maximum number of output tokens controls the maximum length of the generated text. Higher values make the output longer, while lower values make it shorter. value is set for each request so it means that if during prompt execution agent will call llm each request will get same provided value
-// todo: add better description
+// WithMaxOutputTokens caps the output length of every provider call in this
+// prompt. Optional.
 func (b *PromptBuilder) WithMaxOutputTokens(n int) *PromptBuilder {
 	b.params.MaxOutputTokens = n
 	return b
 }
 
-// WithTopP sets TopP for the prompt, optional,
-// todo: add better description what is for this parameter
+// WithTopP sets nucleus sampling: only tokens within the top-p probability
+// mass are considered. Optional.
 func (b *PromptBuilder) WithTopP(t float32) *PromptBuilder {
 	b.params.TopP = &t
 	return b
 }
 
-// WithPresencePenalty sets PresencePenalty for the prompt, optional,
-// todo: add better description what is for this parameter
+// WithPresencePenalty discourages repeating already-used tokens (range -2..2).
+// Optional.
 func (b *PromptBuilder) WithPresencePenalty(p float32) *PromptBuilder {
 	b.params.PresencePenalty = &p
 	return b
 }
 
-// WithFrequencyPenalty sets FrequencyPenalty for the prompt, optional,
-// todo: add better description what is for this parameter
+// WithFrequencyPenalty discourages frequent tokens proportionally to their
+// repetition (range -2..2). Optional.
 func (b *PromptBuilder) WithFrequencyPenalty(f float32) *PromptBuilder {
 	b.params.FrequencyPenalty = &f
 	return b
 }
 
-// WithSeed sets Seed for the prompt, optional,
-// todo: add better description what is for this parameter
+// WithSeed sets the random seed for reproducible output. Optional.
 func (b *PromptBuilder) WithSeed(seed int64) *PromptBuilder {
 	b.params.Seed = &seed
 	return b
 }
 
-// WithLogprobs sets Logprobs for the prompt, optional,
-// todo: add better description what is for this parameter
+// WithLogprobs enables returning log probabilities for output tokens. Optional.
 func (b *PromptBuilder) WithLogprobs(enabled bool) *PromptBuilder {
 	b.params.Logprobs = enabled
 	return b
 }
 
-// WithTopLogprobs sets TopLogprobs for the prompt, optional,
-// todo: add better description what is for this parameter
+// WithTopLogprobs sets how many of the most likely tokens are returned per
+// output position when WithLogprobs is enabled. Optional.
 func (b *PromptBuilder) WithTopLogprobs(n int) *PromptBuilder {
 	b.params.TopLogprobs = n
 	return b
 }
 
-// Build returns the constructed prompt. It validates accumulated WithXxx calls;
-// last method in chain, message cannot be empty, message with only whitespaces is consider empty
+// Build validates the accumulated WithXxx calls and returns the Prompt. The
+// message is required and must not be empty or whitespace-only.
 func (b *PromptBuilder) Build() (*Prompt, error) {
 	trimmedMsg := strings.TrimSpace(b.msg)
 	if trimmedMsg == "" {
