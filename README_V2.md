@@ -10,6 +10,17 @@ A key feature is easy custom toolset injection: you decide exactly how the
 agent can interact with your system. More control over the toolset means
 fewer unexpected side effects when the model hallucinates.
 
+## Table of contents
+
+- [Why small, specialized agents?](#why-small-specialized-agents)
+- [Supported providers & models](#supported-providers--models)
+- [Installation](#installation)
+- [Quick start](#quick-start)
+  - [Run the example agent](#run-the-example-agent)
+  - [Build your own agent](#build-your-own-agent)
+  - [Adding tools to your agent](#adding-tools-to-your-agent)
+- [External links](#external-links)
+
 ## Why small, specialized agents?
 
 `rellm` is built around the idea that many small, focused agents beat one
