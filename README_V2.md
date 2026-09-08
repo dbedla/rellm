@@ -10,6 +10,27 @@ A key feature is easy custom toolset injection: you decide exactly how the
 agent can interact with your system. More control over the toolset means
 fewer unexpected side effects when the model hallucinates.
 
+## Why small, specialized agents?
+
+`rellm` is built around the idea that many small, focused agents beat one
+general-purpose one:
+
+- **Fewer tools, fewer mistakes.** A small toolset gives the model fewer
+  ways to pick the wrong tool, so hallucinations have a smaller blast radius.
+- **Cheaper and faster.** A narrow task needs less model capability — small
+  local models often do the job, so you avoid paying for a frontier model.
+- **Easier to test and measure.** One agent, one responsibility: success
+  criteria are clear, and regressions are easy to spot.
+- **Composable.** Each agent is a plain Go package — chain them, run them in
+  parallel, or embed one in another agent's toolset.
+- **Fits workflows naturally.** A small agent is a single step: run it as part
+  of a pipeline, embed it in a larger system, or call it from ordinary Go code
+  wherever a decision or an answer is needed.
+- **Great for categorization.** Classification, routing, and tagging tasks have
+  a bounded output and a measurable accuracy — ideal for a small agent running
+  on a cheap model. A categorization agent can also route work to the right,
+  more specialized agent.
+
 ## Supported providers & models
 
 `rellm` talks to providers through a provider interface, so any backend that
