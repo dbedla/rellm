@@ -1,8 +1,14 @@
 # What is `rellm`?
-`rellm` is an experimental Go library for building custom agents based on the Responses API endpoint.
+`rellm` is an Go lightweight framework for building custom agents based on the Responses API endpoint.
 
 ## What endpoint is used?
 Right now, `rellm` uses the Responses API proposed by OpenAI. But do not worry, this endpoint is implemented by other providers too. LM Studio provides it, so it can be used with models run locally. OpenRouter is a unified API gateway and also implements this endpoint.
+Local model recomendations:
+- ornith-1.5-35b-a3b and previous version for slower machine deepreinforce-ai/ornith-1.0-35b
+- google/gemma-4-26b-a4b
+- gemma-4-26b-a4b
+- qwen/qwen3.8-27b
+
 
 ## Can it work with local models?
 Yes.
@@ -19,11 +25,18 @@ The `./examples/base_agent` example demonstrates how to use the `google/gemma-4-
 
 
 ## Can it work with any model?
-It can work with all model providers that implement the Responses API endpoint. To check which model works best with your agent, some benchmarks and experiments are needed.
+It can work with all providers that implement the Responses API endpoint. To check which model works best with your agent, some benchmarks and experiments are needed.
 
-Recommendations:
- - Local models -> LM Studio
- - Top high-end paid models -> OpenRouter
+Local models -> LM Studio 
+- ornith-1.5-35b-a3b 
+- deepreinforce-ai/ornith-1.0-35b
+- google/gemma-4-26b-a4b
+- qwen/qwen3.8-27b
+- meta/muse-glimmer
+ 
+Benchmarks:
+- https://openrouter.ai/benchmarks
+
 
 ## Quick start guide: build own agent
 Reference usage of a library can be found:
@@ -38,9 +51,17 @@ See [the fs_agent example](e2e_tests/e2e_fs_agent) for more details.
 [Install LM Studio](https://lmstudio.ai/download) on your machine; it will be used to run local models.
 Then go to the root of this repository and execute the following commands:
 ```bash
-make lms-set-gemma-4-26b-a4b
+# if you want use local model (gemma-4-26b-a4b)
+make e2e-lms-env 
+
+# builds binary :D 
 make go-build
-./output/bin/lms_base_agent
+
+# just run it to see errors :D
+# for openrouter as provider .env file is required
+# OPENROUTER_API_KEY=sk-1234567890
+# how to generate openrouter api key (available only for logged user): https://openrouter.ai/workspaces/default/keys
+./output/bin/lms_endpoint_agent 
 ```
 ## External links
  - [Open Router responses api](https://openrouter.ai/docs/api/reference/responses/overview)
