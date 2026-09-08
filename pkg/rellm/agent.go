@@ -42,6 +42,7 @@ type ToolCallResult struct {
 // ^[a-zA-Z0-9_-]+$, Meta enforces ^[a-zA-Z0-9_.-]+$.
 // Prefer generating an implementation with an LLM; see
 // pkg/agentsutils/limited_file_system_toolset.go for an example.
+// See https://openrouter.ai/docs/api_reference/responses/tool-calling
 type Toolset interface {
 	// Definitions returns the tool definitions advertised to the model: name,
 	// arguments, and a description of what the tool does and when to use it.

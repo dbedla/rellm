@@ -27,7 +27,20 @@ type promptParams struct {
 }
 
 // PromptBuilder constructs a Prompt, validating its fields on Build.
-// todo: provide usage example
+//
+// Usage example:
+//
+//	prompt, err := rellm.NewPromptBuilder().
+//		WithMessage("Write a haiku about tide pools.").
+//		WithTemperature(0.7).
+//		WithMaxOutputTokens(100).
+//		Build()
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//	answer, err := agent.Execute(ctx, prompt)
+//
+// The WithXxx methods are optional except WithMessage, which is required.
 type PromptBuilder struct {
 	msg    string
 	params promptParams
@@ -48,14 +61,14 @@ func (b *PromptBuilder) WithMessage(msg string) *PromptBuilder {
 
 // WithTemperature sets the sampling temperature (usually 0..2). Higher values
 // make output more random; lower values more deterministic. Optional.
-// todo: provide link to documentation
+// Openrouter https://openrouter.ai/docs/api_reference/parameters#temperature
 func (b *PromptBuilder) WithTemperature(t float32) *PromptBuilder {
 	b.params.Temperature = &t
 	return b
 }
 
 // WithReasoning sets the reasoning effort for models that support it. Optional.
-// todo: provide link to documentation
+// See https://openrouter.ai/docs/api_reference/parameters#reasoning
 func (b *PromptBuilder) WithReasoning(effort ReasoningEffort) *PromptBuilder {
 
 	b.params.Reasoning = &ReasoningConfig{Effort: effort}
@@ -64,7 +77,7 @@ func (b *PromptBuilder) WithReasoning(effort ReasoningEffort) *PromptBuilder {
 
 // WithMaxOutputTokens caps the output length of every provider call in this
 // prompt. Optional.
-// todo: provide link to documentation
+// See https://openrouter.ai/docs/api_reference/parameters#max-tokens
 func (b *PromptBuilder) WithMaxOutputTokens(n int) *PromptBuilder {
 	b.params.MaxOutputTokens = n
 	return b
@@ -72,7 +85,7 @@ func (b *PromptBuilder) WithMaxOutputTokens(n int) *PromptBuilder {
 
 // WithTopP sets nucleus sampling: only tokens within the top-p probability
 // mass are considered. Optional.
-// todo: provide link to documentation
+// See https://openrouter.ai/docs/api_reference/parameters#top-p
 func (b *PromptBuilder) WithTopP(t float32) *PromptBuilder {
 	b.params.TopP = &t
 	return b
@@ -80,7 +93,7 @@ func (b *PromptBuilder) WithTopP(t float32) *PromptBuilder {
 
 // WithPresencePenalty discourages repeating already-used tokens (range -2..2).
 // Optional.
-// todo: provide link to documentation
+// See https://openrouter.ai/docs/api_reference/parameters#presence-penalty
 func (b *PromptBuilder) WithPresencePenalty(p float32) *PromptBuilder {
 	b.params.PresencePenalty = &p
 	return b
@@ -88,21 +101,21 @@ func (b *PromptBuilder) WithPresencePenalty(p float32) *PromptBuilder {
 
 // WithFrequencyPenalty discourages frequent tokens proportionally to their
 // repetition (range -2..2). Optional.
-// todo: provide link to documentation
+// See https://openrouter.ai/docs/api_reference/parameters#frequency-penalty
 func (b *PromptBuilder) WithFrequencyPenalty(f float32) *PromptBuilder {
 	b.params.FrequencyPenalty = &f
 	return b
 }
 
 // WithSeed sets the random seed for reproducible output. Optional.
-// todo: provide link to documentation
+// See https://openrouter.ai/docs/api_reference/parameters#seed
 func (b *PromptBuilder) WithSeed(seed int64) *PromptBuilder {
 	b.params.Seed = &seed
 	return b
 }
 
 // WithLogprobs enables returning log probabilities for output tokens. Optional.
-// todo: provide link to documentation
+// See https://openrouter.ai/docs/api_reference/parameters#logprobs
 func (b *PromptBuilder) WithLogprobs(enabled bool) *PromptBuilder {
 	b.params.Logprobs = enabled
 	return b
@@ -110,7 +123,7 @@ func (b *PromptBuilder) WithLogprobs(enabled bool) *PromptBuilder {
 
 // WithTopLogprobs sets how many of the most likely tokens are returned per
 // output position when WithLogprobs is enabled. Optional.
-// todo: provide link to documentation
+// See https://openrouter.ai/docs/api_reference/parameters#top-logprobs
 func (b *PromptBuilder) WithTopLogprobs(n int) *PromptBuilder {
 	b.params.TopLogprobs = n
 	return b
