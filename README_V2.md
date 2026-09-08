@@ -216,3 +216,10 @@ For a general introduction to tool calling, see
 [Tool & Function Calling (OpenRouter docs)](https://openrouter.ai/docs/guides/features/tool-calling).
 
 ## External links
+
+- [OpenAI Responses API specification](https://developers.openai.com/api/reference/overview)
+- [OpenAI OpenAPI specification (GitHub)](https://github.com/openai/openai-openapi)
+- [OpenRouter Responses API reference](https://openrouter.ai/docs/api/reference/responses/overview)
+- [Tool & Function Calling (OpenRouter docs)](https://openrouter.ai/docs/guides/features/tool-calling)
+- [LM Studio: Responses API support announcement](https://lmstudio.ai/blog/lmstudio-v0.3.29)
+- [LM Studio CLI](https://lmstudio.ai/docs/cli)
