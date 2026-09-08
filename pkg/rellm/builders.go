@@ -8,7 +8,7 @@ import "context"
 //	agent, err := rellm.NewAgentBuilder().
 //		WithProvider(provider).
 //		WithConversationStorage(rellm.NewInMemoryStorage()).
-//	    WithUnknownConversationElementKeepInTheLoop(). //there are other policy for UnknownConversationElement
+//		WithUnknownConversationElementKeepInTheLoop(). // other policies: WithUnknownConversationElementDrop, WithUnknownConversationElementHandler
 //		Build()
 type AgentBuilder struct {
 	agent Agent

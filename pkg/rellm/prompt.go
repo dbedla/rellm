@@ -61,7 +61,7 @@ func (b *PromptBuilder) WithMessage(msg string) *PromptBuilder {
 
 // WithTemperature sets the sampling temperature (usually 0..2). Higher values
 // make output more random; lower values more deterministic. Optional.
-// Openrouter https://openrouter.ai/docs/api_reference/parameters#temperature
+// See https://openrouter.ai/docs/api_reference/parameters#temperature
 func (b *PromptBuilder) WithTemperature(t float32) *PromptBuilder {
 	b.params.Temperature = &t
 	return b
