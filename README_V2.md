@@ -41,6 +41,7 @@ Benchmarks:
 - [LMArena](https://lmarena.ai)
 
 ## Installation
+Intentionaly left blank.
 
 ## Quick start
 
