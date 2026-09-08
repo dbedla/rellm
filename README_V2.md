@@ -38,7 +38,8 @@ Benchmarks:
 - [Berkeley Function-Calling Leaderboard](https://gorilla.cs.berkeley.edu/leaderboard.html)
 - [Artificial Analysis](https://artificialanalysis.ai)
 - [LiveBench](https://livebench.ai)
-- [LMArena](https://lmarena.ai)
+- [LMArena](https://arena.ai/leaderboard)
+- [Model Evaluation & Threat Research](https://metr.org)
 
 ## Installation
 Intentionaly left blank.
