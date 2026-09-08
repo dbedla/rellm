@@ -47,6 +47,7 @@ func NewLMStudioProvider(model Model, host, port string) (*LMStudioProvider, err
 	}, nil
 }
 
+// NewLMStudioProviderWithHTTPClient creates a new LM Studio provider with a custom HTTP client.
 func NewLMStudioProviderWithHTTPClient(model Model, host, port string, c HTTPClient) (*LMStudioProvider, error) {
 	if c == nil {
 		return nil, ErrMissingHTTPClientForProvider

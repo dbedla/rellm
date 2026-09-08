@@ -36,6 +36,7 @@ func NewOpenRouterProvider(apiKey string, model Model) (*OpenRouterProvider, err
 	}, nil
 }
 
+// NewOpenRouterProviderWithHTTPClient builds an OpenRouter provider with custom HTTP client. apiKey and model are required.
 func NewOpenRouterProviderWithHTTPClient(apiKey string, model Model, client HTTPClient) (*OpenRouterProvider, error) {
 	if client == nil {
 		return nil, ErrMissingHTTPClientForProvider
