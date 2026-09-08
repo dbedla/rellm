@@ -74,7 +74,7 @@ Benchmarks:
 - [Model Evaluation & Threat Research](https://metr.org)
 
 ## Installation
-Intentionaly left blank.
+Intentionally left blank.
 
 ## Quick start
 
