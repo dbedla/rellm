@@ -38,10 +38,10 @@ type ToolCallResult struct {
 }
 
 // Toolset groups the tools an agent can call.
-// Tool names must match the provider's regex: OpenAI enforces
+// Tool names placed in definition must match the provider's regex: OpenAI enforces
 // ^[a-zA-Z0-9_-]+$, Meta enforces ^[a-zA-Z0-9_.-]+$.
 // Prefer generating an implementation with an LLM; see
-// pkg/agentsutils/limited_file_system.go for an example.
+// pkg/agentsutils/limited_file_system_toolset.go for an example.
 type Toolset interface {
 	// Definitions returns the tool definitions advertised to the model: name,
 	// arguments, and a description of what the tool does and when to use it.
