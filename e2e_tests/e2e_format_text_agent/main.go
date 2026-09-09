@@ -28,7 +28,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	orGemmaAgent, err := buildORGeminiStructuredOutputAgent()
+	orGeminiAgent, err := buildORGeminiStructuredOutputAgent()
 	if err != nil {
 		panic(err)
 	}
@@ -36,7 +36,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	agents := []*rellm.Agent{lmsAgent, orGemmaAgent, orLunaAgent}
+	agents := []*rellm.Agent{lmsAgent, orGeminiAgent, orLunaAgent}
 
 	for _, a := range agents {
 		scenario(a)
