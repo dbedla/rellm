@@ -151,7 +151,7 @@ Other examples:
 - [examples/lms_base_agent](examples/lms_base_agent) — minimal chat with LM Studio
 - [examples/lms_pro_agent](examples/lms_pro_agent) — more advanced local-model agent
 - [examples/or_chat_agent](examples/or_chat_agent) — chat via OpenRouter
-- [examples/or_structured_output_agent](examples/or_structured_output_agent) — JSON-schema structured output via OpenRouter
+- [examples/or_structured_output_agent](e2e_tests/e2e_format_text_agent) — JSON-schema structured output via OpenRouter
 
 ### Adding tools to your agent
 
