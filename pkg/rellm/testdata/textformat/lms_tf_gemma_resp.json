@@ -26,7 +26,7 @@
             "content": [
                 {
                     "type": "output_text",
-                    "text": "{\n  \"name\": \"John Snow\",\n  \"location\": \"Winterfel\",\n  \"age\": 100\n}",
+                    "text": "{\n  \"name\": \"John Snow\",\n  \"city\": \"Winterfel\",\n  \"age\": 100\n}",
                     "annotations": [],
                     "logprobs": []
                 }
