@@ -17,6 +17,7 @@ type Prompt struct {
 type promptParams struct {
 	Temperature      *float32
 	Reasoning        *ReasoningConfig
+	Text             *TextConfig
 	MaxOutputTokens  int
 	TopP             *float32
 	PresencePenalty  *float32
@@ -72,6 +73,14 @@ func (b *PromptBuilder) WithTemperature(t float32) *PromptBuilder {
 func (b *PromptBuilder) WithReasoning(effort ReasoningEffort) *PromptBuilder {
 
 	b.params.Reasoning = &ReasoningConfig{Effort: effort}
+	return b
+}
+
+// WithTextFormat requests structured output via the Responses API text.format
+// field. Optional.
+// See https://platform.openai.com/docs/api-reference/responses/create#responses-create-text
+func (b *PromptBuilder) WithTextFormat(f *TextFormat) *PromptBuilder {
+	b.params.Text = &TextConfig{Format: f}
 	return b
 }
 
@@ -140,6 +149,15 @@ func (b *PromptBuilder) Build() (*Prompt, error) {
 	if b.params.Reasoning != nil {
 		if b.params.Reasoning.Effort == "" {
 			return nil, ErrEmptyReasoningEffort
+		}
+	}
+	if b.params.Text != nil {
+		f := b.params.Text.Format
+		if f == nil || f.Type == "" {
+			return nil, ErrEmptyTextFormat
+		}
+		if f.Type == "json_schema" && f.Schema == nil {
+			return nil, ErrEmptyTextFormat
 		}
 	}
 	return &Prompt{

@@ -1,0 +1,77 @@
+{
+    "id": "resp_69fe9c1c8bc4d73641b1e58de40135683d3f17881209c6c3",
+    "object": "response",
+    "created_at": 1788957949,
+    "model": "google/gemma-4-26b-a4b",
+    "status": "completed",
+    "completed_at": 1788957961,
+    "output": [
+        {
+            "id": "rs_iqzw15iu65obhjq48j14o",
+            "type": "reasoning",
+            "status": "completed",
+            "summary": [],
+            "content": [
+                {
+                    "type": "reasoning_text",
+                    "text": "*   Input: \"I am John Snow from Winterfell, I have 100 years...\"\n    *   Goal: Extract structured information and return only valid JSON matching a schema.\n    *   Constraint: Return *only* JSON.\n\n    *   Name: John Snow\n    *   Location/Origin: Winterfell (likely meant Winterfelll, but extracting as provided)\n    *   Age/Duration: 100 years\n\n    The user hasn't explicitly provided a schema in the prompt, but typically for this type of task, I should create one that covers the extracted entities. Common fields would be `name`, `location`, and `age`.\n\n    ```json\n    {\n      \"name\": \"John Snow\",\n      \"location\": \"Winterfell\",\n      \"age\": 100\n    }\n    ```\n\n    *   Input: \"I am John Snow from Winterfell, I have 100 years...\"\n    *   Extracted data: Name=\"John Snow\", Location=\"Winterfell\", Age=100.\n    *   Valid JSON? Yes.\n    *   Only valid JSON? Yes.\n\n    (Note: Since the prompt doesn't specify a schema, I will provide a standard extraction of the entities found in the text.)"
+                }
+            ]
+        },
+        {
+            "id": "msg_vaysbrkea3mhodqoslsc",
+            "type": "message",
+            "role": "assistant",
+            "status": "completed",
+            "content": [
+                {
+                    "type": "output_text",
+                    "text": "{\n  \"name\": \"John Snow\",\n  \"city\": \"Winterfell\",\n  \"age\": 100\n}",
+                    "annotations": [],
+                    "logprobs": []
+                }
+            ]
+        }
+    ],
+    "error": null,
+    "incomplete_details": null,
+    "tools": [],
+    "tool_choice": "auto",
+    "parallel_tool_calls": true,
+    "max_output_tokens": null,
+    "temperature": 1,
+    "top_p": 0.95,
+    "presence_penalty": 0,
+    "frequency_penalty": 1.1,
+    "top_logprobs": 0,
+    "max_tool_calls": null,
+    "metadata": {},
+    "background": false,
+    "previous_response_id": null,
+    "service_tier": "default",
+    "truncation": "auto",
+    "store": true,
+    "instructions": null,
+    "text": {
+        "format": {
+            "type": "text"
+        }
+    },
+    "reasoning": {
+        "effort": null,
+        "summary": null
+    },
+    "safety_identifier": null,
+    "prompt_cache_key": null,
+    "usage": {
+        "input_tokens": 53,
+        "input_tokens_details": {
+            "cached_tokens": 48
+        },
+        "output_tokens": 305,
+        "output_tokens_details": {
+            "reasoning_tokens": 275
+        },
+        "total_tokens": 358
+    }
+}

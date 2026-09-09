@@ -161,6 +161,10 @@ func TestPromptBuilder_AllFields(t *testing.T) {
 
 			assert.Equal(t, float32(0.7), *req.Temperature)
 			assert.Equal(t, rellm.ReasoningEffortHigh, req.Reasoning.Effort)
+			assert.NotNil(t, req.Text)
+			assert.Equal(t, "json_schema", req.Text.Format.Type)
+			assert.Equal(t, "person", req.Text.Format.Name)
+			assert.True(t, req.Text.Format.Strict)
 			assert.Equal(t, 512, req.MaxOutputTokens)
 			assert.InDelta(t, 0.9, *req.TopP, 0.001)
 			assert.InDelta(t, 1.0, *req.PresencePenalty, 0.001)
@@ -179,6 +183,12 @@ func TestPromptBuilder_AllFields(t *testing.T) {
 		WithMessage("hi").
 		WithTemperature(0.7).
 		WithReasoning(rellm.ReasoningEffortHigh).
+		WithTextFormat(&rellm.TextFormat{
+			Type:   "json_schema",
+			Name:   "person",
+			Strict: true,
+			Schema: map[string]interface{}{"type": "object"},
+		}).
 		WithMaxOutputTokens(512).
 		WithTopP(0.9).
 		WithPresencePenalty(1.0).
