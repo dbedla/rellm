@@ -112,6 +112,7 @@ package main
 
 import (
     "context"
+    "fmt"
 
     "rellm/pkg/rellm"
 )
@@ -136,7 +137,10 @@ func main() {
     }
 
     response, err := agent.Ask(context.Background(), "Hello!")
-    _ = response
+    if err != nil {
+        panic(err)
+    }
+    fmt.Println(response)
 }
 ```
 
@@ -169,7 +173,7 @@ Write your logic as a plain struct with methods (or plain functions), then wrap
 it in a thin `Toolset` that only translates between the model and your code.
 The complete working version is
 [examples/lms_math_agent](examples/lms_math_agent): `calculator.go` is the
-functionality, `calculatortoolset.go` is the adapter — shown here trimmed:
+functionality, `calculatortoolset.go` is the adapter:
 
 ```go
 // calculator.go — your functionality: a plain struct, no rellm types involved.
@@ -205,8 +209,32 @@ func (t *CalculatorToolset) Definitions() []rellm.ToolDefinition {
                 "required": []string{"a", "b"},
             },
         },
-        // Definitions for Calculator_Sub and Calculator_Mul follow
-        // the same pattern.
+        {
+            Type:        "function",
+            Name:        "Calculator_Sub",
+            Description: "Subtract b from a.",
+            Parameters: map[string]any{
+                "type": "object",
+                "properties": map[string]any{
+                    "a": map[string]any{"type": "number"},
+                    "b": map[string]any{"type": "number"},
+                },
+                "required": []string{"a", "b"},
+            },
+        },
+        {
+            Type:        "function",
+            Name:        "Calculator_Mul",
+            Description: "Multiply two numbers.",
+            Parameters: map[string]any{
+                "type": "object",
+                "properties": map[string]any{
+                    "a": map[string]any{"type": "number"},
+                    "b": map[string]any{"type": "number"},
+                },
+                "required": []string{"a", "b"},
+            },
+        },
     }
 }
 
