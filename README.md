@@ -151,7 +151,97 @@ Other examples:
 - [examples/lms_base_agent](examples/lms_base_agent) — minimal chat with LM Studio
 - [examples/lms_pro_agent](examples/lms_pro_agent) — more advanced local-model agent
 - [examples/or_chat_agent](examples/or_chat_agent) — chat via OpenRouter
-- [examples/or_structured_output_agent](e2e_tests/e2e_format_text_agent) — JSON-schema structured output via OpenRouter
+- [e2e_tests/e2e_format_text_agent](e2e_tests/e2e_format_text_agent) — JSON-schema structured output via OpenRouter
+
+### Structured output (JSON schema)
+
+Ask for JSON that conforms to a schema instead of free text. Two lines do
+most of the work, both highlighted below:
+
+- `(&jsonschema.Reflector{DoNotReference: true}).Reflect(&Person{})` —
+  generates the JSON schema straight from a Go struct, so there is no
+  hand-written schema to keep in sync.
+- `jsonschema:"description=..."` on each field — the description lands in the
+  generated schema and makes the contract readable to the model.
+
+A JSON answer is far easier to put to work than free text: parse it, pass it
+to another tool, or persist it without fragile string scraping. Validation is
+simpler too — every field already carries a type, and the `description` can
+spell out the expected value range, which the model generally respects.
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+
+    "github.com/invopop/jsonschema"
+    "github.com/joho/godotenv"
+
+    "rellm/pkg/rellm"
+)
+
+// The struct tags describe the schema.
+type Person struct {
+    Name string `json:"name" jsonschema:"description=Full name of the person"`
+    Age  int    `json:"age"  jsonschema:"description=Age in years"`
+    City string `json:"city" jsonschema:"description=City of residence"`
+}
+
+func main() {
+    // Schema generated from the struct tags above.
+    textFormat := &rellm.TextFormat{
+        Type:   "json_schema",
+        Name:   "person",
+        Strict: true,
+        Schema: (&jsonschema.Reflector{DoNotReference: true}).Reflect(&Person{}),
+    }
+
+    _ = godotenv.Load() // reads OPENROUTER_API_KEY from .env
+    apiKey := os.Getenv("OPENROUTER_API_KEY")
+    if apiKey == "" {
+        panic("OPENROUTER_API_KEY is not set")
+    }
+
+    provider, err := rellm.NewOpenRouterProvider(apiKey, "openai/gpt-5.6-luna")
+    if err != nil {
+        panic(err)
+    }
+
+    agent, err := rellm.NewAgentBuilder().
+        WithProvider(provider).
+        WithAgentName("StructuredOutputAgent").
+        WithMaxAgentSteps(20).
+        WithConversationStorage(rellm.NewInMemoryStorage()).
+        WithSystemMessage("You are an assistant that extracts structured information from user text and returns only valid JSON matching the requested schema.").
+        Build()
+    if err != nil {
+        panic(err)
+    }
+
+    prompt, err := rellm.NewPromptBuilder().
+        WithMessage("I am John Snow from Winterfell, I have 100 years...").
+        WithTextFormat(textFormat).
+        Build()
+    if err != nil {
+        panic(err)
+    }
+
+    response, err := agent.Execute(context.Background(), prompt)
+    if err != nil {
+        panic(err)
+    }
+    fmt.Println(response)
+}
+```
+
+> **Local models (LM Studio):** a small model served by LM Studio may ignore
+> the `text.format` field. If the output drifts, embed a stringified copy of
+> the schema in the system prompt with an extra instruction to return raw
+> JSON only (no markdown) — see how the LMS agent does it in
+> [e2e_tests/e2e_format_text_agent/agent.go](e2e_tests/e2e_format_text_agent/agent.go).
 
 ### Adding tools to your agent
 
