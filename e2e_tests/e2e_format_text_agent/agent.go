@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"rellm/internal/examplesutils"
@@ -16,8 +17,11 @@ func buildLMSStructuredOutputAgent() (*rellm.Agent, error) {
 	if err != nil {
 		return nil, err
 	}
-	schema := fmt.Sprintf("\n%v\n", textFormat.Schema)
-	lmsSysPrompt := structuredOutputSysPrompt + schema + "\nONLY parsable json string allowed as result, no additional markdown formatting\n"
+	schema, err := json.Marshal(textFormat.Schema)
+	if err != nil {
+		return nil, err
+	}
+	lmsSysPrompt := structuredOutputSysPrompt + string(schema) + "\nONLY parsable json string allowed as result, no additional markdown formatting\n"
 	return buildStructuredOutputAgent(p, "lms-agent", lmsSysPrompt)
 }
 
@@ -26,7 +30,7 @@ func buildORGeminiStructuredOutputAgent() (*rellm.Agent, error) {
 	if err != nil {
 		return nil, err
 	}
-	return buildStructuredOutputAgent(p, "or-gemma-agent", structuredOutputSysPrompt)
+	return buildStructuredOutputAgent(p, "or-gemini-agent", structuredOutputSysPrompt)
 }
 
 func buildORLunaStructuredOutputAgent() (*rellm.Agent, error) {

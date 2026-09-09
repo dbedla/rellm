@@ -77,6 +77,7 @@ func TestAgentTestFormat(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.tname, func(t *testing.T) {
+			defer tt.httpMock.AssertExpectations(t)
 			tt.httpMock.On("Do", mock.MatchedBy(baseRequestMatch)).
 				Once().
 				Run(func(args mock.Arguments) {
@@ -101,7 +102,7 @@ func TestAgentTestFormat(t *testing.T) {
 				Schema: (&jsonschema.Reflector{DoNotReference: true}).Reflect(&Person{}),
 			}
 
-			msg := "I am John Snow from Winterfel, I have 100 years..."
+			msg := "I am John Snow from Winterfell, I have 100 years..."
 			prompt, err := rellm.NewPromptBuilder().
 				WithMessage(msg).
 				WithTextFormat(textFormat).

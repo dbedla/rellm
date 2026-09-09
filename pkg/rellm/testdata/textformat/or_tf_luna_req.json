@@ -10,7 +10,7 @@
             "content": [
                 {
                     "type": "input_text",
-                    "text": "I am John Snow from Winterfel, I have 100 years..."
+                    "text": "I am John Snow from Winterfell, I have 100 years..."
                 }
             ],
             "role": "user",
