@@ -161,10 +161,6 @@ func TestPromptBuilder_AllFields(t *testing.T) {
 
 			assert.Equal(t, float32(0.7), *req.Temperature)
 			assert.Equal(t, rellm.ReasoningEffortHigh, req.Reasoning.Effort)
-			assert.NotNil(t, req.ResponseFormat)
-			assert.Equal(t, "json_schema", req.ResponseFormat.Type)
-			assert.Equal(t, "test_schema", req.ResponseFormat.JSONSchema.Name)
-			assert.True(t, req.ResponseFormat.JSONSchema.Strict)
 			assert.NotNil(t, req.Text)
 			assert.Equal(t, "json_schema", req.Text.Format.Type)
 			assert.Equal(t, "person", req.Text.Format.Name)
@@ -187,14 +183,6 @@ func TestPromptBuilder_AllFields(t *testing.T) {
 		WithMessage("hi").
 		WithTemperature(0.7).
 		WithReasoning(rellm.ReasoningEffortHigh).
-		WithResponseFormat(&rellm.ResponseFormat{
-			Type: "json_schema",
-			JSONSchema: &rellm.JSONSchemaDefinition{
-				Name:   "test_schema",
-				Strict: true,
-				Schema: map[string]interface{}{"type": "object"},
-			},
-		}).
 		WithTextFormat(&rellm.TextFormat{
 			Type:   "json_schema",
 			Name:   "person",

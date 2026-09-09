@@ -17,7 +17,6 @@ type Prompt struct {
 type promptParams struct {
 	Temperature      *float32
 	Reasoning        *ReasoningConfig
-	ResponseFormat   *ResponseFormat
 	Text             *TextConfig
 	MaxOutputTokens  int
 	TopP             *float32
@@ -74,14 +73,6 @@ func (b *PromptBuilder) WithTemperature(t float32) *PromptBuilder {
 func (b *PromptBuilder) WithReasoning(effort ReasoningEffort) *PromptBuilder {
 
 	b.params.Reasoning = &ReasoningConfig{Effort: effort}
-	return b
-}
-
-// WithResponseFormat requests structured output via the Responses API
-// response_format field. Optional.
-// See https://platform.openai.com/docs/api-reference/responses/create#responses-create-response_format
-func (b *PromptBuilder) WithResponseFormat(f *ResponseFormat) *PromptBuilder {
-	b.params.ResponseFormat = f
 	return b
 }
 
