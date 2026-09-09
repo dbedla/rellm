@@ -1,0 +1,54 @@
+{
+    "model": "google/gemma-4-26b-a4b",
+    "input": [
+        {
+            "content": [
+                {
+                    "type": "input_text",
+                    "text": "You are an assistant that extracts structured information from user text and returns only valid JSON matching the requested schema."
+                }
+            ],
+            "role": "system"
+        },
+        {
+            "content": [
+                {
+                    "type": "input_text",
+                    "text": "I am John Snow from Winterfel, I have 100 years..."
+                }
+            ],
+            "role": "user"
+        }
+    ],
+    "text": {
+        "format": {
+            "type": "json_schema",
+            "name": "person",
+            "schema": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Full name of the person"
+                    },
+                    "age": {
+                        "type": "integer",
+                        "description": "Age in years"
+                    },
+                    "city": {
+                        "type": "string",
+                        "description": "City of residence"
+                    }
+                },
+                "additionalProperties": false,
+                "type": "object",
+                "required": [
+                    "name",
+                    "age",
+                    "city"
+                ]
+            },
+            "strict": true
+        }
+    }
+}

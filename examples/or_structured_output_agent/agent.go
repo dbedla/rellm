@@ -15,9 +15,9 @@ func buildStructuredOutputAgent() (*rellm.Agent, error) {
 
 	agentName := "OpenRouterStructuredOutputAgent"
 
-	p, err := rellm.NewLMStudioProvider("google/gemma-4-26b-a4b", "http://127.0.0.1", "1234")
+	// p, err := rellm.NewLMStudioProvider("google/gemma-4-26b-a4b", "http://127.0.0.1", "1234")
 	// p, err := newOpenRouterProvider("google/gemini-3.1-flash-lite")
-	// p, err := newOpenRouterProvider("openai/gpt-5.6-luna")
+	p, err := newOpenRouterProvider("openai/gpt-5.6-luna")
 	if err != nil {
 		return nil, err
 	}

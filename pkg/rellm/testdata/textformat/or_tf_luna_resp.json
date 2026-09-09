@@ -1,0 +1,83 @@
+{
+    "id": "gen-1788958740-QamduzV9u4tLHImOYLPx",
+    "object": "response",
+    "created_at": 1788958740,
+    "model": "openai/gpt-5.6-luna",
+    "status": "completed",
+    "completed_at": 1788958742,
+    "output": [
+        {
+            "id": "rs_07f25925ac90f5f9016aa158159f1487d19016eacc3e47902b",
+            "type": "reasoning",
+            "status": "completed",
+            "summary": [],
+            "encrypted_content": "gAAAAABqoVgWZ3v8-sa3LGFVawAM6kiBvVG__-EhlnGIiBXsfvfMEgsb-BjV2LVsGTOo6w2xSP8YeudW0WJqdphf34dD32PW77-8hlTj4sxfZhJEbt1C30j2nP1xCMCx6_07ZZyrlDb8UVv8PI0KRKb77MA-toXW15Zrd5BnFQ2_3ruE4ykJdXb0EAx0-1Q70yGWyAkMsAF09W_Qa-UBhfTfa5ii1snQ3FzDK7GQU8AFnPfK9Ab-Ww6aOGTXzxa85enHhqzcbW2j4J6tWJU_mFkdootUttPk0YiqQ5LdWM9CIWUUJguOIPaojmmeuCignXz9IOOdDCmGmo5Y453LNzvX4TCexpH6jd_929F82rFBQO9XDMGHpKmEVpCPKDP8SxfvPrTziRDzMQtMz8bOVNMrD_jE1vTDA_HHjTq1kRjZ0kNbPhDtSApkeEwcZfQYGqsuuyAytB9JNb_CqqmIghw0c9EZWnQaVJKC-kwwP3iieX0KPaLT16VhH8kLd3265MP_SNTnxYOjt2FLUavHztGObB6f7LA_pzROElnJpMW4zqRyjHeDMahtKQdmjualdLjXjDlKg8m5dXpf6dS0ieOS9-0CKUgbCu-js29yclbAYUHGMJjyujjty85XOBsBR7OEhqjdpDE42mDWnURFj-xU1a4QG8rGne1xU8SOIlF77THJz2aaXO6wMr-jv9XiS9wLYGIGJpf-S6Xw6S6h0ifH-ik8aXyEfslg6lvyzADyu0Q6jQitWFg5JrKTUb-O3BwEMjoz8FA7t8kAI-JJAAR6dQ8rx2TexEceQsuiuhWvCveLymCjJg6Z3kx9PMK0vzD4uQeJR8MaVbwXaoXufVZLYfCVKFskvxthYeH7Zj2ZyXlvex90CEwgmcwIIBLo1cya6Yyr3CIY63F99t8gevY2ybNKGazWRfd-6mca4z6tXESqABrhH_wfJ_dCwOirnLESkPXnm3PYBcTf_eh1zes1mE5zAzPBseYnbrTdoWtU3sxvedDBwv6axJXMK3H6FCoNS5XFupgs9ryuTwwv9nRLfU4n3StKx91Xs7TbvOoGY-RyYZ9cmEgw-KDlJ3QJiYe9j56iInnxWI56wgc1VqDZ-zZBUR-e9zGxLEtrMZDyatmnFHa3xN8VpNQjoeDaC9Cwp52muItP5kFGmhL8pvBIIqYb7c70SAMja_23VHmgDxqutp4nJiH7mah-X_ujHspKMvaPoKAFeRJ9VhC7oS127aFtXxQaREzly0Ejn8hw7W74agwklblFSn3FVbSGUJz9nwOBeR1npxgOfivPceAL5293CLoTSh7yp2Wz-9KrqzQCVZvoxO72YUKvA6GoujuwzyAsS5JIi1KUHowy86KL0tFQ38Q_Iob7VAGhg74NmhXDCGKyBhB0xOTL3gD3tHwZwwus3TKKomqvPd845wU2UKT0kHamSuh5NX_e1d363uVX1h4v2OQQovSLJBkQ0EkCLLv8rM-3Z9_-MqiDdNOTl472E_ktHRQbgEgkP_o7xOj1inqJ4QM=.eyJlbmRwb2ludF9zbHVnIjoib3BlbmFpL2dwdC01LjYtbHVuYS0yMDI2MDcwOXxvcGVuYWkifQ",
+            "format": "openai-responses-v1"
+        },
+        {
+            "id": "msg_tmp_1m1g5amepb1",
+            "type": "message",
+            "role": "assistant",
+            "status": "completed",
+            "content": [
+                {
+                    "type": "output_text",
+                    "text": "{\"name\":\"John Snow\",\"age\":100,\"city\":\"Winterfel\"}",
+                    "annotations": [],
+                    "logprobs": []
+                }
+            ],
+            "phase": "final_answer"
+        }
+    ],
+    "error": null,
+    "incomplete_details": null,
+    "tools": [],
+    "tool_choice": "auto",
+    "parallel_tool_calls": true,
+    "max_output_tokens": null,
+    "temperature": 1,
+    "top_p": 1,
+    "presence_penalty": 0,
+    "frequency_penalty": 0,
+    "top_logprobs": 0,
+    "max_tool_calls": null,
+    "metadata": {},
+    "background": false,
+    "previous_response_id": null,
+    "service_tier": "default",
+    "truncation": "disabled",
+    "store": false,
+    "instructions": null,
+    "text": {
+        "format": {
+            "type": "json_schema"
+        }
+    },
+    "reasoning": {
+        "context": "all_turns",
+        "effort": "medium",
+        "mode": "standard",
+        "summary": "detailed"
+    },
+    "safety_identifier": null,
+    "prompt_cache_key": null,
+    "usage": {
+        "input_tokens": 100,
+        "input_tokens_details": {
+            "cached_tokens": 0
+        },
+        "output_tokens": 58,
+        "output_tokens_details": {
+            "reasoning_tokens": 34
+        },
+        "total_tokens": 158,
+        "cost": 0.0000896,
+        "is_byok": false,
+        "cost_details": {
+            "upstream_inference_cost": 0.0000896,
+            "upstream_inference_input_cost": 0.00002,
+            "upstream_inference_output_cost": 0.0000696
+        }
+    }
+}

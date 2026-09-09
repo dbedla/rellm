@@ -6,7 +6,15 @@ import (
 	"rellm/pkg/rellm"
 
 	"github.com/fatih/color"
+	"github.com/invopop/jsonschema"
 )
+
+// Person is the structured shape we ask the model to produce.
+type Person struct {
+	Name string `json:"name" jsonschema:"description=Full name of the person"`
+	Age  int    `json:"age"  jsonschema:"description=Age in years"`
+	City string `json:"city" jsonschema:"description=City of residence"`
+}
 
 func main() {
 	agent, err := buildStructuredOutputAgent()
@@ -18,16 +26,7 @@ func main() {
 		Type:   "json_schema",
 		Name:   "person",
 		Strict: true,
-		Schema: map[string]interface{}{
-			"type": "object",
-			"properties": map[string]interface{}{
-				"name": map[string]interface{}{"type": "string"},
-				"age":  map[string]interface{}{"type": "number"},
-				"city": map[string]interface{}{"type": "string"},
-			},
-			"required":             []string{"name", "age", "city"},
-			"additionalProperties": false,
-		},
+		Schema: (&jsonschema.Reflector{DoNotReference: true}).Reflect(&Person{}),
 	}
 
 	for {

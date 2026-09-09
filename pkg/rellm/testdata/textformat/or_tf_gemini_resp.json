@@ -1,0 +1,78 @@
+{
+    "id": "gen-1788958493-t6GI0Xyfw9CAy8CPI519",
+    "object": "response",
+    "created_at": 1788958493,
+    "model": "google/gemini-3.1-flash-lite",
+    "status": "completed",
+    "completed_at": 1788958494,
+    "output": [
+        {
+            "id": "msg_tmp_re2xnkodgda",
+            "type": "message",
+            "role": "assistant",
+            "status": "completed",
+            "content": [
+                {
+                    "type": "output_text",
+                    "text": "{\n  \"name\": \"John Snow\",\n  \"age\": 100,\n  \"city\": \"Winterfel\"\n}",
+                    "annotations": [],
+                    "logprobs": []
+                }
+            ]
+        },
+        {
+            "id": "rs_tmp_u60bbp6tszf",
+            "type": "reasoning",
+            "status": "completed",
+            "summary": [],
+            "signature": "AY89a18NhaqOskIDZE5wXK8TGIx3lY/wWjRutF73HYo8jm5wRI37PUo9BVqHBxA5hOcwCC+HYfDfqeneosmfcRa6B8LUOEZQAQFZWG/4muvisAA="
+        }
+    ],
+    "error": null,
+    "incomplete_details": null,
+    "tools": [],
+    "tool_choice": "auto",
+    "parallel_tool_calls": true,
+    "max_output_tokens": null,
+    "temperature": 1,
+    "top_p": 1,
+    "presence_penalty": 0,
+    "frequency_penalty": 0,
+    "top_logprobs": 0,
+    "max_tool_calls": null,
+    "metadata": {},
+    "background": false,
+    "previous_response_id": null,
+    "service_tier": "default",
+    "truncation": "disabled",
+    "store": false,
+    "instructions": null,
+    "text": {
+        "format": {
+            "type": "json_schema"
+        }
+    },
+    "reasoning": {
+        "effort": "minimal"
+    },
+    "safety_identifier": null,
+    "prompt_cache_key": null,
+    "usage": {
+        "input_tokens": 154,
+        "input_tokens_details": {
+            "cached_tokens": 0
+        },
+        "output_tokens": 31,
+        "output_tokens_details": {
+            "reasoning_tokens": 0
+        },
+        "total_tokens": 185,
+        "cost": 0.000085,
+        "is_byok": false,
+        "cost_details": {
+            "upstream_inference_cost": 0.000085,
+            "upstream_inference_input_cost": 0.0000385,
+            "upstream_inference_output_cost": 0.0000465
+        }
+    }
+}
