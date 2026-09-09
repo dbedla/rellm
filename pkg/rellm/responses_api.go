@@ -48,6 +48,9 @@ type ResponsesAPIReq struct {
 	// Structured output and JSON schema
 	ResponseFormat *ResponseFormat `json:"response_format,omitempty"`
 
+	// Structured output via the Responses API text.format field
+	Text *TextConfig `json:"text,omitempty"`
+
 	// Streaming (SSE) toggle
 	Stream bool `json:"stream,omitempty"`
 
@@ -137,6 +140,20 @@ type JSONSchemaDefinition struct {
 	Strict bool `json:"strict,omitempty"`
 	// The actual JSON Schema (use a Go struct, map, or raw JSON)
 	Schema interface{} `json:"schema"`
+}
+
+// TextConfig configures the text output of the Responses API.
+type TextConfig struct {
+	Format *TextFormat `json:"format,omitempty"`
+}
+
+// TextFormat requests structured output via text.format. Only the fields
+// relevant to Type should be set: json_schema uses Name, Schema, and Strict.
+type TextFormat struct {
+	Type   string      `json:"type"`
+	Name   string      `json:"name,omitempty"`
+	Schema interface{} `json:"schema,omitempty"`
+	Strict bool        `json:"strict,omitempty"`
 }
 
 // AudioOutputConfig controls audio generation when you include "audio" in Modalities.

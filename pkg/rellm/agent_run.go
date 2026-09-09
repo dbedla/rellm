@@ -203,6 +203,7 @@ func toBaseResponsesAPIReq(params promptParams, model Model, conversation []json
 		Temperature:      params.Temperature,
 		Reasoning:        params.Reasoning,
 		ResponseFormat:   params.ResponseFormat,
+		Text:             params.Text,
 		MaxOutputTokens:  params.MaxOutputTokens,
 		TopP:             params.TopP,
 		PresencePenalty:  params.PresencePenalty,
