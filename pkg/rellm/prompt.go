@@ -151,6 +151,15 @@ func (b *PromptBuilder) Build() (*Prompt, error) {
 			return nil, ErrEmptyReasoningEffort
 		}
 	}
+	if b.params.Text != nil {
+		f := b.params.Text.Format
+		if f == nil || f.Type == "" {
+			return nil, ErrEmptyTextFormat
+		}
+		if f.Type == "json_schema" && f.Schema == nil {
+			return nil, ErrEmptyTextFormat
+		}
+	}
 	return &Prompt{
 		msg:    trimmedMsg,
 		params: b.params,

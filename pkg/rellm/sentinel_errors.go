@@ -26,6 +26,7 @@ var ErrUnableToReadResponseBody = errors.New("unable to read response body")
 
 var ErrEmptyPrompt = errors.New("prompt message is empty")
 var ErrEmptyReasoningEffort = errors.New("reasoning effort cannot be empty")
+var ErrEmptyTextFormat = errors.New("text format cannot be nil or have an empty type")
 
 var ErrNoUnknownConversationElementHandler = errors.New("unknown conversation element handler not provided")
 var ErrCustomConversationElementHandlerFailed = errors.New("custom unknown conversation element handler failed")
