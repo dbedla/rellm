@@ -34,7 +34,7 @@ var goldenTextFormatOrLunaReq string
 //go:embed testdata/textformat/or_tf_luna_resp.json
 var goldenTextFormatOrLunaResp string
 
-func TestAgentTestFormat(t *testing.T) {
+func TestAgentTextFormat(t *testing.T) {
 
 	lmsAgent, lmsHTTPDo := buildTestFormatOutputLMSAgent(t, testDefaultMaxAgentSteps)
 	orGeminiAgent, orGeminiHTTPDo := buildTestFormatOpenRouterAgent(
@@ -118,7 +118,7 @@ func TestAgentTestFormat(t *testing.T) {
 
 			assert.Equal(t, "John Snow", p.Name)
 			assert.Equal(t, 100, p.Age)
-			assert.Equal(t, "Winterfel", p.City)
+			assert.Equal(t, "Winterfell", p.City)
 		})
 	}
 

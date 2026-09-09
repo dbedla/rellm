@@ -22,7 +22,7 @@
             "content": [
                 {
                     "type": "output_text",
-                    "text": "{\"name\":\"John Snow\",\"age\":100,\"city\":\"Winterfel\"}",
+                    "text": "{\"name\":\"John Snow\",\"age\":100,\"city\":\"Winterfell\"}",
                     "annotations": [],
                     "logprobs": []
                 }
