@@ -174,6 +174,7 @@ package main
 
 import (
     "context"
+    "encoding/json"
     "fmt"
     "os"
 
@@ -233,7 +234,13 @@ func main() {
     if err != nil {
         panic(err)
     }
-    fmt.Println(response)
+
+    var person Person
+    err = json.Unmarshal([]byte(response), &person)
+    if err != nil {
+        panic(err)
+    }
+    fmt.Printf("after unmarshal to struct: %+v\n", person)
 }
 ```
 
