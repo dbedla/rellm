@@ -56,7 +56,7 @@ func (a *Agent) process(ctx context.Context, req *ResponsesAPIReq) (Report, erro
 		}
 
 		stepReport, conversation, stepErr := a.processStep(ctx, response)
-		finalReport.Image = stepReport.Image
+		finalReport.Image = append(finalReport.Image, stepReport.Image...)
 		finalReport.Messages = stepReport.Messages
 
 		if len(conversation) > 0 {
@@ -69,7 +69,7 @@ func (a *Agent) process(ctx context.Context, req *ResponsesAPIReq) (Report, erro
 			return finalReport, stepErr
 		}
 
-		if finalReport.Messages != nil || finalReport.Image != nil {
+		if finalReport.Messages != nil || len(finalReport.Image) > 0 {
 			return finalReport, nil
 		}
 	}
@@ -88,10 +88,10 @@ func (a *Agent) processStep(ctx context.Context, response *ResponsesAPIResp) (Re
 		return stepReport, nil, errors.Join(ErrConversationElementConversion, err)
 	}
 
-	message, conversation, image, dispatchErr := a.dispatchConversation(ctx, conversation)
-	stepReport.Image = image
+	message, conversation, images, dispatchErr := a.dispatchConversation(ctx, conversation)
+	stepReport.Image = images
 	if len(conversation) == 0 {
-		if image != nil && dispatchErr == nil {
+		if len(images) > 0 && dispatchErr == nil {
 			return stepReport, nil, nil
 		}
 		return stepReport, nil, errors.Join(ErrNoNewConversationElementAfterDispatch, dispatchErr)
@@ -120,11 +120,11 @@ func (a *Agent) appendNewConversationElements(
 	return a.conversationStorage.Append(ctx, conversation)
 }
 
-func (a *Agent) dispatchConversation(ctx context.Context, conversation []ConversationElement) (string, []ConversationElement, *ImageReport, error) {
+func (a *Agent) dispatchConversation(ctx context.Context, conversation []ConversationElement) (string, []ConversationElement, []ImageReport, error) {
 
 	var message strings.Builder
 	processed := make([]ConversationElement, 0, len(conversation)+4)
-	var image *ImageReport
+	var images []ImageReport
 
 	var outputErr error
 
@@ -166,13 +166,15 @@ func (a *Agent) dispatchConversation(ctx context.Context, conversation []Convers
 			// Keep the provider response intact for the caller. The policy may
 			// mutate or replace the image used by the conversation loop.
 			original := *el
-			image = &ImageReport{Original: &original}
+			images = append(images, ImageReport{Original: &original})
 			imageResp, err := a.executeImageGenerationCallHandler(ctx, el)
 			if err != nil {
 				outputErr = errors.Join(outputErr, err)
 				continue
 			}
-			image.PolicyOutput = imageResp
+			// Copy the policy output so the report snapshot does not alias the
+			// elements appended to storage.
+			images[len(images)-1].PolicyOutput = cloneConversationElements(imageResp)
 			processed = append(processed, imageResp...)
 
 		default:
@@ -180,7 +182,69 @@ func (a *Agent) dispatchConversation(ctx context.Context, conversation []Convers
 		}
 	}
 
-	return message.String(), processed, image, outputErr
+	return message.String(), processed, images, outputErr
+}
+
+// cloneConversationElements returns independent copies of the elements so
+// report snapshots do not alias stored conversation history. Element types
+// rellm does not know are returned as-is.
+func cloneConversationElements(elements []ConversationElement) []ConversationElement {
+	clones := make([]ConversationElement, 0, len(elements))
+	for _, el := range elements {
+		clones = append(clones, cloneConversationElement(el))
+	}
+	return clones
+}
+
+func cloneConversationElement(el ConversationElement) ConversationElement {
+	switch e := el.(type) {
+	case *ImageGeneration:
+		c := *e
+		return &c
+	case *FunctionCallResp:
+		c := *e
+		return &c
+	case *FunctionCall:
+		c := *e
+		c.Args = append(json.RawMessage(nil), e.Args...)
+		return &c
+	case *Reasoning:
+		c := *e
+		c.Summary = append([]ReasoningSummaryPart(nil), e.Summary...)
+		return &c
+	case *UserMessage:
+		c := *e
+		c.Content = cloneMessageParts(e.Content)
+		return &c
+	case *AssistantMessage:
+		c := *e
+		c.Content = cloneMessageParts(e.Content)
+		return &c
+	case *SystemMessage:
+		c := *e
+		c.Content = cloneMessageParts(e.Content)
+		return &c
+	case *UnknownElement:
+		c := *e
+		c.Raw = append(json.RawMessage(nil), e.Raw...)
+		return &c
+	default:
+		return el
+	}
+}
+
+func cloneMessageParts(parts []MessagePart) []MessagePart {
+	clones := make([]MessagePart, len(parts))
+	for i, p := range parts {
+		clones[i] = p
+		if p.ImageURL != nil {
+			u := *p.ImageURL
+			clones[i].ImageURL = &u
+		}
+		clones[i].Annotations = append([]interface{}(nil), p.Annotations...)
+		clones[i].Logprobs = append([]interface{}(nil), p.Logprobs...)
+	}
+	return clones
 }
 
 func (a *Agent) executeImageGenerationCallHandler(ctx context.Context, image *ImageGeneration) ([]ConversationElement, error) {

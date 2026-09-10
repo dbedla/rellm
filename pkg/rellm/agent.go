@@ -119,10 +119,13 @@ type HandleUnknownConversationElement func(ctx context.Context, el *UnknownEleme
 
 type Report struct {
 	Messages   *string
-	Image      *ImageReport
+	Image      []ImageReport
 	StepsStats []StepStat
 }
 
+// ImageReport describes one generated image: Original is the provider payload
+// as received, and PolicyOutput is an independent copy of the elements the
+// image policy substituted into the conversation.
 type ImageReport struct {
 	Original     *ImageGeneration
 	PolicyOutput []ConversationElement
