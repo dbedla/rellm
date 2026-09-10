@@ -46,8 +46,8 @@ func TestAgentAsk(t *testing.T) {
 	ctx := context.Background()
 	finalReport, err := agent.Ask(ctx, "Hi")
 	assert.NoError(t, err, "failed to ask")
-	assert.NotNil(t, finalReport.Messages)
-	assert.Equal(t, "Hello! How can I help you today? \n\nIf you have any questions about the weather, meteorology, climate patterns, or even how certain atmospheric phenomena work, feel free to ask!", *finalReport.Messages, "response message should match")
+	assert.NotEmpty(t, finalReport.Messages)
+	assert.Equal(t, "Hello! How can I help you today? \n\nIf you have any questions about the weather, meteorology, climate patterns, or even how certain atmospheric phenomena work, feel free to ask!", finalReport.Messages, "response message should match")
 }
 
 //go:embed testdata/base_api_req_hi_no_sys_msg.json
@@ -77,8 +77,8 @@ func TestAgentAskNoSysMsg(t *testing.T) {
 	ctx := context.Background()
 	finalReport, err := agent.Ask(ctx, "Hi")
 	assert.NoError(t, err, "failed to ask")
-	assert.NotNil(t, finalReport.Messages)
-	assert.Equal(t, "Hello! How can I help you today? \n\nIf you have any questions about the weather, meteorology, climate patterns, or even how certain atmospheric phenomena work, feel free to ask!", *finalReport.Messages, "response message should match")
+	assert.NotEmpty(t, finalReport.Messages)
+	assert.Equal(t, "Hello! How can I help you today? \n\nIf you have any questions about the weather, meteorology, climate patterns, or even how certain atmospheric phenomena work, feel free to ask!", finalReport.Messages, "response message should match")
 
 	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
@@ -95,7 +95,7 @@ func TestAgentAskContextAlreadyCanceled(t *testing.T) {
 	finalReport, err := agent.Ask(ctx, "Hi")
 	assert.Error(t, err)
 	assert.ErrorIs(t, context.Canceled, err)
-	assert.Nil(t, finalReport.Messages)
+	assert.Empty(t, finalReport.Messages)
 }
 
 func TestAgentAsk_HTTP200EmptyBody(t *testing.T) {
@@ -121,7 +121,7 @@ func TestAgentAsk_HTTP200EmptyBody(t *testing.T) {
 	ctx := context.Background()
 	finalReport, err := agent.Ask(ctx, "Hi")
 	assert.Error(t, err)
-	assert.Nil(t, finalReport.Messages)
+	assert.Empty(t, finalReport.Messages)
 }
 
 func TestAgentAsk_EmptyString(t *testing.T) {
@@ -222,7 +222,7 @@ func TestAgentAskStatusInternalServerError(t *testing.T) {
 	ctx := context.Background()
 	finalReport, err := agent.Ask(ctx, "Hi")
 	assert.Error(t, err)
-	assert.Nil(t, finalReport.Messages)
+	assert.Empty(t, finalReport.Messages)
 }
 
 func TestAgentAsk_RetryAfterProviderFailedMessageStaysInConversation(t *testing.T) {

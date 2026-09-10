@@ -69,7 +69,7 @@ func (a *Agent) process(ctx context.Context, req *ResponsesAPIReq) (Report, erro
 			return finalReport, stepErr
 		}
 
-		if finalReport.Messages != nil || len(finalReport.Image) > 0 {
+		if finalReport.Messages != "" || len(finalReport.Image) > 0 {
 			return finalReport, nil
 		}
 	}
@@ -100,7 +100,7 @@ func (a *Agent) processStep(ctx context.Context, response *ResponsesAPIResp) (Re
 		return stepReport, conversation, dispatchErr
 	}
 	if message != "" {
-		stepReport.Messages = &message
+		stepReport.Messages = message
 	}
 
 	return stepReport, conversation, nil

@@ -48,7 +48,7 @@ func TestAgentPromptToGetImage(t *testing.T) {
 	ctx := context.Background()
 	finalReport, err := agent.Ask(ctx, q)
 	assert.NoError(t, err)
-	assert.Nil(t, finalReport.Messages)
+	assert.Empty(t, finalReport.Messages)
 	if assert.Len(t, finalReport.Image, 1) {
 		assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA", finalReport.Image[0].Original.Result)
 		assert.Equal(t, "completed", finalReport.Image[0].Original.Status)
@@ -101,7 +101,7 @@ func TestAgentPromptToGetImage_handlerErr(t *testing.T) {
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, rellm.ErrCustomImageHandlerFailed)
 
-	assert.Nil(t, finalReport.Messages)
+	assert.Empty(t, finalReport.Messages)
 	assert.Len(t, finalReport.Image, 1)
 	assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA", finalReport.Image[0].Original.Result)
 	assert.Empty(t, finalReport.Image[0].PolicyOutput)
@@ -146,7 +146,7 @@ func TestAgentPromptToGetImagePolicies(t *testing.T) {
 
 			finalReport, err := agent.Ask(context.Background(), "generate an image")
 			assert.NoError(t, err)
-			assert.Nil(t, finalReport.Messages)
+			assert.Empty(t, finalReport.Messages)
 			if assert.Len(t, finalReport.Image, 1) {
 				assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA", finalReport.Image[0].Original.Result)
 				assert.Len(t, finalReport.Image[0].PolicyOutput, tt.policyOutputSize)
@@ -181,7 +181,7 @@ func TestAgentPromptToGetMultipleImages(t *testing.T) {
 
 	finalReport, err := agent.Ask(context.Background(), "generate images")
 	assert.NoError(t, err)
-	assert.Nil(t, finalReport.Messages)
+	assert.Empty(t, finalReport.Messages)
 
 	wantResults := []string{"data:image/jpeg;base64,AAA", "data:image/jpeg;base64,BBB"}
 	if assert.Len(t, finalReport.Image, 2) {

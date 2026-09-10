@@ -53,7 +53,7 @@ func TestLMSAgentHiUnknownConversationElInRespNoHandlerGetErr(t *testing.T) {
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, rellm.ErrNoUnknownConversationElementHandler)
 
-	assert.Nil(t, finalReport.Messages)
+	assert.Empty(t, finalReport.Messages)
 	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, conversation, 4)
@@ -92,7 +92,7 @@ func TestLMSAgentHiUnknownConversationElHandlerNotProvidedGetErr(t *testing.T) {
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, rellm.ErrNoUnknownConversationElementHandler)
 
-	assert.Nil(t, finalReport.Messages)
+	assert.Empty(t, finalReport.Messages)
 	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, conversation, 4)
@@ -130,8 +130,8 @@ func TestLMSAgentHiUnknownConversationElInRespDrop(t *testing.T) {
 	finalReport, err := agent.Execute(ctx, promptFirst)
 	assert.NoError(t, err)
 
-	assert.NotNil(t, finalReport.Messages)
-	assert.Equal(t, "Hello! How can I help you today?", *finalReport.Messages)
+	assert.NotEmpty(t, finalReport.Messages)
+	assert.Equal(t, "Hello! How can I help you today?", finalReport.Messages)
 	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, conversation, 4)
@@ -169,8 +169,8 @@ func TestLMSAgentHiUnknownConversationElInRespKeepInTheLoop(t *testing.T) {
 	finalReport, err := agent.Execute(ctx, promptFirst)
 	assert.NoError(t, err)
 
-	assert.NotNil(t, finalReport.Messages)
-	assert.Equal(t, "Hello! How can I help you today?", *finalReport.Messages)
+	assert.NotEmpty(t, finalReport.Messages)
+	assert.Equal(t, "Hello! How can I help you today?", finalReport.Messages)
 	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, conversation, 5)
@@ -208,8 +208,8 @@ func TestLMSAgentHiUnknownConversationElHandlerAddAdditionalData(t *testing.T) {
 	finalReport, err := agent.Execute(ctx, promptFirst)
 	assert.NoError(t, err)
 
-	assert.NotNil(t, finalReport.Messages)
-	assert.Equal(t, "Hello! How can I help you today?", *finalReport.Messages)
+	assert.NotEmpty(t, finalReport.Messages)
+	assert.Equal(t, "Hello! How can I help you today?", finalReport.Messages)
 	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, conversation, 6)
@@ -251,7 +251,7 @@ func TestLMSAgentHiUnknownConversationElInRespDropNoNewMessages(t *testing.T) {
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, rellm.ErrNoNewConversationElementAfterDispatch)
 
-	assert.Nil(t, finalReport.Messages)
+	assert.Empty(t, finalReport.Messages)
 	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, conversation, 2)
@@ -289,8 +289,8 @@ func TestLMSAgentHiUnknownConversationElInRespReplace(t *testing.T) {
 	finalReport, err := agent.Execute(ctx, promptFirst)
 	assert.NoError(t, err)
 
-	assert.NotNil(t, finalReport.Messages)
-	assert.Equal(t, "Hello! How can I help you today?", *finalReport.Messages)
+	assert.NotEmpty(t, finalReport.Messages)
+	assert.Equal(t, "Hello! How can I help you today?", finalReport.Messages)
 	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, conversation, 5)

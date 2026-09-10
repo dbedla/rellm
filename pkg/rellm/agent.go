@@ -118,7 +118,7 @@ type InspectEachResponse func(resp *ResponsesAPIResp)
 type HandleUnknownConversationElement func(ctx context.Context, el *UnknownElement) ([]ConversationElement, error)
 
 type Report struct {
-	Messages   *string
+	Messages   string
 	Image      []ImageReport
 	StepsStats []StepStat
 }
