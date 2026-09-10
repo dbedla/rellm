@@ -207,8 +207,6 @@ func toBaseResponsesAPIReq(params promptParams, model Model, conversation []json
 		TopP:             params.TopP,
 		PresencePenalty:  params.PresencePenalty,
 		FrequencyPenalty: params.FrequencyPenalty,
-		Seed:             params.Seed,
-		Logprobs:         params.Logprobs,
 		TopLogprobs:      params.TopLogprobs,
 	}
 }

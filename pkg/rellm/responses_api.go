@@ -23,17 +23,8 @@ type ResponsesAPIReq struct {
 	PresencePenalty  *float64 `json:"presence_penalty,omitempty"`
 	FrequencyPenalty *float64 `json:"frequency_penalty,omitempty"`
 
-	// Stop controls
-	// NOTE: Some examples show "stop"; others may reference "stop_sequences".
-	// Use Stop for modern Responses API.
-	Stop []string `json:"stop,omitempty"`
-
-	// Log probabilities (if supported by the selected model)
-	Logprobs    bool `json:"logprobs,omitempty"`
-	TopLogprobs int  `json:"top_logprobs,omitempty"`
-
-	// Determinism
-	Seed *int64 `json:"seed,omitempty"`
+	// Number of most likely tokens to return per output position
+	TopLogprobs int `json:"top_logprobs,omitempty"`
 
 	// Tools and function calling
 	Tools []ToolDefinition `json:"tools,omitempty"`
@@ -45,22 +36,14 @@ type ResponsesAPIReq struct {
 	// Reasoning models configuration (e.g., o3-family)
 	Reasoning *ReasoningConfig `json:"reasoning,omitempty"`
 
-	// Structured output and JSON schema
-	ResponseFormat *ResponseFormat `json:"response_format,omitempty"`
-
 	// Structured output via the Responses API text.format field
 	Text *TextConfig `json:"text,omitempty"`
 
 	// Streaming (SSE) toggle
 	Stream bool `json:"stream,omitempty"`
 
-	// Modalities and audio output (text-to-speech, etc.)
-	// Example: Modalities: ["text"] or ["text","audio"]
-	Modalities []string           `json:"modalities,omitempty"`
-	Audio      *AudioOutputConfig `json:"audio,omitempty"`
-
-	// File attachments for tools like file_search / code_interpreter
-	Attachments []Attachment `json:"attachments,omitempty"`
+	// Output modalities: "text" and/or "image"
+	Modalities []string `json:"modalities,omitempty"`
 
 	// Arbitrary metadata you want to associate with the request
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
@@ -125,23 +108,6 @@ type ReasoningConfig struct {
 	Effort ReasoningEffort `json:"effort,omitempty"`
 }
 
-// ResponseFormat lets you request structured output.
-type ResponseFormat struct {
-	// "text" | "json_object" | "json_schema"
-	Type       string                `json:"type"`
-	JSONSchema *JSONSchemaDefinition `json:"json_schema,omitempty"`
-}
-
-// JSONSchemaDefinition is used when Type == "json_schema".
-type JSONSchemaDefinition struct {
-	// A friendly name for the schema
-	Name string `json:"name"`
-	// Enforce the exact schema if supported by the model
-	Strict bool `json:"strict,omitempty"`
-	// The actual JSON Schema (use a Go struct, map, or raw JSON)
-	Schema interface{} `json:"schema"`
-}
-
 // TextConfig configures the text output of the Responses API.
 type TextConfig struct {
 	Format *TextFormat `json:"format,omitempty"`
@@ -154,28 +120,6 @@ type TextFormat struct {
 	Name   string      `json:"name,omitempty"`
 	Schema interface{} `json:"schema,omitempty"`
 	Strict bool        `json:"strict,omitempty"`
-}
-
-// AudioOutputConfig controls audio generation when you include "audio" in Modalities.
-type AudioOutputConfig struct {
-	// e.g., "alloy"
-	Voice string `json:"voice,omitempty"`
-	// e.g., "wav", "mp3", "pcm16"
-	Format string `json:"format,omitempty"`
-	// Optional sample rate (e.g., 24000)
-	SampleRate int `json:"sample_rate,omitempty"`
-}
-
-// Attachment references files available to tools.
-type Attachment struct {
-	FileID string           `json:"file_id"`
-	Tools  []AttachmentTool `json:"tools,omitempty"`
-}
-
-// AttachmentTool declares which tool(s) can access the attached file.
-type AttachmentTool struct {
-	// e.g., "file_search", "code_interpreter"
-	Type string `json:"type"`
 }
 
 type ResponsesAPIUsage struct {

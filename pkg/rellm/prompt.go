@@ -22,8 +22,6 @@ type promptParams struct {
 	TopP             *float64
 	PresencePenalty  *float64
 	FrequencyPenalty *float64
-	Seed             *int64
-	Logprobs         bool
 	TopLogprobs      int
 }
 
@@ -116,22 +114,8 @@ func (b *PromptBuilder) WithFrequencyPenalty(f float64) *PromptBuilder {
 	return b
 }
 
-// WithSeed sets the random seed for reproducible output. Optional.
-// See https://openrouter.ai/docs/api_reference/parameters#seed
-func (b *PromptBuilder) WithSeed(seed int64) *PromptBuilder {
-	b.params.Seed = &seed
-	return b
-}
-
-// WithLogprobs enables returning log probabilities for output tokens. Optional.
-// See https://openrouter.ai/docs/api_reference/parameters#logprobs
-func (b *PromptBuilder) WithLogprobs(enabled bool) *PromptBuilder {
-	b.params.Logprobs = enabled
-	return b
-}
-
 // WithTopLogprobs sets how many of the most likely tokens are returned per
-// output position when WithLogprobs is enabled. Optional.
+// output position when logprobs are enabled. Optional.
 // See https://openrouter.ai/docs/api_reference/parameters#top-logprobs
 func (b *PromptBuilder) WithTopLogprobs(n int) *PromptBuilder {
 	b.params.TopLogprobs = n

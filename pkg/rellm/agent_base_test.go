@@ -169,9 +169,6 @@ func TestPromptBuilder_AllFields(t *testing.T) {
 			assert.InDelta(t, 0.9, *req.TopP, 0.001)
 			assert.InDelta(t, 1.0, *req.PresencePenalty, 0.001)
 			assert.InDelta(t, 0.5, *req.FrequencyPenalty, 0.001)
-			assert.NotNil(t, req.Seed)
-			assert.Equal(t, int64(42), *req.Seed)
-			assert.True(t, req.Logprobs)
 			assert.Equal(t, 3, req.TopLogprobs)
 		}).
 		Return(&http.Response{
@@ -193,8 +190,6 @@ func TestPromptBuilder_AllFields(t *testing.T) {
 		WithTopP(0.9).
 		WithPresencePenalty(1.0).
 		WithFrequencyPenalty(0.5).
-		WithSeed(42).
-		WithLogprobs(true).
 		WithTopLogprobs(3).
 		Build()
 	assert.NoError(t, err)
