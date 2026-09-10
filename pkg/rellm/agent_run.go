@@ -35,65 +35,89 @@ func (a *Agent) run(ctx context.Context, msg string, params promptParams) (Repor
 }
 
 func (a *Agent) process(ctx context.Context, req *ResponsesAPIReq) (Report, error) {
-
 	finalReport := Report{}
 	for i := uint64(0); i < a.maxAgentSteps; i++ {
-
-		err := ctx.Err()
-		if err != nil {
+		if err := ctx.Err(); err != nil {
 			return finalReport, err
 		}
 
-		conversationResponse, err := a.post(ctx, req)
+		response, err := a.post(ctx, req)
 		if err != nil {
 			return finalReport, err
 		}
-		finalReport.StepsStats = append(finalReport.StepsStats, StepStat{conversationResponse.Usage})
+		stepStat := StepStat{ApiUsage: response.Usage}
+		finalReport.StepsStats = append(finalReport.StepsStats, stepStat)
 
-		if conversationResponse.Error != nil {
-			return finalReport, errors.Join(ErrInConversationResponse, fmt.Errorf("err msg: %v", conversationResponse.Error.Message))
+		if response.Error != nil {
+			return finalReport, errors.Join(
+				ErrInConversationResponse,
+				fmt.Errorf("err msg: %v", response.Error.Message),
+			)
 		}
 
-		conversation, err := a.provider.ToConversationElements(conversationResponse.Output)
-		if err != nil {
-			return finalReport, errors.Join(ErrConversationElementConversion, err)
-		}
-		msg, conversation, image, err := a.dispatchConversation(ctx, conversation)
-		finalReport.Image = image
-		if len(conversation) == 0 {
-			if image != nil && err == nil {
-				return finalReport, nil
+		stepReport, conversation, stepErr := a.processStep(ctx, response)
+		finalReport.Image = stepReport.Image
+		finalReport.Messages = stepReport.Messages
+
+		if len(conversation) > 0 {
+			err := a.appendNewConversationElements(ctx, conversation, req)
+			if err != nil {
+				return finalReport, errors.Join(err, stepErr)
 			}
-			return finalReport, errors.Join(ErrNoNewConversationElementAfterDispatch, err)
+		}
+		if stepErr != nil {
+			return finalReport, stepErr
 		}
 
-		raw, errProviderRep := a.provider.ToProviderRepresentation(conversation)
-		if errProviderRep != nil {
-			return finalReport, errors.Join(ErrConversationElementConversion, errProviderRep)
-		}
-		req.Input = append(req.Input, raw...)
-
-		conversationErr := a.conversationStorage.Append(ctx, conversation)
-		if conversationErr != nil {
-			return finalReport, conversationErr
-		}
-
-		if err != nil {
-			return finalReport, err
-		}
-
-		if image != nil || msg != "" {
-			if msg != "" {
-				finalReport.Messages = &msg
-			}
+		if finalReport.Messages != nil || finalReport.Image != nil {
 			return finalReport, nil
 		}
-
 	}
 
-	return finalReport,
-		errors.Join(ErrMaxAgentStepsReached,
-			fmt.Errorf("exceeded %d iterations", a.maxAgentSteps))
+	return finalReport, errors.Join(
+		ErrMaxAgentStepsReached,
+		fmt.Errorf("exceeded %d iterations", a.maxAgentSteps),
+	)
+}
+
+func (a *Agent) processStep(ctx context.Context, response *ResponsesAPIResp) (Report, []ConversationElement, error) {
+	stepReport := Report{}
+
+	conversation, err := a.provider.ToConversationElements(response.Output)
+	if err != nil {
+		return stepReport, nil, errors.Join(ErrConversationElementConversion, err)
+	}
+
+	message, conversation, image, dispatchErr := a.dispatchConversation(ctx, conversation)
+	stepReport.Image = image
+	if len(conversation) == 0 {
+		if image != nil && dispatchErr == nil {
+			return stepReport, nil, nil
+		}
+		return stepReport, nil, errors.Join(ErrNoNewConversationElementAfterDispatch, dispatchErr)
+	}
+	if dispatchErr != nil {
+		return stepReport, conversation, dispatchErr
+	}
+	if message != "" {
+		stepReport.Messages = &message
+	}
+
+	return stepReport, conversation, nil
+}
+
+func (a *Agent) appendNewConversationElements(
+	ctx context.Context,
+	conversation []ConversationElement,
+	req *ResponsesAPIReq,
+) error {
+	raw, err := a.provider.ToProviderRepresentation(conversation)
+	if err != nil {
+		return errors.Join(ErrConversationElementConversion, err)
+	}
+	req.Input = append(req.Input, raw...)
+
+	return a.conversationStorage.Append(ctx, conversation)
 }
 
 func (a *Agent) dispatchConversation(ctx context.Context, conversation []ConversationElement) (string, []ConversationElement, *ImageGeneration, error) {
