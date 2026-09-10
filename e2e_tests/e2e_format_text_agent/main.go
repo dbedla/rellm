@@ -63,10 +63,10 @@ func scenario(agent *rellm.Agent) {
 	}
 
 	color.Blue("raw string output for agent: %s", agent.Name())
-	color.Blue(llmResp)
+	color.Blue(*llmResp.Messages)
 
 	var person Person
-	err = json.Unmarshal([]byte(llmResp), &person)
+	err = json.Unmarshal([]byte(*llmResp.Messages), &person)
 	if err != nil {
 		color.Red("unable to parse json: %s", err.Error())
 		panic(err)

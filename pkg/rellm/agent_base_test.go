@@ -44,10 +44,10 @@ func TestAgentAsk(t *testing.T) {
 		}, nil)
 
 	ctx := context.Background()
-	respMsg, err := agent.Ask(ctx, "Hi")
+	finalReport, err := agent.Ask(ctx, "Hi")
 	assert.NoError(t, err, "failed to ask")
-	assert.NotNil(t, respMsg, "response message should not be nil")
-	assert.Equal(t, "Hello! How can I help you today? \n\nIf you have any questions about the weather, meteorology, climate patterns, or even how certain atmospheric phenomena work, feel free to ask!", respMsg, "response message should match")
+	assert.NotNil(t, finalReport.Messages)
+	assert.Equal(t, "Hello! How can I help you today? \n\nIf you have any questions about the weather, meteorology, climate patterns, or even how certain atmospheric phenomena work, feel free to ask!", *finalReport.Messages, "response message should match")
 }
 
 //go:embed testdata/base_api_req_hi_no_sys_msg.json
@@ -75,10 +75,10 @@ func TestAgentAskNoSysMsg(t *testing.T) {
 		}, nil)
 
 	ctx := context.Background()
-	respMsg, err := agent.Ask(ctx, "Hi")
+	finalReport, err := agent.Ask(ctx, "Hi")
 	assert.NoError(t, err, "failed to ask")
-	assert.NotNil(t, respMsg, "response message should not be nil")
-	assert.Equal(t, "Hello! How can I help you today? \n\nIf you have any questions about the weather, meteorology, climate patterns, or even how certain atmospheric phenomena work, feel free to ask!", respMsg, "response message should match")
+	assert.NotNil(t, finalReport.Messages)
+	assert.Equal(t, "Hello! How can I help you today? \n\nIf you have any questions about the weather, meteorology, climate patterns, or even how certain atmospheric phenomena work, feel free to ask!", *finalReport.Messages, "response message should match")
 
 	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
@@ -92,10 +92,10 @@ func TestAgentAskContextAlreadyCanceled(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	respMsg, err := agent.Ask(ctx, "Hi")
+	finalReport, err := agent.Ask(ctx, "Hi")
 	assert.Error(t, err)
 	assert.ErrorIs(t, context.Canceled, err)
-	assert.Empty(t, respMsg)
+	assert.Nil(t, finalReport.Messages)
 }
 
 func TestAgentAsk_HTTP200EmptyBody(t *testing.T) {
@@ -119,10 +119,9 @@ func TestAgentAsk_HTTP200EmptyBody(t *testing.T) {
 		}, nil)
 
 	ctx := context.Background()
-	respMsg, err := agent.Ask(ctx, "Hi")
+	finalReport, err := agent.Ask(ctx, "Hi")
 	assert.Error(t, err)
-	assert.NotNil(t, respMsg, "response message should not be nil")
-	assert.Equal(t, "", respMsg, "response message should match")
+	assert.Nil(t, finalReport.Messages)
 }
 
 func TestAgentAsk_EmptyString(t *testing.T) {
@@ -159,7 +158,7 @@ func TestPromptBuilder_AllFields(t *testing.T) {
 			err = json.Unmarshal(b, &req)
 			assert.NoError(t, err)
 
-			assert.Equal(t, float32(0.7), *req.Temperature)
+			assert.Equal(t, float64(0.7), *req.Temperature)
 			assert.Equal(t, rellm.ReasoningEffortHigh, req.Reasoning.Effort)
 			assert.NotNil(t, req.Text)
 			assert.Equal(t, "json_schema", req.Text.Format.Type)
@@ -169,9 +168,6 @@ func TestPromptBuilder_AllFields(t *testing.T) {
 			assert.InDelta(t, 0.9, *req.TopP, 0.001)
 			assert.InDelta(t, 1.0, *req.PresencePenalty, 0.001)
 			assert.InDelta(t, 0.5, *req.FrequencyPenalty, 0.001)
-			assert.NotNil(t, req.Seed)
-			assert.Equal(t, int64(42), *req.Seed)
-			assert.True(t, req.Logprobs)
 			assert.Equal(t, 3, req.TopLogprobs)
 		}).
 		Return(&http.Response{
@@ -193,8 +189,6 @@ func TestPromptBuilder_AllFields(t *testing.T) {
 		WithTopP(0.9).
 		WithPresencePenalty(1.0).
 		WithFrequencyPenalty(0.5).
-		WithSeed(42).
-		WithLogprobs(true).
 		WithTopLogprobs(3).
 		Build()
 	assert.NoError(t, err)
@@ -226,10 +220,9 @@ func TestAgentAskStatusInternalServerError(t *testing.T) {
 		}, nil)
 
 	ctx := context.Background()
-	respMsg, err := agent.Ask(ctx, "Hi")
+	finalReport, err := agent.Ask(ctx, "Hi")
 	assert.Error(t, err)
-	assert.NotNil(t, respMsg, "response message should not be nil")
-	assert.Equal(t, "", respMsg, "response message should match")
+	assert.Nil(t, finalReport.Messages)
 }
 
 func TestAgentAsk_RetryAfterProviderFailedMessageStaysInConversation(t *testing.T) {

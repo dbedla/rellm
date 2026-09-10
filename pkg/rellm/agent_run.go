@@ -8,15 +8,15 @@ import (
 	"strings"
 )
 
-func (a *Agent) run(ctx context.Context, msg string, params promptParams) (string, error) {
+func (a *Agent) run(ctx context.Context, msg string, params promptParams) (Report, error) {
 	conversation, err := a.appendConversation(ctx, msg)
 	if err != nil {
-		return "", err
+		return Report{}, err
 	}
 
 	wire, err := a.provider.ToProviderRepresentation(conversation)
 	if err != nil {
-		return "", errors.Join(ErrConversationElementConversion, err)
+		return Report{}, errors.Join(ErrConversationElementConversion, err)
 	}
 
 	req := toBaseResponsesAPIReq(params, a.provider.Model(), wire)
@@ -25,63 +25,67 @@ func (a *Agent) run(ctx context.Context, msg string, params promptParams) (strin
 		req.Tools = a.toolset.Definitions()
 	}
 
-	msgRespFromLLM, err := a.process(ctx, req)
+	finalReport, err := a.process(ctx, req)
 
 	if err != nil {
-		return "", err
+		return finalReport, err
 	}
 
-	return msgRespFromLLM, nil
+	return finalReport, nil
 }
 
-func (a *Agent) process(ctx context.Context, req *ResponsesAPIReq) (string, error) {
+func (a *Agent) process(ctx context.Context, req *ResponsesAPIReq) (Report, error) {
+
+	finalReport := Report{}
 	for i := uint64(0); i < a.maxAgentSteps; i++ {
 
 		err := ctx.Err()
 		if err != nil {
-			return "", err
+			return finalReport, err
 		}
 
 		conversationResponse, err := a.post(ctx, req)
 		if err != nil {
-			return "", err
+			return finalReport, err
 		}
+		finalReport.StepsStats = append(finalReport.StepsStats, StepStat{conversationResponse.Usage})
 
 		if conversationResponse.Error != nil {
-			return "", errors.Join(ErrInConversationResponse, fmt.Errorf("err msg: %v", conversationResponse.Error.Message))
+			return finalReport, errors.Join(ErrInConversationResponse, fmt.Errorf("err msg: %v", conversationResponse.Error.Message))
 		}
 
 		conversation, err := a.provider.ToConversationElements(conversationResponse.Output)
 		if err != nil {
-			return "", errors.Join(ErrConversationElementConversion, err)
+			return finalReport, errors.Join(ErrConversationElementConversion, err)
 		}
 		msg, conversation, imageHandled, err := a.dispatchConversation(ctx, conversation)
 		if len(conversation) == 0 {
-			return "", errors.Join(ErrNoNewConversationElementAfterDispatch, err)
+			return finalReport, errors.Join(ErrNoNewConversationElementAfterDispatch, err)
 		}
 
 		raw, errProviderRep := a.provider.ToProviderRepresentation(conversation)
 		if errProviderRep != nil {
-			return "", errors.Join(ErrConversationElementConversion, errProviderRep)
+			return finalReport, errors.Join(ErrConversationElementConversion, errProviderRep)
 		}
 		req.Input = append(req.Input, raw...)
 
 		conversationErr := a.conversationStorage.Append(ctx, conversation)
 		if conversationErr != nil {
-			return "", conversationErr
+			return finalReport, conversationErr
 		}
 
 		if err != nil {
-			return "", err
+			return finalReport, err
 		}
 
 		if imageHandled || msg != "" {
-			return msg, nil
+			finalReport.Messages = &msg
+			return finalReport, nil
 		}
 
 	}
 
-	return "",
+	return finalReport,
 		errors.Join(ErrMaxAgentStepsReached,
 			fmt.Errorf("exceeded %d iterations", a.maxAgentSteps))
 }
@@ -207,8 +211,6 @@ func toBaseResponsesAPIReq(params promptParams, model Model, conversation []json
 		TopP:             params.TopP,
 		PresencePenalty:  params.PresencePenalty,
 		FrequencyPenalty: params.FrequencyPenalty,
-		Seed:             params.Seed,
-		Logprobs:         params.Logprobs,
 		TopLogprobs:      params.TopLogprobs,
 	}
 }
@@ -242,4 +244,14 @@ func (a *Agent) appendConversation(ctx context.Context, msg string) ([]Conversat
 	}
 
 	return conversation, nil
+}
+
+func funcResultToFunctionCallResp(callID string, funcResult any) FunctionCallResp {
+	b, err := json.Marshal(funcResult)
+	if err != nil {
+		errorMsg := "unable to execute function; " + err.Error()
+		return FunctionCallResp{Type: "function_call_output", CallID: callID, Output: errorMsg}
+	}
+
+	return FunctionCallResp{Type: "function_call_output", CallID: callID, Output: string(b)}
 }

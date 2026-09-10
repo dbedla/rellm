@@ -144,11 +144,11 @@ func main() {
         panic(err)
     }
 
-    response, err := agent.Ask(context.Background(), "Hello!")
+    finalReport, err := agent.Ask(context.Background(), "Hello!")
     if err != nil {
         panic(err)
     }
-    fmt.Println(response)
+    fmt.Println(*finalReport.Messages)
 }
 ```
 
@@ -238,13 +238,13 @@ func main() {
         panic(err)
     }
 
-    response, err := agent.Execute(context.Background(), prompt)
+    finalReport, err := agent.Execute(context.Background(), prompt)
     if err != nil {
         panic(err)
     }
 
     var person Person
-    err = json.Unmarshal([]byte(response), &person)
+    err = json.Unmarshal([]byte(*finalReport.Messages), &person)
     if err != nil {
         panic(err)
     }

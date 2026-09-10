@@ -48,7 +48,7 @@ func main() {
 			color.Red("unable to ask question: %s", err.Error())
 			continue
 		}
-		color.Blue(llmResp)
+		color.Blue(*llmResp.Messages)
 		//if rawRsp != nil {
 		//	color.Yellow("This conversation total cost in tokens: %d\n", rawRsp.Usage.TotalTokens)
 		//	color.Yellow("input tokens: %d\n", rawRsp.Usage.InputTokens)

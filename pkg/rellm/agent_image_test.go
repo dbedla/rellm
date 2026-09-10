@@ -46,10 +46,8 @@ func TestAgentPromptToGetImage(t *testing.T) {
 	q := "A clean, minimalist flat vector illustration of a tic-tac-toe board. White background, bold black grid lines. Three bright blue \"O\" symbols are aligned horizontally in the middle row, indicating a win. Minimalist aesthetic, high contrast, simple and modern graphic design."
 
 	ctx := context.Background()
-	respMsg, err := agent.Ask(ctx, q)
+	_, err := agent.Ask(ctx, q)
 	assert.NoError(t, err)
-
-	assert.NotNil(t, respMsg, "response message should not be nil")
 
 	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
@@ -87,12 +85,11 @@ func TestAgentPromptToGetImage_handlerErr(t *testing.T) {
 	q := "A clean, minimalist flat vector illustration of a tic-tac-toe board. White background, bold black grid lines. Three bright blue \"O\" symbols are aligned horizontally in the middle row, indicating a win. Minimalist aesthetic, high contrast, simple and modern graphic design."
 
 	ctx := context.Background()
-	respMsg, err := agent.Ask(ctx, q)
+	finalReport, err := agent.Ask(ctx, q)
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, rellm.ErrCustomImageHandlerFailed)
 
-	assert.NotNil(t, respMsg, "response message should not be nil")
-	assert.Equal(t, "", respMsg, "response message should match")
+	assert.Nil(t, finalReport.Messages)
 }
 
 func testImageGenerationHandler(_ context.Context, image *rellm.ImageGeneration) (string, error) {

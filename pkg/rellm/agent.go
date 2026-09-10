@@ -111,6 +111,36 @@ type InspectEachResponse func(resp *ResponsesAPIResp)
 //   - any other slice: replace it with those elements
 type HandleUnknownConversationElement func(ctx context.Context, el *UnknownElement) ([]ConversationElement, error)
 
+type Report struct {
+	Messages   *string
+	Image      *ImageGeneration
+	StepsStats []StepStat
+}
+
+type StepStat struct {
+	ApiUsage ResponsesAPIUsage
+}
+
+// Execute runs a prompt built with PromptBuilder, whose parameters control
+// this interaction. A nil prompt or empty message returns ErrEmptyPrompt.
+func (a *Agent) Execute(ctx context.Context, p *Prompt) (Report, error) {
+	if p == nil || p.msg == "" {
+		return Report{}, ErrEmptyPrompt
+	}
+	return a.run(ctx, p.msg, p.params)
+}
+
+// Ask is a minimal entry point for a plain-text question. An empty question
+// returns ErrEmptyPrompt.
+func (a *Agent) Ask(ctx context.Context, question string) (Report, error) {
+	prompt, err := NewPromptBuilder().WithMessage(question).Build()
+	if err != nil {
+		return Report{}, err
+	}
+
+	return a.Execute(ctx, prompt)
+}
+
 // CurrentConversation returns the conversation history as stored.
 func (a *Agent) CurrentConversation(ctx context.Context) ([]ConversationElement, error) {
 	conversation, err := a.conversationStorage.Load(ctx)
@@ -123,36 +153,6 @@ func (a *Agent) CurrentConversation(ctx context.Context) ([]ConversationElement,
 	}
 
 	return []ConversationElement{}, nil
-}
-
-func funcResultToFunctionCallResp(callID string, funcResult any) FunctionCallResp {
-	b, err := json.Marshal(funcResult)
-	if err != nil {
-		errorMsg := "unable to execute function; " + err.Error()
-		return FunctionCallResp{Type: "function_call_output", CallID: callID, Output: errorMsg}
-	}
-
-	return FunctionCallResp{Type: "function_call_output", CallID: callID, Output: string(b)}
-}
-
-// Execute runs a prompt built with PromptBuilder, whose parameters control
-// this interaction. A nil prompt or empty message returns ErrEmptyPrompt.
-func (a *Agent) Execute(ctx context.Context, p *Prompt) (string, error) {
-	if p == nil || p.msg == "" {
-		return "", ErrEmptyPrompt
-	}
-	return a.run(ctx, p.msg, p.params)
-}
-
-// Ask is a minimal entry point for a plain-text question. An empty question
-// returns ErrEmptyPrompt.
-func (a *Agent) Ask(ctx context.Context, question string) (string, error) {
-	prompt, err := NewPromptBuilder().WithMessage(question).Build()
-	if err != nil {
-		return "", err
-	}
-
-	return a.Execute(ctx, prompt)
 }
 
 func (a *Agent) Name() string {
