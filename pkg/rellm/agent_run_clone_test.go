@@ -7,14 +7,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type cloneTestCustomElement struct{}
+// Non-empty struct: zero-size allocations all share one address, which would
+// make the pointer-distinct assertions below meaningless.
+type cloneTestCustomElement struct{ marker int }
 
 func (*cloneTestCustomElement) Kind() ElementKind { return ElementKind("custom") }
+
+func (*cloneTestCustomElement) Clone() ConversationElement { return &cloneTestCustomElement{} }
 
 func TestCloneConversationElementImageGeneration(t *testing.T) {
 	orig := &ImageGeneration{ID: "ig_1", Type: "image_generation_call", Status: "completed", Result: "data:image/jpeg;base64,AAA"}
 
-	clone := cloneConversationElement(orig).(*ImageGeneration)
+	clone := orig.Clone().(*ImageGeneration)
 
 	assert.NotSame(t, orig, clone)
 	assert.Equal(t, orig, clone)
@@ -26,7 +30,7 @@ func TestCloneConversationElementImageGeneration(t *testing.T) {
 func TestCloneConversationElementFunctionCallResp(t *testing.T) {
 	orig := &FunctionCallResp{ID: "id_1", Type: "function_call_output", CallID: "call_1", Output: "42"}
 
-	clone := cloneConversationElement(orig).(*FunctionCallResp)
+	clone := orig.Clone().(*FunctionCallResp)
 
 	assert.NotSame(t, orig, clone)
 	assert.Equal(t, orig, clone)
@@ -38,7 +42,7 @@ func TestCloneConversationElementFunctionCallResp(t *testing.T) {
 func TestCloneConversationElementFunctionCall(t *testing.T) {
 	orig := &FunctionCall{ID: "id_1", Name: "get_data", Args: json.RawMessage(`{"a":1}`), CallID: "call_1"}
 
-	clone := cloneConversationElement(orig).(*FunctionCall)
+	clone := orig.Clone().(*FunctionCall)
 
 	assert.NotSame(t, orig, clone)
 	assert.Equal(t, orig, clone)
@@ -58,7 +62,7 @@ func TestCloneConversationElementReasoning(t *testing.T) {
 		Format:           "text",
 	}
 
-	clone := cloneConversationElement(orig).(*Reasoning)
+	clone := orig.Clone().(*Reasoning)
 
 	assert.NotSame(t, orig, clone)
 	assert.Equal(t, orig, clone)
@@ -70,17 +74,15 @@ func TestCloneConversationElementReasoning(t *testing.T) {
 func TestCloneConversationElementMessages(t *testing.T) {
 	mkContent := func() []MessagePart {
 		return []MessagePart{{
-			Type:        "input_text",
-			Text:        "hello",
-			ImageURL:    &ImageURL{URL: "http://example.com/i.png"},
-			Annotations: []interface{}{"a"},
-			Logprobs:    []interface{}{"l"},
+			Type:     "input_text",
+			Text:     "hello",
+			ImageURL: &ImageURL{URL: "http://example.com/i.png"},
 		}}
 	}
 
 	t.Run("user", func(t *testing.T) {
 		orig := &UserMessage{MessageContent{ID: "u1", Role: "user", Status: "in_progress", Content: mkContent()}}
-		clone := cloneConversationElement(orig).(*UserMessage)
+		clone := orig.Clone().(*UserMessage)
 		assert.NotSame(t, orig, clone)
 		assert.Equal(t, orig, clone)
 		assertMessageContentClone(t, &orig.MessageContent, &clone.MessageContent)
@@ -88,7 +90,7 @@ func TestCloneConversationElementMessages(t *testing.T) {
 
 	t.Run("assistant", func(t *testing.T) {
 		orig := &AssistantMessage{MessageContent{ID: "a1", Role: "assistant", Content: mkContent()}}
-		clone := cloneConversationElement(orig).(*AssistantMessage)
+		clone := orig.Clone().(*AssistantMessage)
 		assert.NotSame(t, orig, clone)
 		assert.Equal(t, orig, clone)
 		assertMessageContentClone(t, &orig.MessageContent, &clone.MessageContent)
@@ -96,7 +98,7 @@ func TestCloneConversationElementMessages(t *testing.T) {
 
 	t.Run("system", func(t *testing.T) {
 		orig := &SystemMessage{MessageContent{ID: "s1", Role: "system", Content: mkContent()}}
-		clone := cloneConversationElement(orig).(*SystemMessage)
+		clone := orig.Clone().(*SystemMessage)
 		assert.NotSame(t, orig, clone)
 		assert.Equal(t, orig, clone)
 		assertMessageContentClone(t, &orig.MessageContent, &clone.MessageContent)
@@ -110,30 +112,21 @@ func assertMessageContentClone(t *testing.T, orig, clone *MessageContent) {
 
 	clone.Content[0].Text = "MUTATED"
 	clone.Content[0].ImageURL.URL = "MUTATED"
-	clone.Content[0].Annotations[0] = "MUTATED"
-	clone.Content[0].Logprobs[0] = "MUTATED"
 
 	assert.Equal(t, "hello", orig.Content[0].Text)
 	assert.Equal(t, "http://example.com/i.png", orig.Content[0].ImageURL.URL)
-	assert.Equal(t, "a", orig.Content[0].Annotations[0])
-	assert.Equal(t, "l", orig.Content[0].Logprobs[0])
 }
 
 func TestCloneConversationElementUnknownElement(t *testing.T) {
 	orig := &UnknownElement{Provider: "openrouter", Type: "custom", Role: "assistant", Raw: json.RawMessage(`{"x":1}`)}
 
-	clone := cloneConversationElement(orig).(*UnknownElement)
+	clone := orig.Clone().(*UnknownElement)
 
 	assert.NotSame(t, orig, clone)
 	assert.Equal(t, orig, clone)
 
 	clone.Raw[0] = 'M'
 	assert.Equal(t, json.RawMessage(`{"x":1}`), orig.Raw)
-}
-
-func TestCloneConversationElementUnknownTypeReturnedAsIs(t *testing.T) {
-	custom := &cloneTestCustomElement{}
-	assert.Same(t, custom, cloneConversationElement(custom))
 }
 
 func TestCloneConversationElements(t *testing.T) {
@@ -150,7 +143,7 @@ func TestCloneConversationElements(t *testing.T) {
 	assert.Len(t, clones, len(orig))
 	assert.NotSame(t, orig[0], clones[0])
 	assert.NotSame(t, orig[1], clones[1])
-	assert.Same(t, orig[2], clones[2]) // unknown types are returned as-is
+	assert.NotSame(t, orig[2], clones[2]) // custom types are cloned via their own Clone
 
 	clones[0].(*ImageGeneration).Result = "MUTATED"
 	assert.Equal(t, "r1", orig[0].(*ImageGeneration).Result)

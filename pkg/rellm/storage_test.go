@@ -74,6 +74,20 @@ func TestInMemoryStorage_LoadDoesNotAlias(t *testing.T) {
 	assert.Len(t, again, 1)
 }
 
+func TestInMemoryStorage_LoadDoesNotAliasElements(t *testing.T) {
+	s := NewInMemoryStorage()
+	ctx := context.Background()
+	assert.NoError(t, s.Append(ctx, []ConversationElement{testUserMsg("x")}))
+
+	loaded, err := s.Load(ctx)
+	assert.NoError(t, err)
+	loaded[0].(*UserMessage).Content[0].Text = "mutated"
+
+	again, err := s.Load(ctx)
+	assert.NoError(t, err)
+	assert.Equal(t, "x", again[0].(*UserMessage).Content[0].Text)
+}
+
 func TestInMemoryStorage_AppendEmpty(t *testing.T) {
 	s := NewInMemoryStorage()
 	ctx := context.Background()

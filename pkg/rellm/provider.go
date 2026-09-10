@@ -37,6 +37,23 @@ const (
 type ConversationElement interface {
 	// Kind reports this element's canonical discriminator.
 	Kind() ElementKind
+
+	// Clone returns an independent copy of this element: mutating the
+	// original or the clone must not affect the other. Copy every slice,
+	// pointer, and map field; a struct copy suffices only while all fields
+	// are immutable (strings, numbers, bools).
+	Clone() ConversationElement
+}
+
+// cloneConversationElements returns independent copies of the elements via
+// each element's Clone, so callers cannot alias stored history or report
+// snapshots.
+func cloneConversationElements(elements []ConversationElement) []ConversationElement {
+	clones := make([]ConversationElement, 0, len(elements))
+	for _, el := range elements {
+		clones = append(clones, el.Clone())
+	}
+	return clones
 }
 
 // MessageContent holds shared fields for role-typed messages. Role is the wire
@@ -58,6 +75,12 @@ type UserMessage struct {
 
 func (*UserMessage) Kind() ElementKind { return KindUserMessage }
 
+func (e *UserMessage) Clone() ConversationElement {
+	c := *e
+	c.Content = cloneMessageParts(e.Content)
+	return &c
+}
+
 // AssistantMessage is a model-generated text message. Content serializes as a
 // plain string on the wire.
 type AssistantMessage struct {
@@ -66,6 +89,12 @@ type AssistantMessage struct {
 
 func (*AssistantMessage) Kind() ElementKind { return KindAssistantMessage }
 
+func (e *AssistantMessage) Clone() ConversationElement {
+	c := *e
+	c.Content = cloneMessageParts(e.Content)
+	return &c
+}
+
 // SystemMessage is a system instruction. Content serializes as a plain string
 // on the wire.
 type SystemMessage struct {
@@ -73,6 +102,12 @@ type SystemMessage struct {
 }
 
 func (*SystemMessage) Kind() ElementKind { return KindSystemMessage }
+
+func (e *SystemMessage) Clone() ConversationElement {
+	c := *e
+	c.Content = cloneMessageParts(e.Content)
+	return &c
+}
 
 // FunctionCall is a model-requested tool invocation.
 type FunctionCall struct {
@@ -84,6 +119,12 @@ type FunctionCall struct {
 
 func (*FunctionCall) Kind() ElementKind { return KindFunctionCall }
 
+func (e *FunctionCall) Clone() ConversationElement {
+	c := *e
+	c.Args = append(json.RawMessage(nil), e.Args...)
+	return &c
+}
+
 // FunctionCallResponse is the tool's result sent back to the model.
 type FunctionCallResp struct {
 	ID     string `json:"id,omitempty"`
@@ -93,6 +134,11 @@ type FunctionCallResp struct {
 }
 
 func (*FunctionCallResp) Kind() ElementKind { return KindFunctionCallResp }
+
+func (e *FunctionCallResp) Clone() ConversationElement {
+	c := *e
+	return &c
+}
 
 // ReasoningSummaryPart is a text summary supplied by a reasoning model.
 type ReasoningSummaryPart struct {
@@ -113,6 +159,12 @@ type Reasoning struct {
 
 func (*Reasoning) Kind() ElementKind { return KindReasoning }
 
+func (e *Reasoning) Clone() ConversationElement {
+	c := *e
+	c.Summary = append([]ReasoningSummaryPart(nil), e.Summary...)
+	return &c
+}
+
 // ImageGeneration is a generated image with its result note.
 type ImageGeneration struct {
 	ID     string `json:"id,omitempty"`
@@ -122,6 +174,11 @@ type ImageGeneration struct {
 }
 
 func (*ImageGeneration) Kind() ElementKind { return KindImageGeneration }
+
+func (e *ImageGeneration) Clone() ConversationElement {
+	c := *e
+	return &c
+}
 
 // UnknownElement preserves a provider output item that rellm does not yet
 // understand. Raw is the original provider representation; Provider identifies
@@ -134,6 +191,12 @@ type UnknownElement struct {
 }
 
 func (*UnknownElement) Kind() ElementKind { return KindUnknown }
+
+func (e *UnknownElement) Clone() ConversationElement {
+	c := *e
+	c.Raw = append(json.RawMessage(nil), e.Raw...)
+	return &c
+}
 
 func newUnknownElement(provider, itemType, role string, raw json.RawMessage) *UnknownElement {
 	return &UnknownElement{
@@ -342,9 +405,19 @@ type ImageURL struct {
 }
 
 type MessagePart struct {
-	Type        string        `json:"type"`
-	Text        string        `json:"text,omitempty"`
-	ImageURL    *ImageURL     `json:"image_url,omitempty"`
-	Annotations []interface{} `json:"annotations,omitempty"`
-	Logprobs    []interface{} `json:"logprobs,omitempty"`
+	Type     string    `json:"type"`
+	Text     string    `json:"text,omitempty"`
+	ImageURL *ImageURL `json:"image_url,omitempty"`
+}
+
+func cloneMessageParts(parts []MessagePart) []MessagePart {
+	clones := make([]MessagePart, len(parts))
+	for i, p := range parts {
+		clones[i] = p
+		if p.ImageURL != nil {
+			u := *p.ImageURL
+			clones[i].ImageURL = &u
+		}
+	}
+	return clones
 }

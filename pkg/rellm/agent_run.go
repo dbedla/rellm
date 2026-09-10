@@ -165,8 +165,8 @@ func (a *Agent) dispatchConversation(ctx context.Context, conversation []Convers
 		case *ImageGeneration:
 			// Keep the provider response intact for the caller. The policy may
 			// mutate or replace the image used by the conversation loop.
-			original := *el
-			images = append(images, ImageReport{Original: &original})
+			original := el.Clone().(*ImageGeneration)
+			images = append(images, ImageReport{Original: original})
 			imageResp, err := a.executeImageGenerationCallHandler(ctx, el)
 			if err != nil {
 				outputErr = errors.Join(outputErr, err)
@@ -183,68 +183,6 @@ func (a *Agent) dispatchConversation(ctx context.Context, conversation []Convers
 	}
 
 	return message.String(), processed, images, outputErr
-}
-
-// cloneConversationElements returns independent copies of the elements so
-// report snapshots do not alias stored conversation history. Element types
-// rellm does not know are returned as-is.
-func cloneConversationElements(elements []ConversationElement) []ConversationElement {
-	clones := make([]ConversationElement, 0, len(elements))
-	for _, el := range elements {
-		clones = append(clones, cloneConversationElement(el))
-	}
-	return clones
-}
-
-func cloneConversationElement(el ConversationElement) ConversationElement {
-	switch e := el.(type) {
-	case *ImageGeneration:
-		c := *e
-		return &c
-	case *FunctionCallResp:
-		c := *e
-		return &c
-	case *FunctionCall:
-		c := *e
-		c.Args = append(json.RawMessage(nil), e.Args...)
-		return &c
-	case *Reasoning:
-		c := *e
-		c.Summary = append([]ReasoningSummaryPart(nil), e.Summary...)
-		return &c
-	case *UserMessage:
-		c := *e
-		c.Content = cloneMessageParts(e.Content)
-		return &c
-	case *AssistantMessage:
-		c := *e
-		c.Content = cloneMessageParts(e.Content)
-		return &c
-	case *SystemMessage:
-		c := *e
-		c.Content = cloneMessageParts(e.Content)
-		return &c
-	case *UnknownElement:
-		c := *e
-		c.Raw = append(json.RawMessage(nil), e.Raw...)
-		return &c
-	default:
-		return el
-	}
-}
-
-func cloneMessageParts(parts []MessagePart) []MessagePart {
-	clones := make([]MessagePart, len(parts))
-	for i, p := range parts {
-		clones[i] = p
-		if p.ImageURL != nil {
-			u := *p.ImageURL
-			clones[i].ImageURL = &u
-		}
-		clones[i].Annotations = append([]interface{}(nil), p.Annotations...)
-		clones[i].Logprobs = append([]interface{}(nil), p.Logprobs...)
-	}
-	return clones
 }
 
 func (a *Agent) executeImageGenerationCallHandler(ctx context.Context, image *ImageGeneration) ([]ConversationElement, error) {
