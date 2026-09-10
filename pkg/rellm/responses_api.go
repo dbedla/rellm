@@ -7,14 +7,8 @@ type ResponsesAPIReq struct {
 	// Required
 	Model string `json:"model"`
 
-	// Input can be:
-	// - string (simple text)
-	// - []ContentPart (multimodal/text parts for the Responses API)
-	// - json.RawMessage (if you want complete control)
+	// Input: raw conversation items in the provider's wire format
 	Input []json.RawMessage `json:"input,omitempty"`
-
-	// Optional high-level instruction (system-style prompt)
-	Instructions string `json:"instructions,omitempty"`
 
 	// Output controls
 	MaxOutputTokens  int      `json:"max_output_tokens,omitempty"`
@@ -28,60 +22,12 @@ type ResponsesAPIReq struct {
 
 	// Tools and function calling
 	Tools []ToolDefinition `json:"tools,omitempty"`
-	// ToolChoice can be:
-	// - string: "auto", "none", or "required"
-	// - ToolChoiceOption: { "type": "function", "function": { "name": "..." } }
-	ToolChoice interface{} `json:"tool_choice,omitempty"`
 
 	// Reasoning models configuration (e.g., o3-family)
 	Reasoning *ReasoningConfig `json:"reasoning,omitempty"`
 
 	// Structured output via the Responses API text.format field
 	Text *TextConfig `json:"text,omitempty"`
-
-	// Streaming (SSE) toggle
-	Stream bool `json:"stream,omitempty"`
-
-	// Output modalities: "text" and/or "image"
-	Modalities []string `json:"modalities,omitempty"`
-
-	// Arbitrary metadata you want to associate with the request
-	Metadata map[string]interface{} `json:"metadata,omitempty"`
-}
-
-// ContentPart represents a single item in the "input" array for multimodal or
-// structured inputs. Use Type: "input_text", "input_image", "input_audio", etc.
-// Only fill the fields relevant to the chosen Type; the rest remain empty.
-type ContentPart struct {
-	Type string `json:"type"`
-
-	// For type == "input_text"
-	Text string `json:"text,omitempty"`
-
-	// For type == "input_image"
-	// Depending on the API variant, you might provide a URL or embedded data.
-	// Keep both optional to support either style.
-	ImageURL string     `json:"image_url,omitempty"`
-	Image    *ImageData `json:"image,omitempty"`
-
-	// For type == "input_audio"
-	Audio *InputAudioData `json:"audio,omitempty"`
-}
-
-// ImageData holds embedded image bytes for input_image variants.
-type ImageData struct {
-	// Base64-encoded image bytes
-	Data string `json:"data"`
-	// Example: "png", "jpeg", "webp"
-	Format string `json:"format"`
-}
-
-// InputAudioData holds embedded audio for input_audio variants.
-type InputAudioData struct {
-	// Base64-encoded audio bytes
-	Data string `json:"data"`
-	// Example: "wav", "mp3", "pcm16"
-	Format string `json:"format"`
 }
 
 // ToolDefinition defines a tool the model can call.
@@ -91,16 +37,6 @@ type ToolDefinition struct {
 	Description string      `json:"description,omitempty"`
 	Parameters  interface{} `json:"parameters,omitempty"`
 	Strict      bool        `json:"strict,omitempty"`
-}
-
-// ToolChoiceOption allows forcing a specific function.
-type ToolChoiceOption struct {
-	Type     string                    `json:"type"` // e.g., "function"
-	Function *ToolChoiceFunctionTarget `json:"function,omitempty"`
-}
-
-type ToolChoiceFunctionTarget struct {
-	Name string `json:"name"`
 }
 
 // ReasoningConfig controls behavior for reasoning-capable models.
