@@ -159,7 +159,7 @@ func TestPromptBuilder_AllFields(t *testing.T) {
 			err = json.Unmarshal(b, &req)
 			assert.NoError(t, err)
 
-			assert.Equal(t, float32(0.7), *req.Temperature)
+			assert.Equal(t, float64(0.7), *req.Temperature)
 			assert.Equal(t, rellm.ReasoningEffortHigh, req.Reasoning.Effort)
 			assert.NotNil(t, req.Text)
 			assert.Equal(t, "json_schema", req.Text.Format.Type)

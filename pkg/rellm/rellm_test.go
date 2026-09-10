@@ -49,12 +49,12 @@ func (m *ToolsetMock) Dispatch(ctx context.Context, name string, arguments json.
 
 func SetParametersWithReqLog(req *rellm.ResponsesAPIReq) {
 	req.Reasoning = &rellm.ReasoningConfig{Effort: rellm.ReasoningEffortMedium}
-	req.Temperature = new(float32(0.5))
+	req.Temperature = new(float64(0.5))
 
 	examplesutils.InspectWithReqLog(req)
 }
 
 func SetParametersForTest(req *rellm.ResponsesAPIReq) {
 	req.Reasoning = &rellm.ReasoningConfig{Effort: rellm.ReasoningEffortMedium}
-	req.Temperature = new(float32(0.5))
+	req.Temperature = new(float64(0.5))
 }

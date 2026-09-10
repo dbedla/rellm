@@ -18,10 +18,10 @@ type ResponsesAPIReq struct {
 
 	// Output controls
 	MaxOutputTokens  int      `json:"max_output_tokens,omitempty"`
-	Temperature      *float32 `json:"temperature,omitempty"`
-	TopP             *float32 `json:"top_p,omitempty"`
-	PresencePenalty  *float32 `json:"presence_penalty,omitempty"`
-	FrequencyPenalty *float32 `json:"frequency_penalty,omitempty"`
+	Temperature      *float64 `json:"temperature,omitempty"`
+	TopP             *float64 `json:"top_p,omitempty"`
+	PresencePenalty  *float64 `json:"presence_penalty,omitempty"`
+	FrequencyPenalty *float64 `json:"frequency_penalty,omitempty"`
 
 	// Stop controls
 	// NOTE: Some examples show "stop"; others may reference "stop_sequences".
@@ -221,13 +221,13 @@ type ResponsesAPIResp struct {
 	Tools             []ResponseTool    `json:"tools"`
 	ToolChoice        string            `json:"tool_choice"`
 	ParallelToolCalls bool              `json:"parallel_tool_calls"`
-	MaxOutputTokens   interface{}       `json:"max_output_tokens"`
-	Temperature       float64           `json:"temperature"`
-	TopP              float64           `json:"top_p"`
-	PresencePenalty   float64           `json:"presence_penalty"`
-	FrequencyPenalty  float64           `json:"frequency_penalty"`
-	TopLogprobs       float64           `json:"top_logprobs"`
-	MaxToolCalls      interface{}       `json:"max_tool_calls"`
+	MaxOutputTokens   *int              `json:"max_output_tokens"`
+	Temperature       *float64           `json:"temperature"`
+	TopP              *float64           `json:"top_p"`
+	PresencePenalty   *float64           `json:"presence_penalty"`
+	FrequencyPenalty  *float64           `json:"frequency_penalty"`
+	TopLogprobs       int               `json:"top_logprobs"`
+	MaxToolCalls      *int              `json:"max_tool_calls"`
 	Metadata          struct {
 	} `json:"metadata"`
 	Background         bool        `json:"background"`
