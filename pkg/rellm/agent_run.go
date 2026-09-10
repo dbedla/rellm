@@ -58,8 +58,12 @@ func (a *Agent) process(ctx context.Context, req *ResponsesAPIReq) (Report, erro
 		if err != nil {
 			return finalReport, errors.Join(ErrConversationElementConversion, err)
 		}
-		msg, conversation, imageHandled, err := a.dispatchConversation(ctx, conversation)
+		msg, conversation, image, err := a.dispatchConversation(ctx, conversation)
+		finalReport.Image = image
 		if len(conversation) == 0 {
+			if image != nil && err == nil {
+				return finalReport, nil
+			}
 			return finalReport, errors.Join(ErrNoNewConversationElementAfterDispatch, err)
 		}
 
@@ -78,8 +82,10 @@ func (a *Agent) process(ctx context.Context, req *ResponsesAPIReq) (Report, erro
 			return finalReport, err
 		}
 
-		if imageHandled || msg != "" {
-			finalReport.Messages = &msg
+		if image != nil || msg != "" {
+			if msg != "" {
+				finalReport.Messages = &msg
+			}
 			return finalReport, nil
 		}
 
@@ -90,11 +96,11 @@ func (a *Agent) process(ctx context.Context, req *ResponsesAPIReq) (Report, erro
 			fmt.Errorf("exceeded %d iterations", a.maxAgentSteps))
 }
 
-func (a *Agent) dispatchConversation(ctx context.Context, conversation []ConversationElement) (string, []ConversationElement, bool, error) {
+func (a *Agent) dispatchConversation(ctx context.Context, conversation []ConversationElement) (string, []ConversationElement, *ImageGeneration, error) {
 
 	var message strings.Builder
 	processed := make([]ConversationElement, 0, len(conversation)+4)
-	imageHandled := false
+	var image *ImageGeneration
 
 	var outputErr error
 
@@ -133,34 +139,36 @@ func (a *Agent) dispatchConversation(ctx context.Context, conversation []Convers
 			processed = append(processed, el)
 
 		case *ImageGeneration:
-			err := a.executeImageGenerationCallHandler(ctx, el)
+			// Keep the provider response intact for the caller. The policy may
+			// mutate or replace the image used by the conversation loop.
+			original := *el
+			image = &original
+			imageResp, err := a.executeImageGenerationCallHandler(ctx, el)
 			if err != nil {
 				outputErr = errors.Join(outputErr, err)
+				continue
 			}
-			imageHandled = true
-			processed = append(processed, el)
+			processed = append(processed, imageResp...)
 
 		default:
-			return "", nil, false, ErrUnknownConversationElement
+			return "", nil, nil, ErrUnknownConversationElement
 		}
 	}
 
-	return message.String(), processed, imageHandled, outputErr
+	return message.String(), processed, image, outputErr
 }
 
-func (a *Agent) executeImageGenerationCallHandler(ctx context.Context, image *ImageGeneration) error {
+func (a *Agent) executeImageGenerationCallHandler(ctx context.Context, image *ImageGeneration) ([]ConversationElement, error) {
 	if a.handleImageGeneration == nil {
-		return ErrNoImageHandler
+		return nil, ErrNoImageHandler
 	}
 
-	resultNote, err := a.handleImageGeneration(ctx, image)
+	response, err := a.handleImageGeneration(ctx, image)
 	if err != nil {
-		return errors.Join(ErrCustomImageHandlerFailed, err)
+		return nil, errors.Join(ErrCustomImageHandlerFailed, err)
 	}
 
-	image.Result = resultNote
-
-	return nil
+	return response, nil
 }
 
 func (a *Agent) executeUnknownConversationElementHandler(ctx context.Context, el *UnknownElement) ([]ConversationElement, error) {

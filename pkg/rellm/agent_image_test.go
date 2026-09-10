@@ -46,8 +46,14 @@ func TestAgentPromptToGetImage(t *testing.T) {
 	q := "A clean, minimalist flat vector illustration of a tic-tac-toe board. White background, bold black grid lines. Three bright blue \"O\" symbols are aligned horizontally in the middle row, indicating a win. Minimalist aesthetic, high contrast, simple and modern graphic design."
 
 	ctx := context.Background()
-	_, err := agent.Ask(ctx, q)
+	finalReport, err := agent.Ask(ctx, q)
 	assert.NoError(t, err)
+	assert.Nil(t, finalReport.Messages)
+	if assert.NotNil(t, finalReport.Image) {
+		assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA", finalReport.Image.Result)
+		assert.Equal(t, "completed", finalReport.Image.Status)
+		assert.Equal(t, "ig_tmp_vqotwoa5eg", finalReport.Image.ID)
+	}
 
 	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
@@ -90,18 +96,76 @@ func TestAgentPromptToGetImage_handlerErr(t *testing.T) {
 	assert.ErrorIs(t, err, rellm.ErrCustomImageHandlerFailed)
 
 	assert.Nil(t, finalReport.Messages)
+	assert.NotNil(t, finalReport.Image)
+	assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA", finalReport.Image.Result)
 }
 
-func testImageGenerationHandler(_ context.Context, image *rellm.ImageGeneration) (string, error) {
-	return "image-stored-under-this-id", nil
+func TestAgentPromptToGetImagePolicies(t *testing.T) {
+	tests := []struct {
+		name             string
+		configure        func(*rellm.AgentBuilder)
+		conversationSize int
+	}{
+		{
+			name: "drop",
+			configure: func(builder *rellm.AgentBuilder) {
+				builder.WithImageGenerationDrop()
+			},
+			conversationSize: 2,
+		},
+		{
+			name: "keep in the loop",
+			configure: func(builder *rellm.AgentBuilder) {
+				builder.WithImageGenerationKeepInTheLoop()
+			},
+			conversationSize: 3,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			agent, httpDo := buildTestImageAgentWithPolicy(t, testDefaultMaxAgentSteps, tt.configure)
+			defer httpDo.AssertExpectations(t)
+
+			httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+				Once().
+				Return(&http.Response{
+					StatusCode: http.StatusOK,
+					Body:       io.NopCloser(strings.NewReader(goldenImageResp)),
+				}, nil)
+
+			finalReport, err := agent.Ask(context.Background(), "generate an image")
+			assert.NoError(t, err)
+			assert.Nil(t, finalReport.Messages)
+			if assert.NotNil(t, finalReport.Image) {
+				assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA", finalReport.Image.Result)
+			}
+
+			conversation, err := agent.CurrentConversation(context.Background())
+			assert.NoError(t, err)
+			assert.Len(t, conversation, tt.conversationSize)
+		})
+	}
 }
 
-func testImageGenerationHandlerAlwaysErr(_ context.Context, image *rellm.ImageGeneration) (string, error) {
-	return "", errors.New("test err in image handling error")
+func testImageGenerationHandler(_ context.Context, image *rellm.ImageGeneration) ([]rellm.ConversationElement, error) {
+	image.Result = "image-stored-under-this-id"
+	return []rellm.ConversationElement{image}, nil
+}
+
+func testImageGenerationHandlerAlwaysErr(_ context.Context, image *rellm.ImageGeneration) ([]rellm.ConversationElement, error) {
+	return nil, errors.New("test err in image handling error")
 }
 
 func buildTestImageAgent(t *testing.T, maxAgentSteps uint64,
 	imageGenerationH rellm.HandleImageGeneration) (*rellm.Agent, *HTTPDoMock) {
+	return buildTestImageAgentWithPolicy(t, maxAgentSteps, func(builder *rellm.AgentBuilder) {
+		builder.WithImageGenerationHandler(imageGenerationH)
+	})
+}
+
+func buildTestImageAgentWithPolicy(t *testing.T, maxAgentSteps uint64,
+	configure func(*rellm.AgentBuilder)) (*rellm.Agent, *HTTPDoMock) {
 
 	agentName := "TestImageAgent"
 	mockHttp := new(HTTPDoMock)
@@ -109,14 +173,14 @@ func buildTestImageAgent(t *testing.T, maxAgentSteps uint64,
 	p, err := rellm.NewOpenRouterProviderWithHTTPClient("test-key", rellm.Model("x-ai/grok-imagine-image-quality"), mockHttp)
 	assert.NoError(t, err, "failed to create provider")
 
-	ta, err := rellm.NewAgentBuilder().
+	builder := rellm.NewAgentBuilder().
 		WithProvider(p).
 		WithAgentName(agentName).
 		WithMaxAgentSteps(maxAgentSteps).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
-		WithSystemMessage("You are a helpful assistant.").
-		WithHandleImageGeneration(imageGenerationH).
-		Build()
+		WithSystemMessage("You are a helpful assistant.")
+	configure(builder)
+	ta, err := builder.Build()
 
 	assert.NoError(t, err, "failed to create agent")
 	return ta, mockHttp

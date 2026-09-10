@@ -59,9 +59,37 @@ func (b *AgentBuilder) WithMaxAgentSteps(max uint64) *AgentBuilder {
 	return b
 }
 
-// WithHandleImageGeneration sets the image handler; see HandleImageGeneration.
+// WithHandleImageGeneration sets a custom image policy; see
+// HandleImageGeneration.
+// Deprecated: use WithImageGenerationHandler.
 func (b *AgentBuilder) WithHandleImageGeneration(handleImage HandleImageGeneration) *AgentBuilder {
 	b.agent.handleImageGeneration = handleImage
+	return b
+}
+
+// WithImageGenerationDrop configures the agent to drop generated images from
+// the conversation loop. The original image is still returned in Report.Image.
+func (b *AgentBuilder) WithImageGenerationDrop() *AgentBuilder {
+	b.agent.handleImageGeneration = func(ctx context.Context, image *ImageGeneration) ([]ConversationElement, error) {
+		return nil, nil
+	}
+	return b
+}
+
+// WithImageGenerationKeepInTheLoop configures the agent to keep generated
+// images unchanged in the conversation loop.
+func (b *AgentBuilder) WithImageGenerationKeepInTheLoop() *AgentBuilder {
+	b.agent.handleImageGeneration = func(ctx context.Context, image *ImageGeneration) ([]ConversationElement, error) {
+		return []ConversationElement{image}, nil
+	}
+	return b
+}
+
+// WithImageGenerationHandler sets a custom image policy. The returned slice
+// replaces the generated image's slot in the conversation; nil or an empty
+// slice drops it.
+func (b *AgentBuilder) WithImageGenerationHandler(handler HandleImageGeneration) *AgentBuilder {
+	b.agent.handleImageGeneration = handler
 	return b
 }
 
@@ -120,9 +148,17 @@ func (b *AgentBuilder) Build() (*Agent, error) {
 		return nil, ErrBuildNoConversationStorage
 	}
 
+	//Todo: force policy setting
 	if b.agent.handleUnknownConversationElement == nil {
 		b.agent.handleUnknownConversationElement = func(ctx context.Context, el *UnknownElement) ([]ConversationElement, error) {
 			return nil, ErrNoUnknownConversationElementHandler
+		}
+	}
+
+	//Todo: force policy setting
+	if b.agent.handleImageGeneration == nil {
+		b.agent.handleImageGeneration = func(ctx context.Context, image *ImageGeneration) ([]ConversationElement, error) {
+			return nil, ErrNoImageHandler
 		}
 	}
 

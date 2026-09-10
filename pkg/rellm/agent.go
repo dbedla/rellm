@@ -90,9 +90,15 @@ type Agent struct {
 	inspectResp                      InspectEachResponse
 }
 
-// HandleImageGeneration is called for image generation. The returned string is
-// stored as the image identifier in place of the generated image.
-type HandleImageGeneration func(ctx context.Context, image *ImageGeneration) (string, error)
+// HandleImageGeneration is called for each generated image. The returned slice
+// replaces the image's slot in the conversation:
+//
+//   - nil or empty: drop the image from the conversation
+//   - []ConversationElement{image}: keep it unchanged
+//   - any other slice: replace it with those elements
+//
+// The original image is returned separately in Report.Image.
+type HandleImageGeneration func(ctx context.Context, image *ImageGeneration) ([]ConversationElement, error)
 
 // InspectEachRequest inspects each request before it is sent to the provider.
 // Last chance to modify or log it.
@@ -112,7 +118,9 @@ type InspectEachResponse func(resp *ResponsesAPIResp)
 type HandleUnknownConversationElement func(ctx context.Context, el *UnknownElement) ([]ConversationElement, error)
 
 type Report struct {
-	Messages   *string
+	Messages *string
+
+	//before any policy hit
 	Image      *ImageGeneration
 	StepsStats []StepStat
 }
