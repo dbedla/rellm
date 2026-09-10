@@ -120,11 +120,11 @@ func (a *Agent) appendNewConversationElements(
 	return a.conversationStorage.Append(ctx, conversation)
 }
 
-func (a *Agent) dispatchConversation(ctx context.Context, conversation []ConversationElement) (string, []ConversationElement, *ImageGeneration, error) {
+func (a *Agent) dispatchConversation(ctx context.Context, conversation []ConversationElement) (string, []ConversationElement, *ImageReport, error) {
 
 	var message strings.Builder
 	processed := make([]ConversationElement, 0, len(conversation)+4)
-	var image *ImageGeneration
+	var image *ImageReport
 
 	var outputErr error
 
@@ -166,12 +166,13 @@ func (a *Agent) dispatchConversation(ctx context.Context, conversation []Convers
 			// Keep the provider response intact for the caller. The policy may
 			// mutate or replace the image used by the conversation loop.
 			original := *el
-			image = &original
+			image = &ImageReport{Original: &original}
 			imageResp, err := a.executeImageGenerationCallHandler(ctx, el)
 			if err != nil {
 				outputErr = errors.Join(outputErr, err)
 				continue
 			}
+			image.PolicyOutput = imageResp
 			processed = append(processed, imageResp...)
 
 		default:

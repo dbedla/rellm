@@ -97,7 +97,7 @@ type Agent struct {
 //   - []ConversationElement{image}: keep it unchanged
 //   - any other slice: replace it with those elements
 //
-// The original image is returned separately in Report.Image.
+// The original image and the policy output are returned in Report.Image.
 type HandleImageGeneration func(ctx context.Context, image *ImageGeneration) ([]ConversationElement, error)
 
 // InspectEachRequest inspects each request before it is sent to the provider.
@@ -118,11 +118,14 @@ type InspectEachResponse func(resp *ResponsesAPIResp)
 type HandleUnknownConversationElement func(ctx context.Context, el *UnknownElement) ([]ConversationElement, error)
 
 type Report struct {
-	Messages *string
-
-	//before any policy hit
-	Image      *ImageGeneration
+	Messages   *string
+	Image      *ImageReport
 	StepsStats []StepStat
+}
+
+type ImageReport struct {
+	Original     *ImageGeneration
+	PolicyOutput []ConversationElement
 }
 
 type StepStat struct {

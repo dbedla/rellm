@@ -68,7 +68,8 @@ func (b *AgentBuilder) WithHandleImageGeneration(handleImage HandleImageGenerati
 }
 
 // WithImageGenerationDrop configures the agent to drop generated images from
-// the conversation loop. The original image is still returned in Report.Image.
+// the conversation loop. The original image is still returned in
+// Report.Image.Original.
 func (b *AgentBuilder) WithImageGenerationDrop() *AgentBuilder {
 	b.agent.handleImageGeneration = func(ctx context.Context, image *ImageGeneration) ([]ConversationElement, error) {
 		return nil, nil

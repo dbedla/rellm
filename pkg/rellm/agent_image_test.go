@@ -50,9 +50,15 @@ func TestAgentPromptToGetImage(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Nil(t, finalReport.Messages)
 	if assert.NotNil(t, finalReport.Image) {
-		assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA", finalReport.Image.Result)
-		assert.Equal(t, "completed", finalReport.Image.Status)
-		assert.Equal(t, "ig_tmp_vqotwoa5eg", finalReport.Image.ID)
+		assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA", finalReport.Image.Original.Result)
+		assert.Equal(t, "completed", finalReport.Image.Original.Status)
+		assert.Equal(t, "ig_tmp_vqotwoa5eg", finalReport.Image.Original.ID)
+		if assert.Len(t, finalReport.Image.PolicyOutput, 1) {
+			policyImage, ok := finalReport.Image.PolicyOutput[0].(*rellm.ImageGeneration)
+			if assert.True(t, ok) {
+				assert.Equal(t, "image-stored-under-this-id", policyImage.Result)
+			}
+		}
 	}
 
 	conversation, err := agent.CurrentConversation(ctx)
@@ -97,7 +103,8 @@ func TestAgentPromptToGetImage_handlerErr(t *testing.T) {
 
 	assert.Nil(t, finalReport.Messages)
 	assert.NotNil(t, finalReport.Image)
-	assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA", finalReport.Image.Result)
+	assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA", finalReport.Image.Original.Result)
+	assert.Empty(t, finalReport.Image.PolicyOutput)
 }
 
 func TestAgentPromptToGetImagePolicies(t *testing.T) {
@@ -105,6 +112,7 @@ func TestAgentPromptToGetImagePolicies(t *testing.T) {
 		name             string
 		configure        func(*rellm.AgentBuilder)
 		conversationSize int
+		policyOutputSize int
 	}{
 		{
 			name: "drop",
@@ -112,6 +120,7 @@ func TestAgentPromptToGetImagePolicies(t *testing.T) {
 				builder.WithImageGenerationDrop()
 			},
 			conversationSize: 2,
+			policyOutputSize: 0,
 		},
 		{
 			name: "keep in the loop",
@@ -119,6 +128,7 @@ func TestAgentPromptToGetImagePolicies(t *testing.T) {
 				builder.WithImageGenerationKeepInTheLoop()
 			},
 			conversationSize: 3,
+			policyOutputSize: 1,
 		},
 	}
 
@@ -138,7 +148,8 @@ func TestAgentPromptToGetImagePolicies(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Nil(t, finalReport.Messages)
 			if assert.NotNil(t, finalReport.Image) {
-				assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA", finalReport.Image.Result)
+				assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA", finalReport.Image.Original.Result)
+				assert.Len(t, finalReport.Image.PolicyOutput, tt.policyOutputSize)
 			}
 
 			conversation, err := agent.CurrentConversation(context.Background())
