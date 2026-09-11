@@ -132,6 +132,7 @@ func TestLMSAgentHiUnknownConversationElInRespDrop(t *testing.T) {
 
 	assert.NotEmpty(t, finalReport.Messages)
 	assert.Equal(t, "Hello! How can I help you today?", finalReport.Messages)
+	assert.Equal(t, expectedStepStats(t, goldenLMS_Hi_02_resp_unknown), finalReport.StepsStats)
 	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, conversation, 4)
@@ -171,6 +172,7 @@ func TestLMSAgentHiUnknownConversationElInRespKeepInTheLoop(t *testing.T) {
 
 	assert.NotEmpty(t, finalReport.Messages)
 	assert.Equal(t, "Hello! How can I help you today?", finalReport.Messages)
+	assert.Equal(t, expectedStepStats(t, goldenLMS_Hi_02_resp_unknown), finalReport.StepsStats)
 	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, conversation, 5)
@@ -210,6 +212,7 @@ func TestLMSAgentHiUnknownConversationElHandlerAddAdditionalData(t *testing.T) {
 
 	assert.NotEmpty(t, finalReport.Messages)
 	assert.Equal(t, "Hello! How can I help you today?", finalReport.Messages)
+	assert.Equal(t, expectedStepStats(t, goldenLMS_Hi_02_resp_unknown), finalReport.StepsStats)
 	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, conversation, 6)
@@ -252,6 +255,8 @@ func TestLMSAgentHiUnknownConversationElInRespDropNoNewMessages(t *testing.T) {
 	assert.ErrorIs(t, err, rellm.ErrNoNewConversationElementAfterDispatch)
 
 	assert.Empty(t, finalReport.Messages)
+	// Usage is recorded even though dispatching produced no conversation elements.
+	assert.Equal(t, expectedStepStats(t, goldenLMS_Hi_02_resp_only_unknown), finalReport.StepsStats)
 	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, conversation, 2)
@@ -291,6 +296,7 @@ func TestLMSAgentHiUnknownConversationElInRespReplace(t *testing.T) {
 
 	assert.NotEmpty(t, finalReport.Messages)
 	assert.Equal(t, "Hello! How can I help you today?", finalReport.Messages)
+	assert.Equal(t, expectedStepStats(t, goldenLMS_Hi_02_resp_unknown), finalReport.StepsStats)
 	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, conversation, 5)

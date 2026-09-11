@@ -48,6 +48,7 @@ func TestAgentAsk(t *testing.T) {
 	assert.NoError(t, err, "failed to ask")
 	assert.NotEmpty(t, finalReport.Messages)
 	assert.Equal(t, "Hello! How can I help you today? \n\nIf you have any questions about the weather, meteorology, climate patterns, or even how certain atmospheric phenomena work, feel free to ask!", finalReport.Messages, "response message should match")
+	assert.Equal(t, expectedStepStats(t, goldenRespHi), finalReport.StepsStats)
 }
 
 //go:embed testdata/base_api_req_hi_no_sys_msg.json
@@ -79,6 +80,7 @@ func TestAgentAskNoSysMsg(t *testing.T) {
 	assert.NoError(t, err, "failed to ask")
 	assert.NotEmpty(t, finalReport.Messages)
 	assert.Equal(t, "Hello! How can I help you today? \n\nIf you have any questions about the weather, meteorology, climate patterns, or even how certain atmospheric phenomena work, feel free to ask!", finalReport.Messages, "response message should match")
+	assert.Equal(t, expectedStepStats(t, goldenRespHi), finalReport.StepsStats)
 
 	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
@@ -194,8 +196,9 @@ func TestPromptBuilder_AllFields(t *testing.T) {
 	assert.NoError(t, err)
 
 	ctx := context.Background()
-	_, err = agent.Execute(ctx, prompt)
+	report, err := agent.Execute(ctx, prompt)
 	assert.NoError(t, err)
+	assert.Equal(t, expectedStepStats(t, goldenRespHi), report.StepsStats)
 }
 
 func TestAgentAskStatusInternalServerError(t *testing.T) {
@@ -247,8 +250,9 @@ func TestAgentAsk_RetryAfterProviderFailedMessageStaysInConversation(t *testing.
 	_, err := agent.Ask(ctx, "Hi")
 	assert.Error(t, err)
 
-	_, err = agent.Ask(ctx, "Hi")
+	report, err := agent.Ask(ctx, "Hi")
 	assert.NoError(t, err)
+	assert.Equal(t, expectedStepStats(t, goldenRespHi), report.StepsStats)
 
 	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)

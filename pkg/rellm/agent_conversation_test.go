@@ -47,6 +47,7 @@ func TestAgentAsk_ConversationBeforeAndAfter(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, finalReport.Messages)
 	assert.Equal(t, "Hello! How can I help you today? \n\nIf you have any questions about the weather, meteorology, climate patterns, or even how certain atmospheric phenomena work, feel free to ask!", finalReport.Messages)
+	assert.Equal(t, expectedStepStats(t, goldenRespHi), finalReport.StepsStats)
 
 	conversationFromGolden, err := buildConversationFromGoldenLms(
 		goldenReqHi,
@@ -128,6 +129,7 @@ func TestAgentLMS_ToolsCallWithConversationCheck(t *testing.T) {
 
 	assert.NotEmpty(t, finalReport.Messages)
 	assert.Equal(t, "The first tool call to `GetStaticData` returned the value `42`. The second tool call to `GetDataFor` with the input \"the meaning of 42\" returned a list containing `[\"abc\", \"def\"]`. Therefore, based on these specific tool outputs, the data associated with the value 42 is \"abc\" and \"def\".", finalReport.Messages, "response message should match")
+	assert.Equal(t, expectedStepStats(t, goldenProRespA1, goldenProRespA2, goldenProRespA3), finalReport.StepsStats)
 
 	agentConversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
@@ -210,6 +212,8 @@ func TestAgentLMS_ToolsCallWithConversationCheck_SecondRespFail(t *testing.T) {
 	assert.ErrorIs(t, err, rellm.ErrEndpointNilBodyInResponse)
 
 	assert.Empty(t, finalReport.Messages)
+	// Usage of the two successful calls is retained despite the failing third.
+	assert.Equal(t, expectedStepStats(t, goldenProRespA1, goldenProRespA2), finalReport.StepsStats)
 
 	agentConversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
@@ -272,6 +276,7 @@ func TestAgentOpenRouterGemma_ConversationCheck(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, finalReport.Messages)
 	assert.Equal(t, "Hello! How can I help you today?", finalReport.Messages)
+	assert.Equal(t, expectedStepStats(t, goldenOR_Hi_02_resp), finalReport.StepsStats)
 
 	secondPrompt, err := rellm.NewPromptBuilder().
 		WithMessage("what tool do you see?").
@@ -284,6 +289,7 @@ func TestAgentOpenRouterGemma_ConversationCheck(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, finalReport.Messages)
 	assert.Equal(t, "I have access to the following tools:\n\n1.  **`GetDataFor`**: This tool allows me to retrieve specific data based on an input string you provide.\n2.  **`GetStaticData`**: This tool allows me to retrieve pre-defined static data.", finalReport.Messages)
+	assert.Equal(t, expectedStepStats(t, goldenOR_Hi_04_resp), finalReport.StepsStats)
 
 	agentConversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
@@ -347,6 +353,7 @@ func TestAgentOpenRouterGemini_ConversationCheck(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, finalReport.Messages)
 	assert.Equal(t, "Hello! How can I help you today?", finalReport.Messages)
+	assert.Equal(t, expectedStepStats(t, goldenOR_Hi_gemini_02_resp), finalReport.StepsStats)
 
 	secondPrompt, err := rellm.NewPromptBuilder().
 		WithMessage("what tools do you see?").
@@ -359,6 +366,7 @@ func TestAgentOpenRouterGemini_ConversationCheck(t *testing.T) {
 	assert.NoError(t, err, "failed to ask with reasoning in conversation")
 	assert.NotEmpty(t, finalReport.Messages)
 	assert.Equal(t, "I have access to the following tools:\n\n*   **`GetDataFor`**: This tool allows me to retrieve specific data based on an input you provide.\n*   **`GetStaticData`**: This tool allows me to retrieve general static information.\n\nHow can I help you use these today?", finalReport.Messages)
+	assert.Equal(t, expectedStepStats(t, goldenOR_Hi_gemini_04_resp), finalReport.StepsStats)
 
 	agentConversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
@@ -465,6 +473,7 @@ func TestAgentAskGetSummaryFromOpenAiWithFsToolset(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, finalReport.Messages)
 	assert.Equal(t, "I can see these files:\n\n- `locations.txt`\n- `names.txt`\n\nThe output directory is currently empty.", finalReport.Messages)
+	assert.Equal(t, expectedStepStats(t, goldenFS02LunaResp, goldenFS04LunaResp, goldenFS06LunaResp), finalReport.StepsStats)
 }
 
 func buildTestFileSystemAgentOpenRouter(t *testing.T, model rellm.Model, maxAgentSteps uint64, fst rellm.Toolset) (*rellm.Agent, *HTTPDoMock) {

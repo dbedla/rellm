@@ -80,6 +80,7 @@ func TestLMSAgentHiWithToolsNoCall(t *testing.T) {
 
 	assert.NotEmpty(t, finalReport.Messages)
 	assert.Equal(t, "Hello! How can I help you today?", finalReport.Messages)
+	assert.Equal(t, expectedStepStats(t, goldenLMS_Hi_02_resp), finalReport.StepsStats)
 
 	promptReasoning, err := rellm.NewPromptBuilder().
 		WithMessage("what tools do you see?").
@@ -92,6 +93,7 @@ func TestLMSAgentHiWithToolsNoCall(t *testing.T) {
 	assert.NoError(t, err, "failed to ask with reasoning in conversation")
 	assert.NotEmpty(t, finalReport.Messages)
 	assert.Equal(t, "I have access to the following tools:\n\n1.  **`GetDataFor`**: This tool allows me to retrieve specific data based on an input string you provide.\n2.  **`GetStaticData`**: This tool allows me to retrieve predefined static information.", finalReport.Messages)
+	assert.Equal(t, expectedStepStats(t, goldenLMS_Hi_04_resp), finalReport.StepsStats)
 }
 
 //go:embed testdata/openrouter/hi_01_gemma_req.json
@@ -156,6 +158,7 @@ func TestOpenRouterAgentHiWithToolsNoCallGemma(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, finalReport.Messages)
 	assert.Equal(t, "Hello! How can I help you today?", finalReport.Messages)
+	assert.Equal(t, expectedStepStats(t, goldenOR_Hi_02_resp), finalReport.StepsStats)
 
 	secondPrompt, err := rellm.NewPromptBuilder().
 		WithMessage("what tool do you see?").
@@ -168,6 +171,7 @@ func TestOpenRouterAgentHiWithToolsNoCallGemma(t *testing.T) {
 	assert.NoError(t, err, "failed to ask with reasoning in conversation")
 	assert.NotEmpty(t, finalReport.Messages)
 	assert.Equal(t, "I have access to the following tools:\n\n1.  **`GetDataFor`**: This tool allows me to retrieve specific data based on an input string you provide.\n2.  **`GetStaticData`**: This tool allows me to retrieve pre-defined static data.", finalReport.Messages)
+	assert.Equal(t, expectedStepStats(t, goldenOR_Hi_04_resp), finalReport.StepsStats)
 }
 
 //go:embed testdata/openrouter/hi_gemini_01_req.json
@@ -232,6 +236,7 @@ func TestOpenRouterAgentHiWithToolsNoCallGemini(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, finalReport.Messages)
 	assert.Equal(t, "Hello! How can I help you today?", finalReport.Messages)
+	assert.Equal(t, expectedStepStats(t, goldenOR_Hi_gemini_02_resp), finalReport.StepsStats)
 
 	secondPrompt, err := rellm.NewPromptBuilder().
 		WithMessage("what tools do you see?").
@@ -244,6 +249,7 @@ func TestOpenRouterAgentHiWithToolsNoCallGemini(t *testing.T) {
 	assert.NoError(t, err, "failed to ask with reasoning in conversation")
 	assert.NotEmpty(t, finalReport.Messages)
 	assert.Equal(t, "I have access to the following tools:\n\n*   **`GetDataFor`**: This tool allows me to retrieve specific data based on an input you provide.\n*   **`GetStaticData`**: This tool allows me to retrieve general static information.\n\nHow can I help you use these today?", finalReport.Messages)
+	assert.Equal(t, expectedStepStats(t, goldenOR_Hi_gemini_04_resp), finalReport.StepsStats)
 }
 
 //go:embed testdata/pro_api_tool_A1_req.json
@@ -333,6 +339,7 @@ func TestAgentLMS_ToolsCall(t *testing.T) {
 
 	assert.NotEmpty(t, finalReport.Messages)
 	assert.Equal(t, "The first tool call to `GetStaticData` returned the value `42`. The second tool call to `GetDataFor` with the input \"the meaning of 42\" returned a list containing `[\"abc\", \"def\"]`. Therefore, based on these specific tool outputs, the data associated with the value 42 is \"abc\" and \"def\".", finalReport.Messages, "response message should match")
+	assert.Equal(t, expectedStepStats(t, goldenProRespA1, goldenProRespA2, goldenProRespA3), finalReport.StepsStats)
 }
 
 //go:embed testdata/lms/unknown_fn_call_01_req.json
@@ -398,6 +405,8 @@ func TestAgentLMS_UnknownFnCall(t *testing.T) {
 	assert.Error(t, err, "failed to ask")
 	assert.ErrorIs(t, err, rellm.ErrWhileDispatchToolCall)
 	assert.Empty(t, finalReport.Messages)
+	// Usage of the successful call is retained despite the dispatch error.
+	assert.Equal(t, expectedStepStats(t, goldenLMs_UnknownFnCall_resp_02), finalReport.StepsStats)
 
 	//since we get err ErrUnknownToolCall so we simulate user ask to continue
 	q = "continue"
@@ -413,6 +422,7 @@ func TestAgentLMS_UnknownFnCall(t *testing.T) {
 
 	assert.NotEmpty(t, finalReport.Messages)
 	assert.Equal(t, "It appears that the attempt to call `GetSpecialData` resulted in an error indicating the function was not found. \n\nHow would you like to proceed? I can try calling one of the other available functions, such as `GetStaticData` or `GetDataFor`, if you provide a specific input.", finalReport.Messages, "response message should match")
+	assert.Equal(t, expectedStepStats(t, goldenLMS_UnknownFnCall_resp_04), finalReport.StepsStats)
 }
 
 func TestAgentLMS_DispatchFailurePersistsPartialToolResults(t *testing.T) {
@@ -457,6 +467,8 @@ func TestAgentLMS_DispatchFailurePersistsPartialToolResults(t *testing.T) {
 	finalReport, err := agent.Execute(ctx, prompt)
 	assert.Empty(t, finalReport.Messages)
 	assert.ErrorIs(t, err, rellm.ErrWhileDispatchToolCall)
+	// The inline response carries no usage, so the stat is recorded zero-valued.
+	assert.Equal(t, expectedStepStats(t, response), finalReport.StepsStats)
 
 	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
@@ -520,9 +532,11 @@ func TestAgentLMSTooManyFunctionCall(t *testing.T) {
 	assert.NoError(t, err)
 
 	ctx := context.Background()
-	_, err = agent.Execute(ctx, prompt)
+	report, err := agent.Execute(ctx, prompt)
 	assert.Error(t, err, "expected error when tool iteration budget is exceeded")
 	assert.True(t, errors.Is(err, rellm.ErrMaxAgentStepsReached))
+	// Two provider calls succeeded before the step budget ran out.
+	assert.Equal(t, expectedStepStats(t, goldenProRespA1, goldenProRespA2), report.StepsStats)
 }
 
 func buildTestProToolAgentLMS(t *testing.T, maxAgentSteps uint64) (*rellm.Agent, *HTTPDoMock) {

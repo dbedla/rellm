@@ -49,6 +49,7 @@ func TestAgentPromptToGetImage(t *testing.T) {
 	finalReport, err := agent.Ask(ctx, q)
 	assert.NoError(t, err)
 	assert.Empty(t, finalReport.Messages)
+	assert.Equal(t, expectedStepStats(t, goldenImageResp), finalReport.StepsStats)
 	if assert.Len(t, finalReport.Image, 1) {
 		assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA", finalReport.Image[0].Original.Result)
 		assert.Equal(t, "completed", finalReport.Image[0].Original.Status)
@@ -105,6 +106,8 @@ func TestAgentPromptToGetImage_handlerErr(t *testing.T) {
 	assert.Len(t, finalReport.Image, 1)
 	assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA", finalReport.Image[0].Original.Result)
 	assert.Empty(t, finalReport.Image[0].PolicyOutput)
+	// Usage is recorded even though the image policy failed.
+	assert.Equal(t, expectedStepStats(t, goldenImageResp), finalReport.StepsStats)
 }
 
 func TestAgentPromptToGetImagePolicies(t *testing.T) {
@@ -151,6 +154,7 @@ func TestAgentPromptToGetImagePolicies(t *testing.T) {
 				assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA", finalReport.Image[0].Original.Result)
 				assert.Len(t, finalReport.Image[0].PolicyOutput, tt.policyOutputSize)
 			}
+			assert.Equal(t, expectedStepStats(t, goldenImageResp), finalReport.StepsStats)
 
 			conversation, err := agent.CurrentConversation(context.Background())
 			assert.NoError(t, err)
@@ -182,6 +186,8 @@ func TestAgentPromptToGetMultipleImages(t *testing.T) {
 	finalReport, err := agent.Ask(context.Background(), "generate images")
 	assert.NoError(t, err)
 	assert.Empty(t, finalReport.Messages)
+	// The inline multi-image response carries no usage, so the stat is zero-valued.
+	assert.Equal(t, expectedStepStats(t, multiImageResp), finalReport.StepsStats)
 
 	wantResults := []string{"data:image/jpeg;base64,AAA", "data:image/jpeg;base64,BBB"}
 	if assert.Len(t, finalReport.Image, 2) {
