@@ -20,84 +20,6 @@ import (
 //go:embed testdata/lms/hi_02_gemma_resp_unknown_el.json
 var goldenLMS_Hi_02_resp_unknown string
 
-func TestLMSAgentHiUnknownConversationElInRespNoHandlerGetErr(t *testing.T) {
-	agent, httpDo := buildTestProToolAgentLMSWithUnknownElHandler(t, testDefaultMaxAgentSteps, unknownConversationElementHandlerNil)
-	defer httpDo.AssertExpectations(t)
-
-	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
-		Once().
-		Run(func(args mock.Arguments) {
-			req := args.Get(0).(*http.Request)
-
-			b, err := io.ReadAll(req.Body)
-			assert.NoError(t, err, "failed to read request body")
-
-			req.Body = io.NopCloser(bytes.NewBuffer(b))
-
-			assert.JSONEq(t, goldenLMS_Hi_01_req, string(b))
-		}).
-		Return(&http.Response{
-			StatusCode: http.StatusOK,
-			Body:       io.NopCloser(strings.NewReader(goldenLMS_Hi_02_resp_unknown)),
-		}, nil)
-
-	promptFirst, err := rellm.NewPromptBuilder().
-		WithMessage("hi").
-		WithReasoning(testReasoningEffort).
-		WithTemperature(testTemperature).
-		Build()
-	assert.NoError(t, err)
-
-	ctx := context.Background()
-	respMsg, err := agent.Execute(ctx, promptFirst)
-	assert.Error(t, err)
-	assert.ErrorIs(t, err, rellm.ErrNoUnknownConversationElementHandler)
-
-	assert.Equal(t, "", respMsg)
-	conversation, err := agent.CurrentConversation(ctx)
-	assert.NoError(t, err)
-	assert.Len(t, conversation, 4)
-}
-
-func TestLMSAgentHiUnknownConversationElHandlerNotProvidedGetErr(t *testing.T) {
-	agent, httpDo := buildTestProToolAgentLMSWithUnknownElHandler(t, testDefaultMaxAgentSteps, unknownConversationElementHandlerUndef)
-	defer httpDo.AssertExpectations(t)
-
-	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
-		Once().
-		Run(func(args mock.Arguments) {
-			req := args.Get(0).(*http.Request)
-
-			b, err := io.ReadAll(req.Body)
-			assert.NoError(t, err, "failed to read request body")
-
-			req.Body = io.NopCloser(bytes.NewBuffer(b))
-
-			assert.JSONEq(t, goldenLMS_Hi_01_req, string(b))
-		}).
-		Return(&http.Response{
-			StatusCode: http.StatusOK,
-			Body:       io.NopCloser(strings.NewReader(goldenLMS_Hi_02_resp_unknown)),
-		}, nil)
-
-	promptFirst, err := rellm.NewPromptBuilder().
-		WithMessage("hi").
-		WithReasoning(testReasoningEffort).
-		WithTemperature(testTemperature).
-		Build()
-	assert.NoError(t, err)
-
-	ctx := context.Background()
-	respMsg, err := agent.Execute(ctx, promptFirst)
-	assert.Error(t, err)
-	assert.ErrorIs(t, err, rellm.ErrNoUnknownConversationElementHandler)
-
-	assert.Equal(t, "", respMsg)
-	conversation, err := agent.CurrentConversation(ctx)
-	assert.NoError(t, err)
-	assert.Len(t, conversation, 4)
-}
-
 func TestLMSAgentHiUnknownConversationElInRespDrop(t *testing.T) {
 	agent, httpDo := buildTestProToolAgentLMSWithUnknownElHandler(t, testDefaultMaxAgentSteps, unknownConversationElementHandlerDrop)
 	defer httpDo.AssertExpectations(t)
@@ -127,10 +49,12 @@ func TestLMSAgentHiUnknownConversationElInRespDrop(t *testing.T) {
 	assert.NoError(t, err)
 
 	ctx := context.Background()
-	respMsg, err := agent.Execute(ctx, promptFirst)
+	finalReport, err := agent.Execute(ctx, promptFirst)
 	assert.NoError(t, err)
 
-	assert.Equal(t, "Hello! How can I help you today?", respMsg)
+	assert.NotEmpty(t, finalReport.Message)
+	assert.Equal(t, "Hello! How can I help you today?", finalReport.Message)
+	assert.Equal(t, expectedStepStats(t, goldenLMS_Hi_02_resp_unknown), finalReport.StepsStats)
 	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, conversation, 4)
@@ -165,10 +89,12 @@ func TestLMSAgentHiUnknownConversationElInRespKeepInTheLoop(t *testing.T) {
 	assert.NoError(t, err)
 
 	ctx := context.Background()
-	respMsg, err := agent.Execute(ctx, promptFirst)
+	finalReport, err := agent.Execute(ctx, promptFirst)
 	assert.NoError(t, err)
 
-	assert.Equal(t, "Hello! How can I help you today?", respMsg)
+	assert.NotEmpty(t, finalReport.Message)
+	assert.Equal(t, "Hello! How can I help you today?", finalReport.Message)
+	assert.Equal(t, expectedStepStats(t, goldenLMS_Hi_02_resp_unknown), finalReport.StepsStats)
 	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, conversation, 5)
@@ -203,10 +129,12 @@ func TestLMSAgentHiUnknownConversationElHandlerAddAdditionalData(t *testing.T) {
 	assert.NoError(t, err)
 
 	ctx := context.Background()
-	respMsg, err := agent.Execute(ctx, promptFirst)
+	finalReport, err := agent.Execute(ctx, promptFirst)
 	assert.NoError(t, err)
 
-	assert.Equal(t, "Hello! How can I help you today?", respMsg)
+	assert.NotEmpty(t, finalReport.Message)
+	assert.Equal(t, "Hello! How can I help you today?", finalReport.Message)
+	assert.Equal(t, expectedStepStats(t, goldenLMS_Hi_02_resp_unknown), finalReport.StepsStats)
 	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, conversation, 6)
@@ -244,11 +172,13 @@ func TestLMSAgentHiUnknownConversationElInRespDropNoNewMessages(t *testing.T) {
 	assert.NoError(t, err)
 
 	ctx := context.Background()
-	respMsg, err := agent.Execute(ctx, promptFirst)
+	finalReport, err := agent.Execute(ctx, promptFirst)
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, rellm.ErrNoNewConversationElementAfterDispatch)
 
-	assert.Equal(t, "", respMsg)
+	assert.Empty(t, finalReport.Message)
+	// Usage is recorded even though dispatching produced no conversation elements.
+	assert.Equal(t, expectedStepStats(t, goldenLMS_Hi_02_resp_only_unknown), finalReport.StepsStats)
 	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, conversation, 2)
@@ -283,10 +213,12 @@ func TestLMSAgentHiUnknownConversationElInRespReplace(t *testing.T) {
 	assert.NoError(t, err)
 
 	ctx := context.Background()
-	respMsg, err := agent.Execute(ctx, promptFirst)
+	finalReport, err := agent.Execute(ctx, promptFirst)
 	assert.NoError(t, err)
 
-	assert.Equal(t, "Hello! How can I help you today?", respMsg)
+	assert.NotEmpty(t, finalReport.Message)
+	assert.Equal(t, "Hello! How can I help you today?", finalReport.Message)
+	assert.Equal(t, expectedStepStats(t, goldenLMS_Hi_02_resp_unknown), finalReport.StepsStats)
 	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, conversation, 5)
@@ -303,9 +235,7 @@ func TestLMSAgentHiUnknownConversationElInRespReplace(t *testing.T) {
 type unknownConversationElementHandlerTestType int
 
 const (
-	unknownConversationElementHandlerNil           unknownConversationElementHandlerTestType = 0
 	unknownConversationElementHandlerDrop          unknownConversationElementHandlerTestType = 1
-	unknownConversationElementHandlerUndef         unknownConversationElementHandlerTestType = 2
 	unknownConversationElementHandlerKeepInTheLoop unknownConversationElementHandlerTestType = 3
 	unknownConversationElementHandlerAddResp       unknownConversationElementHandlerTestType = 4
 	unknownConversationElementHandlerReplace       unknownConversationElementHandlerTestType = 5
@@ -327,13 +257,10 @@ func buildTestProToolAgentLMSWithUnknownElHandler(
 		WithMaxAgentSteps(maxAgentSteps).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage("You are a helpful assistant.").
+		WithImageGenerationKeepInTheLoop().
 		WithToolset(&examplesutils.DataSrcToolset{})
 
 	switch uh {
-	case unknownConversationElementHandlerNil:
-		builder.WithUnknownConversationElementHandler(nil)
-	case unknownConversationElementHandlerUndef:
-		//intentionally left blank
 	case unknownConversationElementHandlerKeepInTheLoop:
 		builder.WithUnknownConversationElementKeepInTheLoop()
 	case unknownConversationElementHandlerDrop:

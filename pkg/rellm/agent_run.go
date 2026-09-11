@@ -8,15 +8,15 @@ import (
 	"strings"
 )
 
-func (a *Agent) run(ctx context.Context, msg string, params promptParams) (string, error) {
+func (a *Agent) run(ctx context.Context, msg string, params promptParams) (Report, error) {
 	conversation, err := a.appendConversation(ctx, msg)
 	if err != nil {
-		return "", err
+		return Report{}, err
 	}
 
 	wire, err := a.provider.ToProviderRepresentation(conversation)
 	if err != nil {
-		return "", errors.Join(ErrConversationElementConversion, err)
+		return Report{}, errors.Join(ErrConversationElementConversion, err)
 	}
 
 	req := toBaseResponsesAPIReq(params, a.provider.Model(), wire)
@@ -25,72 +25,106 @@ func (a *Agent) run(ctx context.Context, msg string, params promptParams) (strin
 		req.Tools = a.toolset.Definitions()
 	}
 
-	msgRespFromLLM, err := a.process(ctx, req)
+	finalReport, err := a.process(ctx, req)
 
 	if err != nil {
-		return "", err
+		return finalReport, err
 	}
 
-	return msgRespFromLLM, nil
+	return finalReport, nil
 }
 
-func (a *Agent) process(ctx context.Context, req *ResponsesAPIReq) (string, error) {
+func (a *Agent) process(ctx context.Context, req *ResponsesAPIReq) (Report, error) {
+	finalReport := Report{}
 	for i := uint64(0); i < a.maxAgentSteps; i++ {
+		if err := ctx.Err(); err != nil {
+			return finalReport, err
+		}
 
-		err := ctx.Err()
+		response, err := a.post(ctx, req)
 		if err != nil {
-			return "", err
+			return finalReport, err
+		}
+		stepStat := StepStat{APIUsage: response.Usage}
+		finalReport.StepsStats = append(finalReport.StepsStats, stepStat)
+
+		if response.Error != nil {
+			return finalReport, errors.Join(
+				ErrInConversationResponse,
+				fmt.Errorf("err msg: %v", response.Error.Message),
+			)
 		}
 
-		conversationResponse, err := a.post(ctx, req)
-		if err != nil {
-			return "", err
+		stepReport, conversation, stepErr := a.processStep(ctx, response)
+		finalReport.Images = append(finalReport.Images, stepReport.Images...)
+		finalReport.Message = stepReport.Message
+
+		if len(conversation) > 0 {
+			err := a.appendNewConversationElements(ctx, conversation, req)
+			if err != nil {
+				return finalReport, errors.Join(err, stepErr)
+			}
+		}
+		if stepErr != nil {
+			return finalReport, stepErr
 		}
 
-		if conversationResponse.Error != nil {
-			return "", errors.Join(ErrInConversationResponse, fmt.Errorf("err msg: %v", conversationResponse.Error.Message))
+		if finalReport.Message != "" || len(finalReport.Images) > 0 {
+			return finalReport, nil
 		}
-
-		conversation, err := a.provider.ToConversationElements(conversationResponse.Output)
-		if err != nil {
-			return "", errors.Join(ErrConversationElementConversion, err)
-		}
-		msg, conversation, imageHandled, err := a.dispatchConversation(ctx, conversation)
-		if len(conversation) == 0 {
-			return "", errors.Join(ErrNoNewConversationElementAfterDispatch, err)
-		}
-
-		raw, errProviderRep := a.provider.ToProviderRepresentation(conversation)
-		if errProviderRep != nil {
-			return "", errors.Join(ErrConversationElementConversion, errProviderRep)
-		}
-		req.Input = append(req.Input, raw...)
-
-		conversationErr := a.conversationStorage.Append(ctx, conversation)
-		if conversationErr != nil {
-			return "", conversationErr
-		}
-
-		if err != nil {
-			return "", err
-		}
-
-		if imageHandled || msg != "" {
-			return msg, nil
-		}
-
 	}
 
-	return "",
-		errors.Join(ErrMaxAgentStepsReached,
-			fmt.Errorf("exceeded %d iterations", a.maxAgentSteps))
+	return finalReport, errors.Join(
+		ErrMaxAgentStepsReached,
+		fmt.Errorf("exceeded %d iterations", a.maxAgentSteps),
+	)
 }
 
-func (a *Agent) dispatchConversation(ctx context.Context, conversation []ConversationElement) (string, []ConversationElement, bool, error) {
+func (a *Agent) processStep(ctx context.Context, response *ResponsesAPIResp) (Report, []ConversationElement, error) {
+	stepReport := Report{}
+
+	conversation, err := a.provider.ToConversationElements(response.Output)
+	if err != nil {
+		return stepReport, nil, errors.Join(ErrConversationElementConversion, err)
+	}
+
+	message, conversation, images, dispatchErr := a.dispatchConversation(ctx, conversation)
+	stepReport.Images = images
+	if len(conversation) == 0 {
+		if len(images) > 0 && dispatchErr == nil {
+			return stepReport, nil, nil
+		}
+		return stepReport, nil, errors.Join(ErrNoNewConversationElementAfterDispatch, dispatchErr)
+	}
+	if dispatchErr != nil {
+		return stepReport, conversation, dispatchErr
+	}
+	if message != "" {
+		stepReport.Message = message
+	}
+
+	return stepReport, conversation, nil
+}
+
+func (a *Agent) appendNewConversationElements(
+	ctx context.Context,
+	conversation []ConversationElement,
+	req *ResponsesAPIReq,
+) error {
+	raw, err := a.provider.ToProviderRepresentation(conversation)
+	if err != nil {
+		return errors.Join(ErrConversationElementConversion, err)
+	}
+	req.Input = append(req.Input, raw...)
+
+	return a.conversationStorage.Append(ctx, conversation)
+}
+
+func (a *Agent) dispatchConversation(ctx context.Context, conversation []ConversationElement) (string, []ConversationElement, []ImageReport, error) {
 
 	var message strings.Builder
 	processed := make([]ConversationElement, 0, len(conversation)+4)
-	imageHandled := false
+	var images []ImageReport
 
 	var outputErr error
 
@@ -129,41 +163,38 @@ func (a *Agent) dispatchConversation(ctx context.Context, conversation []Convers
 			processed = append(processed, el)
 
 		case *ImageGeneration:
-			err := a.executeImageGenerationCallHandler(ctx, el)
+			// Keep the provider response intact for the caller. The policy may
+			// mutate or replace the image used by the conversation loop.
+			original := el.Clone().(*ImageGeneration)
+			images = append(images, ImageReport{Original: original})
+			imageResp, err := a.executeImageGenerationCallHandler(ctx, el)
 			if err != nil {
 				outputErr = errors.Join(outputErr, err)
+				continue
 			}
-			imageHandled = true
-			processed = append(processed, el)
+			// Copy the policy output so the report snapshot does not alias the
+			// elements appended to storage.
+			images[len(images)-1].PolicyOutput = cloneConversationElements(imageResp)
+			processed = append(processed, imageResp...)
 
 		default:
-			return "", nil, false, ErrUnknownConversationElement
+			return "", nil, nil, ErrUnknownTypeForConversationElement
 		}
 	}
 
-	return message.String(), processed, imageHandled, outputErr
+	return message.String(), processed, images, outputErr
 }
 
-func (a *Agent) executeImageGenerationCallHandler(ctx context.Context, image *ImageGeneration) error {
-	if a.handleImageGeneration == nil {
-		return ErrNoImageHandler
-	}
-
-	resultNote, err := a.handleImageGeneration(ctx, image)
+func (a *Agent) executeImageGenerationCallHandler(ctx context.Context, image *ImageGeneration) ([]ConversationElement, error) {
+	response, err := a.handleImageGeneration(ctx, image)
 	if err != nil {
-		return errors.Join(ErrCustomImageHandlerFailed, err)
+		return nil, errors.Join(ErrImageHandlerFailed, err)
 	}
 
-	image.Result = resultNote
-
-	return nil
+	return response, nil
 }
 
 func (a *Agent) executeUnknownConversationElementHandler(ctx context.Context, el *UnknownElement) ([]ConversationElement, error) {
-	if a.handleUnknownConversationElement == nil {
-		return nil, ErrNoUnknownConversationElementHandler
-	}
-
 	response, err := a.handleUnknownConversationElement(ctx, el)
 	if err != nil {
 		return nil, errors.Join(ErrCustomConversationElementHandlerFailed, err)
@@ -240,4 +271,14 @@ func (a *Agent) appendConversation(ctx context.Context, msg string) ([]Conversat
 	}
 
 	return conversation, nil
+}
+
+func funcResultToFunctionCallResp(callID string, funcResult any) FunctionCallResp {
+	b, err := json.Marshal(funcResult)
+	if err != nil {
+		errorMsg := "unable to execute function; " + err.Error()
+		return FunctionCallResp{Type: "function_call_output", CallID: callID, Output: errorMsg}
+	}
+
+	return FunctionCallResp{Type: "function_call_output", CallID: callID, Output: string(b)}
 }

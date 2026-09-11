@@ -244,12 +244,6 @@ func normalizeMessageParts(parts []MessagePart, role string) []MessagePart {
 		if parts[i].Type == "input_text" || parts[i].Type == "output_text" {
 			parts[i].Type = textType
 		}
-		if len(parts[i].Annotations) == 0 {
-			parts[i].Annotations = nil
-		}
-		if len(parts[i].Logprobs) == 0 {
-			parts[i].Logprobs = nil
-		}
 	}
 
 	return parts

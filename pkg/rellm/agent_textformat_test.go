@@ -109,11 +109,13 @@ func TestAgentTextFormat(t *testing.T) {
 				Build()
 			assert.NoError(t, err)
 
-			resp, err := tt.agent.Execute(context.Background(), prompt)
+			finalReport, err := tt.agent.Execute(context.Background(), prompt)
 			assert.NoError(t, err)
+			assert.NotEmpty(t, finalReport.Message)
+			assert.Equal(t, expectedStepStats(t, tt.resp), finalReport.StepsStats)
 
 			p := Person{}
-			err = json.Unmarshal([]byte(resp), &p)
+			err = json.Unmarshal([]byte(finalReport.Message), &p)
 			assert.NoError(t, err)
 
 			assert.Equal(t, "John Snow", p.Name)
@@ -145,6 +147,8 @@ func buildTestFormatOpenRouterAgent(t *testing.T, model rellm.Model, maxAgentSte
 		WithMaxAgentSteps(maxAgentSteps).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage(structuredOutputSysPrompt).
+		WithImageGenerationKeepInTheLoop().
+		WithUnknownConversationElementKeepInTheLoop().
 		Build()
 
 	assert.NoError(t, err, "failed to create agent")
@@ -165,6 +169,8 @@ func buildTestFormatOutputLMSAgent(t *testing.T, maxAgentSteps uint64) (*rellm.A
 		WithMaxAgentSteps(maxAgentSteps).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage(structuredOutputSysPrompt).
+		WithImageGenerationKeepInTheLoop().
+		WithUnknownConversationElementKeepInTheLoop().
 		Build()
 
 	assert.NoError(t, err, "failed to create agent")

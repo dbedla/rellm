@@ -27,5 +27,7 @@ func buildMathAgent() (*rellm.Agent, error) {
 		WithToolset(NewCalculatorToolset(&Calculator{})).
 		WithInspectEachRequest(examplesutils.InspectWithReqLog).
 		WithInspectEachResponse(examplesutils.InspectWithRespLog).
+		WithImageGenerationKeepInTheLoop().
+		WithUnknownConversationElementKeepInTheLoop().
 		Build()
 }

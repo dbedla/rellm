@@ -21,11 +21,9 @@ func NewInMemoryStorage() *InMemoryStorage {
 	return &InMemoryStorage{}
 }
 
-// Load returns a copy of the stored conversation elements. ctx is ignored.
+// Load returns deep copies of the stored conversation elements. ctx is ignored.
 func (s *InMemoryStorage) Load(_ context.Context) ([]ConversationElement, error) {
-	cp := make([]ConversationElement, len(s.messages))
-	copy(cp, s.messages)
-	return cp, nil
+	return cloneConversationElements(s.messages), nil
 }
 
 // Append adds elements to the in-memory history. ctx is ignored.

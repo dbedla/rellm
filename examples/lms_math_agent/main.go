@@ -29,6 +29,6 @@ func main() {
 			color.Red("unable to ask question: %s", err.Error())
 			continue
 		}
-		color.Blue(llmResp)
+		color.Blue(llmResp.Message)
 	}
 }

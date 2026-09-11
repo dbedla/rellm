@@ -46,10 +46,18 @@ func TestAgentPromptToGetImage(t *testing.T) {
 	q := "A clean, minimalist flat vector illustration of a tic-tac-toe board. White background, bold black grid lines. Three bright blue \"O\" symbols are aligned horizontally in the middle row, indicating a win. Minimalist aesthetic, high contrast, simple and modern graphic design."
 
 	ctx := context.Background()
-	respMsg, err := agent.Ask(ctx, q)
+	finalReport, err := agent.Ask(ctx, q)
 	assert.NoError(t, err)
-
-	assert.NotNil(t, respMsg, "response message should not be nil")
+	assert.Empty(t, finalReport.Message)
+	assert.Equal(t, expectedStepStats(t, goldenImageResp), finalReport.StepsStats)
+	assert.Len(t, finalReport.Images, 1)
+	assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA", finalReport.Images[0].Original.Result)
+	assert.Equal(t, "completed", finalReport.Images[0].Original.Status)
+	assert.Equal(t, "ig_tmp_vqotwoa5eg", finalReport.Images[0].Original.ID)
+	assert.Len(t, finalReport.Images[0].PolicyOutput, 1)
+	policyImage, ok := finalReport.Images[0].PolicyOutput[0].(*rellm.ImageGeneration)
+	assert.True(t, ok)
+	assert.Equal(t, "image-stored-under-this-id", policyImage.Result)
 
 	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
@@ -87,24 +95,136 @@ func TestAgentPromptToGetImage_handlerErr(t *testing.T) {
 	q := "A clean, minimalist flat vector illustration of a tic-tac-toe board. White background, bold black grid lines. Three bright blue \"O\" symbols are aligned horizontally in the middle row, indicating a win. Minimalist aesthetic, high contrast, simple and modern graphic design."
 
 	ctx := context.Background()
-	respMsg, err := agent.Ask(ctx, q)
+	finalReport, err := agent.Ask(ctx, q)
 	assert.Error(t, err)
-	assert.ErrorIs(t, err, rellm.ErrCustomImageHandlerFailed)
+	assert.ErrorIs(t, err, rellm.ErrImageHandlerFailed)
 
-	assert.NotNil(t, respMsg, "response message should not be nil")
-	assert.Equal(t, "", respMsg, "response message should match")
+	assert.Empty(t, finalReport.Message)
+	assert.Len(t, finalReport.Images, 1)
+	assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA", finalReport.Images[0].Original.Result)
+	assert.Empty(t, finalReport.Images[0].PolicyOutput)
+	// Usage is recorded even though the image policy failed.
+	assert.Equal(t, expectedStepStats(t, goldenImageResp), finalReport.StepsStats)
 }
 
-func testImageGenerationHandler(_ context.Context, image *rellm.ImageGeneration) (string, error) {
-	return "image-stored-under-this-id", nil
+func TestAgentPromptToGetImagePolicies(t *testing.T) {
+	tests := []struct {
+		name             string
+		configure        func(*rellm.AgentBuilder)
+		conversationSize int
+		policyOutputSize int
+	}{
+		{
+			name: "drop",
+			configure: func(builder *rellm.AgentBuilder) {
+				builder.WithImageGenerationDrop()
+			},
+			conversationSize: 2,
+			policyOutputSize: 0,
+		},
+		{
+			name: "keep in the loop",
+			configure: func(builder *rellm.AgentBuilder) {
+				builder.WithImageGenerationKeepInTheLoop()
+			},
+			conversationSize: 3,
+			policyOutputSize: 1,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			agent, httpDo := buildTestImageAgentWithPolicy(t, testDefaultMaxAgentSteps, tt.configure)
+			defer httpDo.AssertExpectations(t)
+
+			httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+				Once().
+				Return(&http.Response{
+					StatusCode: http.StatusOK,
+					Body:       io.NopCloser(strings.NewReader(goldenImageResp)),
+				}, nil)
+
+			finalReport, err := agent.Ask(context.Background(), "generate an image")
+			assert.NoError(t, err)
+			assert.Empty(t, finalReport.Message)
+			assert.Len(t, finalReport.Images, 1)
+			assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA", finalReport.Images[0].Original.Result)
+			assert.Len(t, finalReport.Images[0].PolicyOutput, tt.policyOutputSize)
+			assert.Equal(t, expectedStepStats(t, goldenImageResp), finalReport.StepsStats)
+
+			conversation, err := agent.CurrentConversation(context.Background())
+			assert.NoError(t, err)
+			assert.Len(t, conversation, tt.conversationSize)
+		})
+	}
 }
 
-func testImageGenerationHandlerAlwaysErr(_ context.Context, image *rellm.ImageGeneration) (string, error) {
-	return "", errors.New("test err in image handling error")
+func TestAgentPromptToGetMultipleImages(t *testing.T) {
+	agent, httpDo := buildTestImageAgentWithPolicy(t, testDefaultMaxAgentSteps, func(builder *rellm.AgentBuilder) {
+		builder.WithImageGenerationKeepInTheLoop()
+	})
+	defer httpDo.AssertExpectations(t)
+
+	multiImageResp := `{
+		"output": [
+			{"id":"ig_1","type":"image_generation_call","status":"completed","result":"data:image/jpeg;base64,AAA"},
+			{"id":"ig_2","type":"image_generation_call","status":"completed","result":"data:image/jpeg;base64,BBB"}
+		]
+	}`
+
+	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
+		Once().
+		Return(&http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(multiImageResp)),
+		}, nil)
+
+	finalReport, err := agent.Ask(context.Background(), "generate images")
+	assert.NoError(t, err)
+	assert.Empty(t, finalReport.Message)
+	// The inline multi-image response carries no usage, so the stat is zero-valued.
+	assert.Equal(t, expectedStepStats(t, multiImageResp), finalReport.StepsStats)
+
+	assert.Len(t, finalReport.Images, 2)
+	assert.Equal(t, "data:image/jpeg;base64,AAA", finalReport.Images[0].Original.Result)
+	assert.Equal(t, "data:image/jpeg;base64,BBB", finalReport.Images[1].Original.Result)
+
+	// Mutating the report must not affect stored history (no aliasing).
+	assert.Len(t, finalReport.Images[0].PolicyOutput, 1)
+	policyImage, ok := finalReport.Images[0].PolicyOutput[0].(*rellm.ImageGeneration)
+	assert.True(t, ok)
+	policyImage.Result = "MUTATED"
+
+	conversation, err := agent.CurrentConversation(context.Background())
+	assert.NoError(t, err)
+	assert.Len(t, conversation, 4) // sys + user + 2 images
+	img0, ok0 := conversation[2].(*rellm.ImageGeneration)
+	assert.True(t, ok0, "conversation[2] should be *ImageGeneration, got %T", conversation[2])
+	assert.Equal(t, "data:image/jpeg;base64,AAA", img0.Result, "stored result must not be affected by report mutation")
+
+	img1, ok1 := conversation[3].(*rellm.ImageGeneration)
+	assert.True(t, ok1, "conversation[3] should be *ImageGeneration, got %T", conversation[3])
+	assert.Equal(t, "data:image/jpeg;base64,BBB", img1.Result, "stored result must not be affected by report mutation")
+}
+
+func testImageGenerationHandler(_ context.Context, image *rellm.ImageGeneration) ([]rellm.ConversationElement, error) {
+	image.Result = "image-stored-under-this-id"
+	return []rellm.ConversationElement{image}, nil
+}
+
+func testImageGenerationHandlerAlwaysErr(_ context.Context, image *rellm.ImageGeneration) ([]rellm.ConversationElement, error) {
+	return nil, errors.New("test err in image handling error")
 }
 
 func buildTestImageAgent(t *testing.T, maxAgentSteps uint64,
 	imageGenerationH rellm.HandleImageGeneration) (*rellm.Agent, *HTTPDoMock) {
+	return buildTestImageAgentWithPolicy(t, maxAgentSteps, func(builder *rellm.AgentBuilder) {
+		builder.WithImageGenerationHandler(imageGenerationH)
+	})
+}
+
+func buildTestImageAgentWithPolicy(t *testing.T, maxAgentSteps uint64,
+	configure func(*rellm.AgentBuilder)) (*rellm.Agent, *HTTPDoMock) {
 
 	agentName := "TestImageAgent"
 	mockHttp := new(HTTPDoMock)
@@ -112,14 +232,15 @@ func buildTestImageAgent(t *testing.T, maxAgentSteps uint64,
 	p, err := rellm.NewOpenRouterProviderWithHTTPClient("test-key", rellm.Model("x-ai/grok-imagine-image-quality"), mockHttp)
 	assert.NoError(t, err, "failed to create provider")
 
-	ta, err := rellm.NewAgentBuilder().
+	builder := rellm.NewAgentBuilder().
 		WithProvider(p).
 		WithAgentName(agentName).
 		WithMaxAgentSteps(maxAgentSteps).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage("You are a helpful assistant.").
-		WithHandleImageGeneration(imageGenerationH).
-		Build()
+		WithUnknownConversationElementKeepInTheLoop()
+	configure(builder)
+	ta, err := builder.Build()
 
 	assert.NoError(t, err, "failed to create agent")
 	return ta, mockHttp

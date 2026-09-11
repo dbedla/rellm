@@ -31,6 +31,8 @@ func buildLMSAgent() (*rellm.Agent, error) {
 		WithToolset(&examplesutils2.DataSrcToolset{}).
 		WithInspectEachRequest(examplesutils2.InspectWithReqLog).
 		WithInspectEachResponse(examplesutils2.InspectWithRespLog).
+		WithImageGenerationKeepInTheLoop().
+		WithUnknownConversationElementKeepInTheLoop().
 		Build()
 }
 
@@ -52,6 +54,8 @@ func buildOpenRouterAgent(model rellm.Model) (*rellm.Agent, error) {
 		WithToolset(&examplesutils2.DataSrcToolset{}).
 		WithInspectEachRequest(examplesutils2.InspectWithReqLog).
 		WithInspectEachResponse(examplesutils2.InspectWithRespLog).
+		WithImageGenerationKeepInTheLoop().
+		WithUnknownConversationElementKeepInTheLoop().
 		Build()
 }
 

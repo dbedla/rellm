@@ -29,14 +29,16 @@ func buildBaseAgent() (*rellm.Agent, error) {
 		WithMaxAgentSteps(20).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage(baseAgentSysPrompt).
-		WithHandleImageGeneration(handleImage).
+		WithImageGenerationHandler(handleImage).
+		WithUnknownConversationElementKeepInTheLoop().
 		WithInspectEachRequest(examplesutils.InspectWithReqLog).
 		WithInspectEachResponse(examplesutils.InspectWithRespLog).
 		Build()
 }
 
-func handleImage(_ context.Context, image *rellm.ImageGeneration) (string, error) {
-	return "asd", nil
+func handleImage(_ context.Context, image *rellm.ImageGeneration) ([]rellm.ConversationElement, error) {
+	image.Result = "asd"
+	return []rellm.ConversationElement{image}, nil
 }
 
 func newOpenRouterProvider(model rellm.Model) (rellm.Provider, error) {

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"rellm/internal/examplesutils"
 	"rellm/pkg/rellm"
+	"testing"
 
 	"github.com/stretchr/testify/mock"
 )
@@ -20,6 +21,21 @@ const (
 
 func baseRequestMatch(req *http.Request) bool {
 	return req.Method == http.MethodPost && req.ContentLength != 0
+}
+
+// expectedStepStats unmarshals the usage blocks of the given golden responses
+// into the StepStats a report should carry, one per successful provider call.
+func expectedStepStats(t *testing.T, responses ...string) []rellm.StepStat {
+	t.Helper()
+	stats := make([]rellm.StepStat, len(responses))
+	for i, resp := range responses {
+		var r rellm.ResponsesAPIResp
+		if err := json.Unmarshal([]byte(resp), &r); err != nil {
+			t.Fatalf("failed to unmarshal golden response: %v", err)
+		}
+		stats[i] = rellm.StepStat{APIUsage: r.Usage}
+	}
+	return stats
 }
 
 type HTTPDoMock struct {

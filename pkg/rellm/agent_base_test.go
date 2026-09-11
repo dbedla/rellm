@@ -44,10 +44,11 @@ func TestAgentAsk(t *testing.T) {
 		}, nil)
 
 	ctx := context.Background()
-	respMsg, err := agent.Ask(ctx, "Hi")
+	finalReport, err := agent.Ask(ctx, "Hi")
 	assert.NoError(t, err, "failed to ask")
-	assert.NotNil(t, respMsg, "response message should not be nil")
-	assert.Equal(t, "Hello! How can I help you today? \n\nIf you have any questions about the weather, meteorology, climate patterns, or even how certain atmospheric phenomena work, feel free to ask!", respMsg, "response message should match")
+	assert.NotEmpty(t, finalReport.Message)
+	assert.Equal(t, "Hello! How can I help you today? \n\nIf you have any questions about the weather, meteorology, climate patterns, or even how certain atmospheric phenomena work, feel free to ask!", finalReport.Message, "response message should match")
+	assert.Equal(t, expectedStepStats(t, goldenRespHi), finalReport.StepsStats)
 }
 
 //go:embed testdata/base_api_req_hi_no_sys_msg.json
@@ -75,10 +76,11 @@ func TestAgentAskNoSysMsg(t *testing.T) {
 		}, nil)
 
 	ctx := context.Background()
-	respMsg, err := agent.Ask(ctx, "Hi")
+	finalReport, err := agent.Ask(ctx, "Hi")
 	assert.NoError(t, err, "failed to ask")
-	assert.NotNil(t, respMsg, "response message should not be nil")
-	assert.Equal(t, "Hello! How can I help you today? \n\nIf you have any questions about the weather, meteorology, climate patterns, or even how certain atmospheric phenomena work, feel free to ask!", respMsg, "response message should match")
+	assert.NotEmpty(t, finalReport.Message)
+	assert.Equal(t, "Hello! How can I help you today? \n\nIf you have any questions about the weather, meteorology, climate patterns, or even how certain atmospheric phenomena work, feel free to ask!", finalReport.Message, "response message should match")
+	assert.Equal(t, expectedStepStats(t, goldenRespHi), finalReport.StepsStats)
 
 	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
@@ -92,10 +94,10 @@ func TestAgentAskContextAlreadyCanceled(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
-	respMsg, err := agent.Ask(ctx, "Hi")
+	finalReport, err := agent.Ask(ctx, "Hi")
 	assert.Error(t, err)
 	assert.ErrorIs(t, context.Canceled, err)
-	assert.Empty(t, respMsg)
+	assert.Empty(t, finalReport.Message)
 }
 
 func TestAgentAsk_HTTP200EmptyBody(t *testing.T) {
@@ -119,10 +121,9 @@ func TestAgentAsk_HTTP200EmptyBody(t *testing.T) {
 		}, nil)
 
 	ctx := context.Background()
-	respMsg, err := agent.Ask(ctx, "Hi")
+	finalReport, err := agent.Ask(ctx, "Hi")
 	assert.Error(t, err)
-	assert.NotNil(t, respMsg, "response message should not be nil")
-	assert.Equal(t, "", respMsg, "response message should match")
+	assert.Empty(t, finalReport.Message)
 }
 
 func TestAgentAsk_EmptyString(t *testing.T) {
@@ -195,8 +196,9 @@ func TestPromptBuilder_AllFields(t *testing.T) {
 	assert.NoError(t, err)
 
 	ctx := context.Background()
-	_, err = agent.Execute(ctx, prompt)
+	report, err := agent.Execute(ctx, prompt)
 	assert.NoError(t, err)
+	assert.Equal(t, expectedStepStats(t, goldenRespHi), report.StepsStats)
 }
 
 func TestAgentAskStatusInternalServerError(t *testing.T) {
@@ -221,10 +223,9 @@ func TestAgentAskStatusInternalServerError(t *testing.T) {
 		}, nil)
 
 	ctx := context.Background()
-	respMsg, err := agent.Ask(ctx, "Hi")
+	finalReport, err := agent.Ask(ctx, "Hi")
 	assert.Error(t, err)
-	assert.NotNil(t, respMsg, "response message should not be nil")
-	assert.Equal(t, "", respMsg, "response message should match")
+	assert.Empty(t, finalReport.Message)
 }
 
 func TestAgentAsk_RetryAfterProviderFailedMessageStaysInConversation(t *testing.T) {
@@ -249,8 +250,9 @@ func TestAgentAsk_RetryAfterProviderFailedMessageStaysInConversation(t *testing.
 	_, err := agent.Ask(ctx, "Hi")
 	assert.Error(t, err)
 
-	_, err = agent.Ask(ctx, "Hi")
+	report, err := agent.Ask(ctx, "Hi")
 	assert.NoError(t, err)
+	assert.Equal(t, expectedStepStats(t, goldenRespHi), report.StepsStats)
 
 	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
@@ -271,6 +273,8 @@ func buildTestAgent(t *testing.T) (*rellm.Agent, *HTTPDoMock) {
 		WithMaxAgentSteps(20).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage("You are a helpful assistant with deep weather knowledge.").
+		WithImageGenerationKeepInTheLoop().
+		WithUnknownConversationElementKeepInTheLoop().
 		Build()
 
 	assert.NoError(t, err, "failed to create agent")
@@ -290,6 +294,8 @@ func buildTestAgentNoSysMsg(t *testing.T) (*rellm.Agent, *HTTPDoMock) {
 		WithAgentName(agentName).
 		WithMaxAgentSteps(20).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
+		WithImageGenerationKeepInTheLoop().
+		WithUnknownConversationElementKeepInTheLoop().
 		Build()
 
 	assert.NoError(t, err, "failed to create agent")

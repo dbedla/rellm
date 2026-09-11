@@ -90,9 +90,15 @@ type Agent struct {
 	inspectResp                      InspectEachResponse
 }
 
-// HandleImageGeneration is called for image generation. The returned string is
-// stored as the image identifier in place of the generated image.
-type HandleImageGeneration func(ctx context.Context, image *ImageGeneration) (string, error)
+// HandleImageGeneration is called for each generated image. The returned slice
+// replaces the image's slot in the conversation:
+//
+//   - nil or empty: drop the image from the conversation
+//   - []ConversationElement{image}: keep it unchanged
+//   - any other slice: replace it with those elements
+//
+// The original image and the policy output are returned in Report.Images.
+type HandleImageGeneration func(ctx context.Context, image *ImageGeneration) ([]ConversationElement, error)
 
 // InspectEachRequest inspects each request before it is sent to the provider.
 // Last chance to modify or log it.
@@ -111,48 +117,69 @@ type InspectEachResponse func(resp *ResponsesAPIResp)
 //   - any other slice: replace it with those elements
 type HandleUnknownConversationElement func(ctx context.Context, el *UnknownElement) ([]ConversationElement, error)
 
-// CurrentConversation returns the conversation history as stored.
-func (a *Agent) CurrentConversation(ctx context.Context) ([]ConversationElement, error) {
-	conversation, err := a.conversationStorage.Load(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(conversation) != 0 {
-		return conversation, nil
-	}
-
-	return []ConversationElement{}, nil
+// Report is the result of one agent run (Ask or Execute). It carries the
+// final assistant message, every image the run produced, and one usage stat
+// per provider call.
+//
+// A Report is generated exclusively for a single Ask or Execute call: it
+// never carries information from previous calls. What does persist across
+// calls is the conversation history (see CurrentConversation and
+// ConversationStorage); a Report only reflects what its own run received
+// from the provider.
+//
+// When a run ends in error, the Report returned alongside the error holds
+// everything gathered so far: stats from the provider calls that succeeded
+// (even the one that failed, if it carried usage), and images from earlier
+// steps. Message is empty unless the failing step also produced text.
+type Report struct {
+	// Message is the text of the assistant message from the last
+	// successful step. It is empty when the run produced no text (for
+	// example an image-only or tool-only response) or ended in error.
+	Message string
+	// Images holds one entry per generated image, accumulated across all
+	// steps of the run.
+	Images []ImageReport
+	// StepsStats holds one entry per provider call, in call order.
+	StepsStats []StepStat
 }
 
-func funcResultToFunctionCallResp(callID string, funcResult any) FunctionCallResp {
-	b, err := json.Marshal(funcResult)
-	if err != nil {
-		errorMsg := "unable to execute function; " + err.Error()
-		return FunctionCallResp{Type: "function_call_output", CallID: callID, Output: errorMsg}
-	}
+// ImageReport describes one generated image: Original is the provider payload
+// as received, and PolicyOutput is an independent copy of the elements the
+// image policy substituted into the conversation.
+type ImageReport struct {
+	Original     *ImageGeneration
+	PolicyOutput []ConversationElement
+}
 
-	return FunctionCallResp{Type: "function_call_output", CallID: callID, Output: string(b)}
+// StepStat reports the API usage of a single provider call within one
+// agent run. Providers that omit usage are recorded with zero values.
+type StepStat struct {
+	APIUsage ResponsesAPIUsage
 }
 
 // Execute runs a prompt built with PromptBuilder, whose parameters control
 // this interaction. A nil prompt or empty message returns ErrEmptyPrompt.
-func (a *Agent) Execute(ctx context.Context, p *Prompt) (string, error) {
+func (a *Agent) Execute(ctx context.Context, p *Prompt) (Report, error) {
 	if p == nil || p.msg == "" {
-		return "", ErrEmptyPrompt
+		return Report{}, ErrEmptyPrompt
 	}
 	return a.run(ctx, p.msg, p.params)
 }
 
 // Ask is a minimal entry point for a plain-text question. An empty question
 // returns ErrEmptyPrompt.
-func (a *Agent) Ask(ctx context.Context, question string) (string, error) {
+func (a *Agent) Ask(ctx context.Context, question string) (Report, error) {
 	prompt, err := NewPromptBuilder().WithMessage(question).Build()
 	if err != nil {
-		return "", err
+		return Report{}, err
 	}
 
 	return a.Execute(ctx, prompt)
+}
+
+// CurrentConversation returns the conversation history as stored.
+func (a *Agent) CurrentConversation(ctx context.Context) ([]ConversationElement, error) {
+	return a.conversationStorage.Load(ctx)
 }
 
 func (a *Agent) Name() string {

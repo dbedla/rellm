@@ -37,7 +37,8 @@ type promptParams struct {
 //	if err != nil {
 //		log.Fatal(err)
 //	}
-//	answer, err := agent.Execute(ctx, prompt)
+//	finalReport, err := agent.Execute(ctx, prompt)
+//	answer := finalReport.Message
 //
 // The WithXxx methods are optional except WithMessage, which is required.
 type PromptBuilder struct {

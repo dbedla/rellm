@@ -138,17 +138,19 @@ func main() {
         WithAgentName("MyAgent").
         WithMaxAgentSteps(20).
         WithConversationStorage(rellm.NewInMemoryStorage()).
+        WithImageGenerationKeepInTheLoop().
+        WithUnknownConversationElementKeepInTheLoop().
         WithSystemMessage("You are a helpful assistant.").
         Build()
     if err != nil {
         panic(err)
     }
 
-    response, err := agent.Ask(context.Background(), "Hello!")
+    finalReport, err := agent.Ask(context.Background(), "Hello!")
     if err != nil {
         panic(err)
     }
-    fmt.Println(response)
+    fmt.Println(finalReport.Message)
 }
 ```
 
@@ -224,6 +226,8 @@ func main() {
         WithAgentName("StructuredOutputAgent").
         WithMaxAgentSteps(20).
         WithConversationStorage(rellm.NewInMemoryStorage()).
+        WithImageGenerationKeepInTheLoop().
+        WithUnknownConversationElementKeepInTheLoop().
         WithSystemMessage("You are an assistant that extracts structured information from user text and returns only valid JSON matching the requested schema.").
         Build()
     if err != nil {
@@ -238,13 +242,13 @@ func main() {
         panic(err)
     }
 
-    response, err := agent.Execute(context.Background(), prompt)
+    finalReport, err := agent.Execute(context.Background(), prompt)
     if err != nil {
         panic(err)
     }
 
     var person Person
-    err = json.Unmarshal([]byte(response), &person)
+    err = json.Unmarshal([]byte(finalReport.Message), &person)
     if err != nil {
         panic(err)
     }
