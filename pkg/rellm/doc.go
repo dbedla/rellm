@@ -32,7 +32,7 @@
 //	if err != nil {
 //		log.Fatal(err)
 //	}
-//	fmt.Println(finalReport.Messages)
+//	fmt.Println(finalReport.Message)
 //
 // The Agent owns an agentic loop: it manages conversation history, assembles
 // the HTTP requests, and dispatches tool (function) calls through a Toolset

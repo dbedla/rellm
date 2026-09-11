@@ -150,7 +150,7 @@ func main() {
     if err != nil {
         panic(err)
     }
-    fmt.Println(finalReport.Messages)
+    fmt.Println(finalReport.Message)
 }
 ```
 
@@ -248,7 +248,7 @@ func main() {
     }
 
     var person Person
-    err = json.Unmarshal([]byte(finalReport.Messages), &person)
+    err = json.Unmarshal([]byte(finalReport.Message), &person)
     if err != nil {
         panic(err)
     }
