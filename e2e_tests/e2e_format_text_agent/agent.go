@@ -30,7 +30,7 @@ func buildORGlm3flashStructuredOutputAgent() (*rellm.Agent, error) {
 	if err != nil {
 		return nil, err
 	}
-	return buildStructuredOutputAgent(p, "or-gemini-agent", structuredOutputSysPrompt)
+	return buildStructuredOutputAgent(p, "or-glm-5.3-flash-agent", structuredOutputSysPrompt)
 }
 
 func buildORLunaStructuredOutputAgent() (*rellm.Agent, error) {
