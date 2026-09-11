@@ -50,17 +50,14 @@ func TestAgentPromptToGetImage(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Empty(t, finalReport.Messages)
 	assert.Equal(t, expectedStepStats(t, goldenImageResp), finalReport.StepsStats)
-	if assert.Len(t, finalReport.Image, 1) {
-		assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA", finalReport.Image[0].Original.Result)
-		assert.Equal(t, "completed", finalReport.Image[0].Original.Status)
-		assert.Equal(t, "ig_tmp_vqotwoa5eg", finalReport.Image[0].Original.ID)
-		if assert.Len(t, finalReport.Image[0].PolicyOutput, 1) {
-			policyImage, ok := finalReport.Image[0].PolicyOutput[0].(*rellm.ImageGeneration)
-			if assert.True(t, ok) {
-				assert.Equal(t, "image-stored-under-this-id", policyImage.Result)
-			}
-		}
-	}
+	assert.Len(t, finalReport.Image, 1)
+	assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA", finalReport.Image[0].Original.Result)
+	assert.Equal(t, "completed", finalReport.Image[0].Original.Status)
+	assert.Equal(t, "ig_tmp_vqotwoa5eg", finalReport.Image[0].Original.ID)
+	assert.Len(t, finalReport.Image[0].PolicyOutput, 1)
+	policyImage, ok := finalReport.Image[0].PolicyOutput[0].(*rellm.ImageGeneration)
+	assert.True(t, ok)
+	assert.Equal(t, "image-stored-under-this-id", policyImage.Result)
 
 	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
@@ -150,10 +147,9 @@ func TestAgentPromptToGetImagePolicies(t *testing.T) {
 			finalReport, err := agent.Ask(context.Background(), "generate an image")
 			assert.NoError(t, err)
 			assert.Empty(t, finalReport.Messages)
-			if assert.Len(t, finalReport.Image, 1) {
-				assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA", finalReport.Image[0].Original.Result)
-				assert.Len(t, finalReport.Image[0].PolicyOutput, tt.policyOutputSize)
-			}
+			assert.Len(t, finalReport.Image, 1)
+			assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA", finalReport.Image[0].Original.Result)
+			assert.Len(t, finalReport.Image[0].PolicyOutput, tt.policyOutputSize)
 			assert.Equal(t, expectedStepStats(t, goldenImageResp), finalReport.StepsStats)
 
 			conversation, err := agent.CurrentConversation(context.Background())
@@ -189,30 +185,26 @@ func TestAgentPromptToGetMultipleImages(t *testing.T) {
 	// The inline multi-image response carries no usage, so the stat is zero-valued.
 	assert.Equal(t, expectedStepStats(t, multiImageResp), finalReport.StepsStats)
 
-	wantResults := []string{"data:image/jpeg;base64,AAA", "data:image/jpeg;base64,BBB"}
-	if assert.Len(t, finalReport.Image, 2) {
-		for i, want := range wantResults {
-			assert.Equal(t, want, finalReport.Image[i].Original.Result)
-		}
-	}
+	assert.Len(t, finalReport.Image, 2)
+	assert.Equal(t, "data:image/jpeg;base64,AAA", finalReport.Image[0].Original.Result)
+	assert.Equal(t, "data:image/jpeg;base64,BBB", finalReport.Image[1].Original.Result)
 
 	// Mutating the report must not affect stored history (no aliasing).
-	if assert.Len(t, finalReport.Image[0].PolicyOutput, 1) {
-		policyImage, ok := finalReport.Image[0].PolicyOutput[0].(*rellm.ImageGeneration)
-		if assert.True(t, ok) {
-			policyImage.Result = "MUTATED"
-		}
-	}
+	assert.Len(t, finalReport.Image[0].PolicyOutput, 1)
+	policyImage, ok := finalReport.Image[0].PolicyOutput[0].(*rellm.ImageGeneration)
+	assert.True(t, ok)
+	policyImage.Result = "MUTATED"
 
 	conversation, err := agent.CurrentConversation(context.Background())
 	assert.NoError(t, err)
 	assert.Len(t, conversation, 4) // sys + user + 2 images
-	for i, want := range wantResults {
-		img, ok := conversation[2+i].(*rellm.ImageGeneration)
-		if assert.True(t, ok, "conversation[%d] should be *ImageGeneration", 2+i) {
-			assert.Equal(t, want, img.Result, "stored result must not be affected by report mutation")
-		}
-	}
+	img0, ok0 := conversation[2].(*rellm.ImageGeneration)
+	assert.True(t, ok0, "conversation[2] should be *ImageGeneration, got %T", conversation[2])
+	assert.Equal(t, "data:image/jpeg;base64,AAA", img0.Result, "stored result must not be affected by report mutation")
+
+	img1, ok1 := conversation[3].(*rellm.ImageGeneration)
+	assert.True(t, ok1, "conversation[3] should be *ImageGeneration, got %T", conversation[3])
+	assert.Equal(t, "data:image/jpeg;base64,BBB", img1.Result, "stored result must not be affected by report mutation")
 }
 
 func testImageGenerationHandler(_ context.Context, image *rellm.ImageGeneration) ([]rellm.ConversationElement, error) {
