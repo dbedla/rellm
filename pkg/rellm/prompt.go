@@ -17,7 +17,6 @@ type Prompt struct {
 type promptParams struct {
 	Temperature      *float64
 	Reasoning        *ReasoningConfig
-	Text             *TextConfig
 	MaxOutputTokens  int
 	TopP             *float64
 	PresencePenalty  *float64
@@ -75,14 +74,6 @@ func (b *PromptBuilder) WithReasoning(effort ReasoningEffort) *PromptBuilder {
 	return b
 }
 
-// WithTextFormat requests structured output via the Responses API text.format
-// field. Optional.
-// See https://platform.openai.com/docs/api-reference/responses/create#responses-create-text
-func (b *PromptBuilder) WithTextFormat(f *TextFormat) *PromptBuilder {
-	b.params.Text = &TextConfig{Format: f}
-	return b
-}
-
 // WithMaxOutputTokens caps the output length of every provider call in this
 // prompt. Optional.
 // See https://openrouter.ai/docs/api_reference/parameters#max-tokens
@@ -134,15 +125,6 @@ func (b *PromptBuilder) Build() (*Prompt, error) {
 	if b.params.Reasoning != nil {
 		if b.params.Reasoning.Effort == "" {
 			return nil, ErrEmptyReasoningEffort
-		}
-	}
-	if b.params.Text != nil {
-		f := b.params.Text.Format
-		if f == nil || f.Type == "" {
-			return nil, ErrEmptyTextFormat
-		}
-		if f.Type == "json_schema" && f.Schema == nil {
-			return nil, ErrEmptyTextFormat
 		}
 	}
 	return &Prompt{

@@ -48,7 +48,6 @@ func scenario(agent *rellm.Agent) {
 	msg := "I am John Snow from Winterfell, I have 100 years..."
 	prompt, err := rellm.NewPromptBuilder().
 		WithMessage(msg).
-		WithTextFormat(textFormat).
 		Build()
 	if err != nil {
 		color.Red("unable to build prompt: %s", err.Error())

@@ -76,10 +76,11 @@ type HTTPClient interface {
 //
 // Available methods: Ask, Execute, CurrentConversation, Name.
 type Agent struct {
-	provider  Provider
-	toolset   Toolset
-	agentName string
-	sysMsg    string
+	provider   Provider
+	toolset    Toolset
+	textFormat *TextFormat
+	agentName  string
+	sysMsg     string
 
 	conversationStorage ConversationStorage
 	maxAgentSteps       uint64

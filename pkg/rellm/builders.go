@@ -32,6 +32,15 @@ func (b *AgentBuilder) WithToolset(toolset Toolset) *AgentBuilder {
 	return b
 }
 
+// WithTextFormat requests structured output via the Responses API text.format
+// field for every request this agent makes, in the same way the toolset
+// applies to every request. Optional.
+// See https://platform.openai.com/docs/api-reference/responses/create#responses-create-text
+func (b *AgentBuilder) WithTextFormat(f *TextFormat) *AgentBuilder {
+	b.agent.textFormat = f
+	return b
+}
+
 // WithConversationStorage sets the storage used to persist and load the
 // conversation history. Required.
 func (b *AgentBuilder) WithConversationStorage(storage ConversationStorage) *AgentBuilder {
@@ -130,6 +139,16 @@ func (b *AgentBuilder) WithUnknownConversationElementHandler(handler HandleUnkno
 // fall back to defaults. Build returns a copy, so the builder can be reused to
 // create another agent.
 func (b *AgentBuilder) Build() (*Agent, error) {
+	if b.agent.textFormat != nil {
+		f := b.agent.textFormat
+		if f.Type == "" {
+			return nil, ErrEmptyTextFormat
+		}
+		if f.Type == "json_schema" && f.Schema == nil {
+			return nil, ErrEmptyTextFormat
+		}
+	}
+
 	if b.agent.provider == nil {
 		return nil, ErrBuildNoProvider
 	}

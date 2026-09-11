@@ -229,6 +229,7 @@ func main() {
         WithImageGenerationKeepInTheLoop().
         WithUnknownConversationElementKeepInTheLoop().
         WithSystemMessage("You are an assistant that extracts structured information from user text and returns only valid JSON matching the requested schema.").
+        WithTextFormat(textFormat).
         Build()
     if err != nil {
         panic(err)
@@ -236,7 +237,6 @@ func main() {
 
     prompt, err := rellm.NewPromptBuilder().
         WithMessage("I am John Snow from Winterfell, I have 100 years...").
-        WithTextFormat(textFormat).
         Build()
     if err != nil {
         panic(err)

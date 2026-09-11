@@ -95,17 +95,9 @@ func TestAgentTextFormat(t *testing.T) {
 					Body:       io.NopCloser(strings.NewReader(tt.resp)),
 				}, nil)
 
-			textFormat := &rellm.TextFormat{
-				Type:   "json_schema",
-				Name:   "person",
-				Strict: true,
-				Schema: (&jsonschema.Reflector{DoNotReference: true}).Reflect(&Person{}),
-			}
-
 			msg := "I am John Snow from Winterfell, I have 100 years..."
 			prompt, err := rellm.NewPromptBuilder().
 				WithMessage(msg).
-				WithTextFormat(textFormat).
 				Build()
 			assert.NoError(t, err)
 
@@ -132,6 +124,13 @@ type Person struct {
 	City string `json:"city" jsonschema:"description=City of residence"`
 }
 
+var testTextFormat = &rellm.TextFormat{
+	Type:   "json_schema",
+	Name:   "person",
+	Strict: true,
+	Schema: (&jsonschema.Reflector{DoNotReference: true}).Reflect(&Person{}),
+}
+
 const structuredOutputSysPrompt = `You are an assistant that extracts structured information from user text and returns only valid JSON matching the requested schema.`
 
 func buildTestFormatOpenRouterAgent(t *testing.T, model rellm.Model, maxAgentSteps uint64) (*rellm.Agent, *HTTPDoMock) {
@@ -147,6 +146,7 @@ func buildTestFormatOpenRouterAgent(t *testing.T, model rellm.Model, maxAgentSte
 		WithMaxAgentSteps(maxAgentSteps).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage(structuredOutputSysPrompt).
+		WithTextFormat(testTextFormat).
 		WithImageGenerationKeepInTheLoop().
 		WithUnknownConversationElementKeepInTheLoop().
 		Build()
@@ -169,6 +169,7 @@ func buildTestFormatOutputLMSAgent(t *testing.T, maxAgentSteps uint64) (*rellm.A
 		WithMaxAgentSteps(maxAgentSteps).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage(structuredOutputSysPrompt).
+		WithTextFormat(testTextFormat).
 		WithImageGenerationKeepInTheLoop().
 		WithUnknownConversationElementKeepInTheLoop().
 		Build()
