@@ -34,8 +34,8 @@ func (b *AgentBuilder) WithToolset(toolset Toolset) *AgentBuilder {
 
 // WithTextFormat requests structured output via the Responses API text.format
 // field for every request this agent makes, in the same way the toolset
-// applies to every request. Optional. A nil f clears structured output (same
-// as not calling WithTextFormat).
+// applies to every request. Optional. Calling it again replaces the previous
+// format.
 // See https://platform.openai.com/docs/api-reference/responses/create#responses-create-text
 func (b *AgentBuilder) WithTextFormat(f TextFormat) *AgentBuilder {
 	b.agent.textFormat = &f
@@ -183,6 +183,9 @@ func validateTextFormat(f *TextFormat) error {
 	case "text", "json_object":
 		return nil
 	case "json_schema":
+		if f.Name == "" {
+			return ErrEmptyTextFormatName
+		}
 		if f.Schema == nil {
 			return ErrEmptyTextFormatSchema
 		}

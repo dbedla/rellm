@@ -59,7 +59,6 @@ type TextFormat struct {
 	Strict bool        `json:"strict,omitempty"`
 }
 
-
 type ResponsesAPIUsage struct {
 	InputTokens        int `json:"input_tokens"`
 	InputTokensDetails struct {

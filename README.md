@@ -203,7 +203,7 @@ type Person struct {
 
 func main() {
     // Schema generated from the struct tags above.
-    textFormat := &rellm.TextFormat{
+    textFormat := rellm.TextFormat{
         Type:   "json_schema",
         Name:   "person",
         Strict: true,

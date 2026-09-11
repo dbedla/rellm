@@ -27,6 +27,7 @@ var ErrUnableToReadResponseBody = errors.New("unable to read response body")
 var ErrEmptyPrompt = errors.New("prompt message is empty")
 var ErrEmptyReasoningEffort = errors.New("reasoning effort cannot be empty")
 var ErrEmptyTextFormat = errors.New("text format type cannot be empty")
+var ErrEmptyTextFormatName = errors.New("json_schema text format requires a name")
 var ErrEmptyTextFormatSchema = errors.New("json_schema text format requires a schema")
 var ErrUnknownTextFormatType = errors.New("unknown text format type")
 

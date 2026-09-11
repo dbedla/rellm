@@ -24,6 +24,14 @@ func TestAgentBuilder_Validation_RejectsNilTextFormatSchema(t *testing.T) {
 	assert.ErrorIs(t, err, rellm.ErrEmptyTextFormatSchema)
 }
 
+func TestAgentBuilder_Validation_RejectsMissingTextFormatName(t *testing.T) {
+	_, err := rellm.NewAgentBuilder().
+		WithTextFormat(rellm.TextFormat{Type: "json_schema", Schema: map[string]interface{}{"type": "object"}}).
+		Build()
+
+	assert.ErrorIs(t, err, rellm.ErrEmptyTextFormatName)
+}
+
 func TestAgentBuilder_Validation_RejectsUnknownTextFormatType(t *testing.T) {
 	_, err := rellm.NewAgentBuilder().
 		WithTextFormat(rellm.TextFormat{Type: "bogus"}).
