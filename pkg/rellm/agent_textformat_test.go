@@ -147,6 +147,8 @@ func buildTestFormatOpenRouterAgent(t *testing.T, model rellm.Model, maxAgentSte
 		WithMaxAgentSteps(maxAgentSteps).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage(structuredOutputSysPrompt).
+		WithImageGenerationKeepInTheLoop().
+		WithUnknownConversationElementKeepInTheLoop().
 		Build()
 
 	assert.NoError(t, err, "failed to create agent")
@@ -167,6 +169,8 @@ func buildTestFormatOutputLMSAgent(t *testing.T, maxAgentSteps uint64) (*rellm.A
 		WithMaxAgentSteps(maxAgentSteps).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage(structuredOutputSysPrompt).
+		WithImageGenerationKeepInTheLoop().
+		WithUnknownConversationElementKeepInTheLoop().
 		Build()
 
 	assert.NoError(t, err, "failed to create agent")

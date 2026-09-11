@@ -30,6 +30,7 @@ func buildBaseAgent() (*rellm.Agent, error) {
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage(baseAgentSysPrompt).
 		WithImageGenerationHandler(handleImage).
+		WithUnknownConversationElementKeepInTheLoop().
 		WithInspectEachRequest(examplesutils.InspectWithReqLog).
 		WithInspectEachResponse(examplesutils.InspectWithRespLog).
 		Build()

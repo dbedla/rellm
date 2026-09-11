@@ -186,10 +186,6 @@ func (a *Agent) dispatchConversation(ctx context.Context, conversation []Convers
 }
 
 func (a *Agent) executeImageGenerationCallHandler(ctx context.Context, image *ImageGeneration) ([]ConversationElement, error) {
-	if a.handleImageGeneration == nil {
-		return nil, ErrNoImageHandler
-	}
-
 	response, err := a.handleImageGeneration(ctx, image)
 	if err != nil {
 		return nil, errors.Join(ErrCustomImageHandlerFailed, err)
@@ -199,10 +195,6 @@ func (a *Agent) executeImageGenerationCallHandler(ctx context.Context, image *Im
 }
 
 func (a *Agent) executeUnknownConversationElementHandler(ctx context.Context, el *UnknownElement) ([]ConversationElement, error) {
-	if a.handleUnknownConversationElement == nil {
-		return nil, ErrNoUnknownConversationElementHandler
-	}
-
 	response, err := a.handleUnknownConversationElement(ctx, el)
 	if err != nil {
 		return nil, errors.Join(ErrCustomConversationElementHandlerFailed, err)

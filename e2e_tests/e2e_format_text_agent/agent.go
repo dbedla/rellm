@@ -51,6 +51,8 @@ func buildStructuredOutputAgent(provider rellm.Provider, name string, sysPrompt 
 		WithSystemMessage(sysPrompt).
 		WithInspectEachRequest(examplesutils.InspectWithReqLog).
 		WithInspectEachResponse(examplesutils.InspectWithRespLog).
+		WithImageGenerationKeepInTheLoop().
+		WithUnknownConversationElementKeepInTheLoop().
 		Build()
 }
 

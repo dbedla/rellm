@@ -273,6 +273,8 @@ func buildTestAgent(t *testing.T) (*rellm.Agent, *HTTPDoMock) {
 		WithMaxAgentSteps(20).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage("You are a helpful assistant with deep weather knowledge.").
+		WithImageGenerationKeepInTheLoop().
+		WithUnknownConversationElementKeepInTheLoop().
 		Build()
 
 	assert.NoError(t, err, "failed to create agent")
@@ -292,6 +294,8 @@ func buildTestAgentNoSysMsg(t *testing.T) (*rellm.Agent, *HTTPDoMock) {
 		WithAgentName(agentName).
 		WithMaxAgentSteps(20).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
+		WithImageGenerationKeepInTheLoop().
+		WithUnknownConversationElementKeepInTheLoop().
 		Build()
 
 	assert.NoError(t, err, "failed to create agent")

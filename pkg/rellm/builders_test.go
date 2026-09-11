@@ -42,11 +42,17 @@ func TestAgentBuilder_Build(t *testing.T) {
 		return p
 	}
 
+	buildPolicies := func(b *rellm.AgentBuilder) *rellm.AgentBuilder {
+		return b.
+			WithImageGenerationKeepInTheLoop().
+			WithUnknownConversationElementKeepInTheLoop()
+	}
+
 	t.Run("Successful build", func(t *testing.T) {
-		builder := rellm.NewAgentBuilder().
+		builder := buildPolicies(rellm.NewAgentBuilder().
 			WithProvider(buildProvider()).
 			WithAgentName("TestAgent").
-			WithConversationStorage(rellm.NewInMemoryStorage())
+			WithConversationStorage(rellm.NewInMemoryStorage()))
 
 		agent, err := builder.Build()
 		assert.NoError(t, err)
@@ -72,11 +78,45 @@ func TestAgentBuilder_Build(t *testing.T) {
 		assert.Equal(t, err, rellm.ErrBuildNoProvider)
 	})
 
-	t.Run("Build twice does not alias the builder state", func(t *testing.T) {
+	t.Run("Missing image generation policy", func(t *testing.T) {
 		builder := rellm.NewAgentBuilder().
 			WithProvider(buildProvider()).
+			WithAgentName("TestAgent").
+			WithConversationStorage(rellm.NewInMemoryStorage()).
+			WithUnknownConversationElementKeepInTheLoop()
+
+		_, err := builder.Build()
+		assert.ErrorIs(t, err, rellm.ErrNoImageHandler)
+	})
+
+	t.Run("Missing unknown conversation element policy", func(t *testing.T) {
+		builder := rellm.NewAgentBuilder().
+			WithProvider(buildProvider()).
+			WithAgentName("TestAgent").
+			WithConversationStorage(rellm.NewInMemoryStorage()).
+			WithImageGenerationKeepInTheLoop()
+
+		_, err := builder.Build()
+		assert.ErrorIs(t, err, rellm.ErrNoUnknownConversationElementHandler)
+	})
+
+	t.Run("Missing explicitly nil image generation policy", func(t *testing.T) {
+		builder := rellm.NewAgentBuilder().
+			WithProvider(buildProvider()).
+			WithAgentName("TestAgent").
+			WithConversationStorage(rellm.NewInMemoryStorage()).
+			WithImageGenerationHandler(nil).
+			WithUnknownConversationElementKeepInTheLoop()
+
+		_, err := builder.Build()
+		assert.ErrorIs(t, err, rellm.ErrNoImageHandler)
+	})
+
+	t.Run("Build twice does not alias the builder state", func(t *testing.T) {
+		builder := buildPolicies(rellm.NewAgentBuilder().
+			WithProvider(buildProvider()).
 			WithAgentName("FirstAgent").
-			WithConversationStorage(rellm.NewInMemoryStorage())
+			WithConversationStorage(rellm.NewInMemoryStorage()))
 
 		agent1, err := builder.Build()
 		assert.NoError(t, err)

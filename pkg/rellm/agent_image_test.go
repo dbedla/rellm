@@ -237,7 +237,8 @@ func buildTestImageAgentWithPolicy(t *testing.T, maxAgentSteps uint64,
 		WithAgentName(agentName).
 		WithMaxAgentSteps(maxAgentSteps).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
-		WithSystemMessage("You are a helpful assistant.")
+		WithSystemMessage("You are a helpful assistant.").
+		WithUnknownConversationElementKeepInTheLoop()
 	configure(builder)
 	ta, err := builder.Build()
 

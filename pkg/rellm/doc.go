@@ -21,6 +21,8 @@
 //	agent, err := rellm.NewAgentBuilder().
 //		WithProvider(provider).
 //		WithConversationStorage(rellm.NewInMemoryStorage()).
+//		WithUnknownConversationElementKeepInTheLoop().
+//		WithImageGenerationKeepInTheLoop().
 //		Build()
 //	if err != nil {
 //		log.Fatal(err)

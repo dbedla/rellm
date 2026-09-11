@@ -491,6 +491,8 @@ func buildTestFileSystemAgentOpenRouter(t *testing.T, model rellm.Model, maxAgen
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage("You are a helpful assistant, with limited access to the file system.").
 		WithToolset(fst).
+		WithImageGenerationKeepInTheLoop().
+		WithUnknownConversationElementKeepInTheLoop().
 		Build()
 
 	assert.NoError(t, err, "failed to create agent")

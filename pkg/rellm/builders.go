@@ -9,6 +9,7 @@ import "context"
 //		WithProvider(provider).
 //		WithConversationStorage(rellm.NewInMemoryStorage()).
 //		WithUnknownConversationElementKeepInTheLoop(). // other policies: WithUnknownConversationElementDrop, WithUnknownConversationElementHandler
+//		WithImageGenerationKeepInTheLoop().           // other policies: WithImageGenerationDrop, WithImageGenerationHandler
 //		Build()
 type AgentBuilder struct {
 	agent Agent
@@ -141,18 +142,12 @@ func (b *AgentBuilder) Build() (*Agent, error) {
 		return nil, ErrBuildNoConversationStorage
 	}
 
-	//Todo: force policy setting
 	if b.agent.handleUnknownConversationElement == nil {
-		b.agent.handleUnknownConversationElement = func(ctx context.Context, el *UnknownElement) ([]ConversationElement, error) {
-			return nil, ErrNoUnknownConversationElementHandler
-		}
+		return nil, ErrNoUnknownConversationElementHandler
 	}
 
-	//Todo: force policy setting
 	if b.agent.handleImageGeneration == nil {
-		b.agent.handleImageGeneration = func(ctx context.Context, image *ImageGeneration) ([]ConversationElement, error) {
-			return nil, ErrNoImageHandler
-		}
+		return nil, ErrNoImageHandler
 	}
 
 	agent := b.agent // copy: builder stays reusable without mutating built agents

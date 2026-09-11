@@ -27,5 +27,7 @@ func buildProAgent() (*rellm.Agent, error) {
 		WithToolset(&WeatherToolset{}).
 		WithInspectEachRequest(examplesutils.InspectWithReqLog).
 		WithInspectEachResponse(examplesutils.InspectWithRespLog).
+		WithImageGenerationKeepInTheLoop().
+		WithUnknownConversationElementKeepInTheLoop().
 		Build()
 }
