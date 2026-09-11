@@ -36,7 +36,7 @@ func (b *AgentBuilder) WithToolset(toolset Toolset) *AgentBuilder {
 // field for every request this agent makes, in the same way the toolset
 // applies to every request. Optional. Calling it again replaces the previous
 // format.
-// See https://platform.openai.com/docs/api-reference/responses/create#responses-create-text
+// See https://developers.openai.com/api/docs/guides/structured-outputs?api-mode=responses
 func (b *AgentBuilder) WithTextFormat(f TextFormat) *AgentBuilder {
 	b.agent.textFormat = &f
 	return b
