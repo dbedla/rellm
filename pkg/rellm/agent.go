@@ -117,9 +117,29 @@ type InspectEachResponse func(resp *ResponsesAPIResp)
 //   - any other slice: replace it with those elements
 type HandleUnknownConversationElement func(ctx context.Context, el *UnknownElement) ([]ConversationElement, error)
 
+// Report is the result of one agent run (Ask or Execute). It carries the
+// final assistant message, every image the run produced, and one usage stat
+// per provider call.
+//
+// A Report is generated exclusively for a single Ask or Execute call: it
+// never carries information from previous calls. What does persist across
+// calls is the conversation history (see CurrentConversation and
+// ConversationStorage); a Report only reflects what its own run received
+// from the provider.
+//
+// When a run ends in error, the Report returned alongside the error holds
+// everything gathered so far: stats from the provider calls that succeeded
+// (even the one that failed, if it carried usage), and images from earlier
+// steps. Messages is empty unless the failing step also produced text.
 type Report struct {
-	Messages   string
-	Image      []ImageReport
+	// Messages is the text of the assistant message from the last
+	// successful step. It is empty when the run produced no text (for
+	// example an image-only or tool-only response) or ended in error.
+	Messages string
+	// Image holds one entry per generated image, accumulated across all
+	// steps of the run.
+	Image []ImageReport
+	// StepsStats holds one entry per provider call, in call order.
 	StepsStats []StepStat
 }
 
@@ -131,6 +151,8 @@ type ImageReport struct {
 	PolicyOutput []ConversationElement
 }
 
+// StepStat reports the API usage of a single provider call within one
+// agent run. Providers that omit usage are recorded with zero values.
 type StepStat struct {
 	ApiUsage ResponsesAPIUsage
 }

@@ -138,6 +138,8 @@ func main() {
         WithAgentName("MyAgent").
         WithMaxAgentSteps(20).
         WithConversationStorage(rellm.NewInMemoryStorage()).
+        WithImageGenerationKeepInTheLoop().
+        WithUnknownConversationElementKeepInTheLoop().
         WithSystemMessage("You are a helpful assistant.").
         Build()
     if err != nil {
@@ -224,6 +226,8 @@ func main() {
         WithAgentName("StructuredOutputAgent").
         WithMaxAgentSteps(20).
         WithConversationStorage(rellm.NewInMemoryStorage()).
+        WithImageGenerationKeepInTheLoop().
+        WithUnknownConversationElementKeepInTheLoop().
         WithSystemMessage("You are an assistant that extracts structured information from user text and returns only valid JSON matching the requested schema.").
         Build()
     if err != nil {
