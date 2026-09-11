@@ -111,11 +111,11 @@ func TestAgentTextFormat(t *testing.T) {
 
 			finalReport, err := tt.agent.Execute(context.Background(), prompt)
 			assert.NoError(t, err)
-			assert.NotEmpty(t, finalReport.Messages)
+			assert.NotEmpty(t, finalReport.Message)
 			assert.Equal(t, expectedStepStats(t, tt.resp), finalReport.StepsStats)
 
 			p := Person{}
-			err = json.Unmarshal([]byte(finalReport.Messages), &p)
+			err = json.Unmarshal([]byte(finalReport.Message), &p)
 			assert.NoError(t, err)
 
 			assert.Equal(t, "John Snow", p.Name)

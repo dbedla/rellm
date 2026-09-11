@@ -45,7 +45,7 @@ func (a *Agent) process(ctx context.Context, req *ResponsesAPIReq) (Report, erro
 		if err != nil {
 			return finalReport, err
 		}
-		stepStat := StepStat{ApiUsage: response.Usage}
+		stepStat := StepStat{APIUsage: response.Usage}
 		finalReport.StepsStats = append(finalReport.StepsStats, stepStat)
 
 		if response.Error != nil {
@@ -56,8 +56,8 @@ func (a *Agent) process(ctx context.Context, req *ResponsesAPIReq) (Report, erro
 		}
 
 		stepReport, conversation, stepErr := a.processStep(ctx, response)
-		finalReport.Image = append(finalReport.Image, stepReport.Image...)
-		finalReport.Messages = stepReport.Messages
+		finalReport.Images = append(finalReport.Images, stepReport.Images...)
+		finalReport.Message = stepReport.Message
 
 		if len(conversation) > 0 {
 			err := a.appendNewConversationElements(ctx, conversation, req)
@@ -69,7 +69,7 @@ func (a *Agent) process(ctx context.Context, req *ResponsesAPIReq) (Report, erro
 			return finalReport, stepErr
 		}
 
-		if finalReport.Messages != "" || len(finalReport.Image) > 0 {
+		if finalReport.Message != "" || len(finalReport.Images) > 0 {
 			return finalReport, nil
 		}
 	}
@@ -89,7 +89,7 @@ func (a *Agent) processStep(ctx context.Context, response *ResponsesAPIResp) (Re
 	}
 
 	message, conversation, images, dispatchErr := a.dispatchConversation(ctx, conversation)
-	stepReport.Image = images
+	stepReport.Images = images
 	if len(conversation) == 0 {
 		if len(images) > 0 && dispatchErr == nil {
 			return stepReport, nil, nil
@@ -100,7 +100,7 @@ func (a *Agent) processStep(ctx context.Context, response *ResponsesAPIResp) (Re
 		return stepReport, conversation, dispatchErr
 	}
 	if message != "" {
-		stepReport.Messages = message
+		stepReport.Message = message
 	}
 
 	return stepReport, conversation, nil

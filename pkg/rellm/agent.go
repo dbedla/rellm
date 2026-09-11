@@ -97,7 +97,7 @@ type Agent struct {
 //   - []ConversationElement{image}: keep it unchanged
 //   - any other slice: replace it with those elements
 //
-// The original image and the policy output are returned in Report.Image.
+// The original image and the policy output are returned in Report.Images.
 type HandleImageGeneration func(ctx context.Context, image *ImageGeneration) ([]ConversationElement, error)
 
 // InspectEachRequest inspects each request before it is sent to the provider.
@@ -130,15 +130,15 @@ type HandleUnknownConversationElement func(ctx context.Context, el *UnknownEleme
 // When a run ends in error, the Report returned alongside the error holds
 // everything gathered so far: stats from the provider calls that succeeded
 // (even the one that failed, if it carried usage), and images from earlier
-// steps. Messages is empty unless the failing step also produced text.
+// steps. Message is empty unless the failing step also produced text.
 type Report struct {
-	// Messages is the text of the assistant message from the last
+	// Message is the text of the assistant message from the last
 	// successful step. It is empty when the run produced no text (for
 	// example an image-only or tool-only response) or ended in error.
-	Messages string
-	// Image holds one entry per generated image, accumulated across all
+	Message string
+	// Images holds one entry per generated image, accumulated across all
 	// steps of the run.
-	Image []ImageReport
+	Images []ImageReport
 	// StepsStats holds one entry per provider call, in call order.
 	StepsStats []StepStat
 }
@@ -154,7 +154,7 @@ type ImageReport struct {
 // StepStat reports the API usage of a single provider call within one
 // agent run. Providers that omit usage are recorded with zero values.
 type StepStat struct {
-	ApiUsage ResponsesAPIUsage
+	APIUsage ResponsesAPIUsage
 }
 
 // Execute runs a prompt built with PromptBuilder, whose parameters control

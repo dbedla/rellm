@@ -33,7 +33,7 @@ func expectedStepStats(t *testing.T, responses ...string) []rellm.StepStat {
 		if err := json.Unmarshal([]byte(resp), &r); err != nil {
 			t.Fatalf("failed to unmarshal golden response: %v", err)
 		}
-		stats[i] = rellm.StepStat{ApiUsage: r.Usage}
+		stats[i] = rellm.StepStat{APIUsage: r.Usage}
 	}
 	return stats
 }

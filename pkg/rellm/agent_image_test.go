@@ -48,14 +48,14 @@ func TestAgentPromptToGetImage(t *testing.T) {
 	ctx := context.Background()
 	finalReport, err := agent.Ask(ctx, q)
 	assert.NoError(t, err)
-	assert.Empty(t, finalReport.Messages)
+	assert.Empty(t, finalReport.Message)
 	assert.Equal(t, expectedStepStats(t, goldenImageResp), finalReport.StepsStats)
-	assert.Len(t, finalReport.Image, 1)
-	assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA", finalReport.Image[0].Original.Result)
-	assert.Equal(t, "completed", finalReport.Image[0].Original.Status)
-	assert.Equal(t, "ig_tmp_vqotwoa5eg", finalReport.Image[0].Original.ID)
-	assert.Len(t, finalReport.Image[0].PolicyOutput, 1)
-	policyImage, ok := finalReport.Image[0].PolicyOutput[0].(*rellm.ImageGeneration)
+	assert.Len(t, finalReport.Images, 1)
+	assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA", finalReport.Images[0].Original.Result)
+	assert.Equal(t, "completed", finalReport.Images[0].Original.Status)
+	assert.Equal(t, "ig_tmp_vqotwoa5eg", finalReport.Images[0].Original.ID)
+	assert.Len(t, finalReport.Images[0].PolicyOutput, 1)
+	policyImage, ok := finalReport.Images[0].PolicyOutput[0].(*rellm.ImageGeneration)
 	assert.True(t, ok)
 	assert.Equal(t, "image-stored-under-this-id", policyImage.Result)
 
@@ -99,10 +99,10 @@ func TestAgentPromptToGetImage_handlerErr(t *testing.T) {
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, rellm.ErrCustomImageHandlerFailed)
 
-	assert.Empty(t, finalReport.Messages)
-	assert.Len(t, finalReport.Image, 1)
-	assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA", finalReport.Image[0].Original.Result)
-	assert.Empty(t, finalReport.Image[0].PolicyOutput)
+	assert.Empty(t, finalReport.Message)
+	assert.Len(t, finalReport.Images, 1)
+	assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA", finalReport.Images[0].Original.Result)
+	assert.Empty(t, finalReport.Images[0].PolicyOutput)
 	// Usage is recorded even though the image policy failed.
 	assert.Equal(t, expectedStepStats(t, goldenImageResp), finalReport.StepsStats)
 }
@@ -146,10 +146,10 @@ func TestAgentPromptToGetImagePolicies(t *testing.T) {
 
 			finalReport, err := agent.Ask(context.Background(), "generate an image")
 			assert.NoError(t, err)
-			assert.Empty(t, finalReport.Messages)
-			assert.Len(t, finalReport.Image, 1)
-			assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA", finalReport.Image[0].Original.Result)
-			assert.Len(t, finalReport.Image[0].PolicyOutput, tt.policyOutputSize)
+			assert.Empty(t, finalReport.Message)
+			assert.Len(t, finalReport.Images, 1)
+			assert.Equal(t, "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA", finalReport.Images[0].Original.Result)
+			assert.Len(t, finalReport.Images[0].PolicyOutput, tt.policyOutputSize)
 			assert.Equal(t, expectedStepStats(t, goldenImageResp), finalReport.StepsStats)
 
 			conversation, err := agent.CurrentConversation(context.Background())
@@ -181,17 +181,17 @@ func TestAgentPromptToGetMultipleImages(t *testing.T) {
 
 	finalReport, err := agent.Ask(context.Background(), "generate images")
 	assert.NoError(t, err)
-	assert.Empty(t, finalReport.Messages)
+	assert.Empty(t, finalReport.Message)
 	// The inline multi-image response carries no usage, so the stat is zero-valued.
 	assert.Equal(t, expectedStepStats(t, multiImageResp), finalReport.StepsStats)
 
-	assert.Len(t, finalReport.Image, 2)
-	assert.Equal(t, "data:image/jpeg;base64,AAA", finalReport.Image[0].Original.Result)
-	assert.Equal(t, "data:image/jpeg;base64,BBB", finalReport.Image[1].Original.Result)
+	assert.Len(t, finalReport.Images, 2)
+	assert.Equal(t, "data:image/jpeg;base64,AAA", finalReport.Images[0].Original.Result)
+	assert.Equal(t, "data:image/jpeg;base64,BBB", finalReport.Images[1].Original.Result)
 
 	// Mutating the report must not affect stored history (no aliasing).
-	assert.Len(t, finalReport.Image[0].PolicyOutput, 1)
-	policyImage, ok := finalReport.Image[0].PolicyOutput[0].(*rellm.ImageGeneration)
+	assert.Len(t, finalReport.Images[0].PolicyOutput, 1)
+	policyImage, ok := finalReport.Images[0].PolicyOutput[0].(*rellm.ImageGeneration)
 	assert.True(t, ok)
 	policyImage.Result = "MUTATED"
 

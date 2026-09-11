@@ -46,7 +46,7 @@ func main() {
 		//		color.Yellow("This conversation total cost in USD: %f\n", *rawResp.Usage.Cost)
 		//	}
 		//}
-		for _, img := range llmResp.Image {
+		for _, img := range llmResp.Images {
 			color.Blue("%+v", img)
 		}
 	}

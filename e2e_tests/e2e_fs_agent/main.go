@@ -51,12 +51,12 @@ func scenario(fsAgent *rellm.Agent, dirs agentsDirs) {
 	if err != nil {
 		panicWithLog("agent failed for input msg: "+msg, err)
 	}
-	color.Green(llmResp.Messages)
+	color.Green(llmResp.Message)
 
-	if !strings.Contains(llmResp.Messages, f1Name) {
+	if !strings.Contains(llmResp.Message, f1Name) {
 		panicWithLog("missing expected file name '"+f1Name+"' in llm output", fmt.Errorf("missing file name"))
 	}
-	if !strings.Contains(llmResp.Messages, f2Name) {
+	if !strings.Contains(llmResp.Message, f2Name) {
 		panicWithLog("missing expected file name '"+f2Name+"' in llm output", fmt.Errorf("missing file name"))
 	}
 
@@ -67,12 +67,12 @@ func scenario(fsAgent *rellm.Agent, dirs agentsDirs) {
 	if err != nil {
 		panicWithLog("agent failed for input msg: "+msg, err)
 	}
-	color.Green(llmResp.Messages)
+	color.Green(llmResp.Message)
 
-	if !strings.Contains(llmResp.Messages, f1Content) {
+	if !strings.Contains(llmResp.Message, f1Content) {
 		panicWithLog("missing expected file content '"+f1Content+"' in llm output", fmt.Errorf("missing file content"))
 	}
-	if !strings.Contains(llmResp.Messages, f2Content) {
+	if !strings.Contains(llmResp.Message, f2Content) {
 		panicWithLog("missing expected file content '"+f2Content+"' in llm output", fmt.Errorf("missing file content"))
 	}
 
@@ -83,7 +83,7 @@ func scenario(fsAgent *rellm.Agent, dirs agentsDirs) {
 	if err != nil {
 		panicWithLog("agent failed for input msg: "+msg, err)
 	}
-	color.Green(llmResp.Messages)
+	color.Green(llmResp.Message)
 
 	dataPath := filepath.Join(dirs.outputDir, "data.txt")
 	rawData, err := os.ReadFile(dataPath)

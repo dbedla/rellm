@@ -52,8 +52,8 @@ func TestLMSAgentHiUnknownConversationElInRespDrop(t *testing.T) {
 	finalReport, err := agent.Execute(ctx, promptFirst)
 	assert.NoError(t, err)
 
-	assert.NotEmpty(t, finalReport.Messages)
-	assert.Equal(t, "Hello! How can I help you today?", finalReport.Messages)
+	assert.NotEmpty(t, finalReport.Message)
+	assert.Equal(t, "Hello! How can I help you today?", finalReport.Message)
 	assert.Equal(t, expectedStepStats(t, goldenLMS_Hi_02_resp_unknown), finalReport.StepsStats)
 	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
@@ -92,8 +92,8 @@ func TestLMSAgentHiUnknownConversationElInRespKeepInTheLoop(t *testing.T) {
 	finalReport, err := agent.Execute(ctx, promptFirst)
 	assert.NoError(t, err)
 
-	assert.NotEmpty(t, finalReport.Messages)
-	assert.Equal(t, "Hello! How can I help you today?", finalReport.Messages)
+	assert.NotEmpty(t, finalReport.Message)
+	assert.Equal(t, "Hello! How can I help you today?", finalReport.Message)
 	assert.Equal(t, expectedStepStats(t, goldenLMS_Hi_02_resp_unknown), finalReport.StepsStats)
 	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
@@ -132,8 +132,8 @@ func TestLMSAgentHiUnknownConversationElHandlerAddAdditionalData(t *testing.T) {
 	finalReport, err := agent.Execute(ctx, promptFirst)
 	assert.NoError(t, err)
 
-	assert.NotEmpty(t, finalReport.Messages)
-	assert.Equal(t, "Hello! How can I help you today?", finalReport.Messages)
+	assert.NotEmpty(t, finalReport.Message)
+	assert.Equal(t, "Hello! How can I help you today?", finalReport.Message)
 	assert.Equal(t, expectedStepStats(t, goldenLMS_Hi_02_resp_unknown), finalReport.StepsStats)
 	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
@@ -176,7 +176,7 @@ func TestLMSAgentHiUnknownConversationElInRespDropNoNewMessages(t *testing.T) {
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, rellm.ErrNoNewConversationElementAfterDispatch)
 
-	assert.Empty(t, finalReport.Messages)
+	assert.Empty(t, finalReport.Message)
 	// Usage is recorded even though dispatching produced no conversation elements.
 	assert.Equal(t, expectedStepStats(t, goldenLMS_Hi_02_resp_only_unknown), finalReport.StepsStats)
 	conversation, err := agent.CurrentConversation(ctx)
@@ -216,8 +216,8 @@ func TestLMSAgentHiUnknownConversationElInRespReplace(t *testing.T) {
 	finalReport, err := agent.Execute(ctx, promptFirst)
 	assert.NoError(t, err)
 
-	assert.NotEmpty(t, finalReport.Messages)
-	assert.Equal(t, "Hello! How can I help you today?", finalReport.Messages)
+	assert.NotEmpty(t, finalReport.Message)
+	assert.Equal(t, "Hello! How can I help you today?", finalReport.Message)
 	assert.Equal(t, expectedStepStats(t, goldenLMS_Hi_02_resp_unknown), finalReport.StepsStats)
 	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
