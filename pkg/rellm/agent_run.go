@@ -19,7 +19,7 @@ func (a *Agent) run(ctx context.Context, msg string, params promptParams) (Repor
 		return Report{}, errors.Join(ErrConversationElementConversion, err)
 	}
 
-	req := toBaseResponsesAPIReq(params, a.provider.Model(), wire)
+	req := toBaseResponsesAPIReq(params, wire)
 
 	if a.toolset != nil {
 		req.Tools = a.toolset.Definitions()
@@ -227,10 +227,9 @@ func invalidFunctionCallResp(fn *FunctionCall) FunctionCallResp {
 	return funcResultToFunctionCallResp(fn.CallID, "invalid function call (function not found) "+fn.Name)
 }
 
-func toBaseResponsesAPIReq(params promptParams, model Model, conversation []json.RawMessage) *ResponsesAPIReq {
+func toBaseResponsesAPIReq(params promptParams, conversation []json.RawMessage) *ResponsesAPIReq {
 	return &ResponsesAPIReq{
-		Model:            string(model),
-		Input:            conversation,
+		Input:             conversation,
 		Temperature:      params.Temperature,
 		Reasoning:        params.Reasoning,
 		Text:             params.Text,

@@ -1,6 +1,7 @@
 package rellm
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -49,11 +50,11 @@ func NewOpenRouterProviderWithHTTPClient(apiKey string, model Model, client HTTP
 	return p, nil
 }
 
-func (p *OpenRouterProvider) Model() Model        { return p.model }
-func (p *OpenRouterProvider) URL() string         { return p.url }
-func (p *OpenRouterProvider) Header() http.Header { return p.header }
-func (p *OpenRouterProvider) Do(r *http.Request) (*http.Response, error) {
-	return p.client.Do(r)
+// Send stamps the configured model and performs one round trip against the
+// OpenRouter Responses API endpoint.
+func (p *OpenRouterProvider) Send(ctx context.Context, req *ResponsesAPIReq) (*ResponsesAPIResp, error) {
+	req.Model = string(p.model)
+	return postResponsesAPI(ctx, p.client, p.url, p.header, req)
 }
 
 func (p *OpenRouterProvider) ToConversationElements(items []json.RawMessage) ([]ConversationElement, error) {
