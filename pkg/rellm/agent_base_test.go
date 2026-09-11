@@ -266,7 +266,7 @@ func buildTestAgentWithTextFormat(t *testing.T) (*rellm.Agent, *HTTPDoMock) {
 		WithMaxAgentSteps(20).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage("You are a helpful assistant with deep weather knowledge.").
-		WithTextFormat(&rellm.TextFormat{
+		WithTextFormat(rellm.TextFormat{
 			Type:   "json_schema",
 			Name:   "person",
 			Strict: true,

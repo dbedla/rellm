@@ -124,7 +124,7 @@ type Person struct {
 	City string `json:"city" jsonschema:"description=City of residence"`
 }
 
-var testTextFormat = &rellm.TextFormat{
+var testTextFormat = rellm.TextFormat{
 	Type:   "json_schema",
 	Name:   "person",
 	Strict: true,

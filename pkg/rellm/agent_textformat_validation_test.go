@@ -10,7 +10,7 @@ import (
 
 func TestAgentBuilder_Validation_RejectsEmptyTextFormatType(t *testing.T) {
 	_, err := rellm.NewAgentBuilder().
-		WithTextFormat(&rellm.TextFormat{Name: "person"}).
+		WithTextFormat(rellm.TextFormat{Name: "person"}).
 		Build()
 
 	assert.ErrorIs(t, err, rellm.ErrEmptyTextFormat)
@@ -18,8 +18,16 @@ func TestAgentBuilder_Validation_RejectsEmptyTextFormatType(t *testing.T) {
 
 func TestAgentBuilder_Validation_RejectsNilTextFormatSchema(t *testing.T) {
 	_, err := rellm.NewAgentBuilder().
-		WithTextFormat(&rellm.TextFormat{Type: "json_schema", Name: "person"}).
+		WithTextFormat(rellm.TextFormat{Type: "json_schema", Name: "person"}).
 		Build()
 
-	assert.ErrorIs(t, err, rellm.ErrEmptyTextFormat)
+	assert.ErrorIs(t, err, rellm.ErrEmptyTextFormatSchema)
+}
+
+func TestAgentBuilder_Validation_RejectsUnknownTextFormatType(t *testing.T) {
+	_, err := rellm.NewAgentBuilder().
+		WithTextFormat(rellm.TextFormat{Type: "bogus"}).
+		Build()
+
+	assert.ErrorIs(t, err, rellm.ErrUnknownTextFormatType)
 }
