@@ -157,16 +157,7 @@ func (a *Agent) Ask(ctx context.Context, question string) (Report, error) {
 
 // CurrentConversation returns the conversation history as stored.
 func (a *Agent) CurrentConversation(ctx context.Context) ([]ConversationElement, error) {
-	conversation, err := a.conversationStorage.Load(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(conversation) != 0 {
-		return conversation, nil
-	}
-
-	return []ConversationElement{}, nil
+	return a.conversationStorage.Load(ctx)
 }
 
 func (a *Agent) Name() string {
