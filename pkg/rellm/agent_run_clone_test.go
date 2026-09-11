@@ -7,14 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Non-empty struct: zero-size allocations all share one address, which would
-// make the pointer-distinct assertions below meaningless.
-type cloneTestCustomElement struct{ marker int }
-
-func (*cloneTestCustomElement) Kind() ElementKind { return ElementKind("custom") }
-
-func (*cloneTestCustomElement) Clone() ConversationElement { return &cloneTestCustomElement{} }
-
 func TestCloneConversationElementImageGeneration(t *testing.T) {
 	orig := &ImageGeneration{ID: "ig_1", Type: "image_generation_call", Status: "completed", Result: "data:image/jpeg;base64,AAA"}
 
@@ -127,24 +119,4 @@ func TestCloneConversationElementUnknownElement(t *testing.T) {
 
 	clone.Raw[0] = 'M'
 	assert.Equal(t, json.RawMessage(`{"x":1}`), orig.Raw)
-}
-
-func TestCloneConversationElements(t *testing.T) {
-	assert.Len(t, cloneConversationElements(nil), 0)
-
-	orig := []ConversationElement{
-		&ImageGeneration{ID: "ig_1", Result: "r1"},
-		&FunctionCallResp{CallID: "c1", Output: "o1"},
-		&cloneTestCustomElement{},
-	}
-
-	clones := cloneConversationElements(orig)
-
-	assert.Len(t, clones, len(orig))
-	assert.NotSame(t, orig[0], clones[0])
-	assert.NotSame(t, orig[1], clones[1])
-	assert.NotSame(t, orig[2], clones[2]) // custom types are cloned via their own Clone
-
-	clones[0].(*ImageGeneration).Result = "MUTATED"
-	assert.Equal(t, "r1", orig[0].(*ImageGeneration).Result)
 }

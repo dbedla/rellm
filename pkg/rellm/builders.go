@@ -59,14 +59,6 @@ func (b *AgentBuilder) WithMaxAgentSteps(max uint64) *AgentBuilder {
 	return b
 }
 
-// WithHandleImageGeneration sets a custom image policy; see
-// HandleImageGeneration.
-// Deprecated: use WithImageGenerationHandler.
-func (b *AgentBuilder) WithHandleImageGeneration(handleImage HandleImageGeneration) *AgentBuilder {
-	b.agent.handleImageGeneration = handleImage
-	return b
-}
-
 // WithImageGenerationDrop configures the agent to drop generated images from
 // the conversation loop. The original image is still returned in
 // Report.Image.Original.
