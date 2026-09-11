@@ -9,7 +9,7 @@ import (
 	"github.com/invopop/jsonschema"
 )
 
-var textFormat = &rellm.TextFormat{
+var textFormat = rellm.TextFormat{
 	Type:   "json_schema",
 	Name:   "person",
 	Strict: true,
@@ -28,7 +28,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	orGeminiAgent, err := buildORGeminiStructuredOutputAgent()
+	orGlm53flashAgent, err := buildORGlm3flashStructuredOutputAgent()
 	if err != nil {
 		panic(err)
 	}
@@ -36,7 +36,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	agents := []*rellm.Agent{lmsAgent, orGeminiAgent, orLunaAgent}
+	agents := []*rellm.Agent{lmsAgent, orGlm53flashAgent, orLunaAgent}
 
 	for _, a := range agents {
 		scenario(a)

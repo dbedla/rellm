@@ -25,8 +25,8 @@ func buildLMSStructuredOutputAgent() (*rellm.Agent, error) {
 	return buildStructuredOutputAgent(p, "lms-agent", lmsSysPrompt)
 }
 
-func buildORGeminiStructuredOutputAgent() (*rellm.Agent, error) {
-	p, err := newOpenRouterProvider("google/gemini-3.1-flash-lite")
+func buildORGlm3flashStructuredOutputAgent() (*rellm.Agent, error) {
+	p, err := newOpenRouterProvider("z-ai/glm-5.3-flash")
 	if err != nil {
 		return nil, err
 	}
