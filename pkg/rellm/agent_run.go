@@ -51,7 +51,7 @@ func (a *Agent) process(ctx context.Context, req *ResponsesAPIReq) (Report, erro
 		if response.Error != nil {
 			return finalReport, errors.Join(
 				ErrInConversationResponse,
-				fmt.Errorf("err msg: %v", response.Error.Message),
+				fmt.Errorf("api error %s: %v", response.Error.Code, response.Error.Message),
 			)
 		}
 
