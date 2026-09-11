@@ -128,14 +128,14 @@ func TestLMStudioToProviderRepresentation_EmptyElements(t *testing.T) {
 func TestNewLMStudioProvider_ValidArgs(t *testing.T) {
 	lm, err := NewLMStudioProvider(Model("local/model"), "http://localhost", "1234")
 	assert.NoError(t, err)
-	assert.Equal(t, Model("local/model"), lm.Model())
-	assert.Equal(t, "http://localhost:1234/v1/responses", lm.URL())
+	assert.Equal(t, Model("local/model"), lm.model)
+	assert.Equal(t, "http://localhost:1234/v1/responses", lm.url)
 }
 
 func TestNewLMStudioProvider_RemoteHost(t *testing.T) {
 	lm, err := NewLMStudioProvider(Model("local/model"), "http://192.168.1.50", "1234")
 	assert.NoError(t, err)
-	assert.Equal(t, "http://192.168.1.50:1234/v1/responses", lm.URL())
+	assert.Equal(t, "http://192.168.1.50:1234/v1/responses", lm.url)
 }
 
 func TestNewLMStudioProvider_MissingModel(t *testing.T) {
@@ -179,22 +179,19 @@ func TestLMStudioRoundTrip_FromFile(t *testing.T) {
 func TestNewLMStudioProviderHTTPHost(t *testing.T) {
 	p, err := NewLMStudioProvider("google/gemma-4-26b-a4b", "http://127.0.0.1", "1234")
 	assert.NoError(t, err)
-	url := p.URL()
-	assert.Equal(t, "http://127.0.0.1:1234/v1/responses", url)
+	assert.Equal(t, "http://127.0.0.1:1234/v1/responses", p.url)
 }
 
 func TestNewLMStudioProviderHTTPSHost(t *testing.T) {
 	p, err := NewLMStudioProvider("google/gemma-4-26b-a4b", "https://127.0.0.1", "1234")
 	assert.NoError(t, err)
-	url := p.URL()
-	assert.Equal(t, "https://127.0.0.1:1234/v1/responses", url)
+	assert.Equal(t, "https://127.0.0.1:1234/v1/responses", p.url)
 }
 
 func TestNewLMStudioProviderNoHTTPHost(t *testing.T) {
 	p, err := NewLMStudioProvider("google/gemma-4-26b-a4b", "127.0.0.1", "1234")
 	assert.NoError(t, err)
-	url := p.URL()
-	assert.Equal(t, "http://127.0.0.1:1234/v1/responses", url)
+	assert.Equal(t, "http://127.0.0.1:1234/v1/responses", p.url)
 }
 
 func TestNewLMStudioProvider_MissingClient(t *testing.T) {

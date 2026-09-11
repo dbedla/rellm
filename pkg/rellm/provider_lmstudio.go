@@ -1,6 +1,7 @@
 package rellm
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -62,11 +63,11 @@ func NewLMStudioProviderWithHTTPClient(model Model, host, port string, c HTTPCli
 	return p, nil
 }
 
-func (p *LMStudioProvider) Model() Model        { return p.model }
-func (p *LMStudioProvider) URL() string         { return p.url }
-func (p *LMStudioProvider) Header() http.Header { return p.header }
-func (p *LMStudioProvider) Do(r *http.Request) (*http.Response, error) {
-	return p.client.Do(r)
+// Send stamps the configured model and performs one round trip against the
+// LM Studio Responses API endpoint.
+func (p *LMStudioProvider) Send(ctx context.Context, req *ResponsesAPIReq) (*ResponsesAPIResp, error) {
+	req.Model = string(p.model)
+	return postResponsesAPI(ctx, p.client, p.url, p.header, req)
 }
 
 func (p *LMStudioProvider) ToConversationElements(items []json.RawMessage) ([]ConversationElement, error) {

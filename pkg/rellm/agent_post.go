@@ -11,23 +11,39 @@ import (
 	"strings"
 )
 
-func (a *Agent) post(ctx context.Context, req *ResponsesAPIReq) (_ *ResponsesAPIResp, finalErr error) {
+func (a *Agent) post(ctx context.Context, req *ResponsesAPIReq) (*ResponsesAPIResp, error) {
 	if a.inspectReq != nil {
 		a.inspectReq(req)
 	}
 
+	resp, err := a.provider.Send(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	if a.inspectResp != nil {
+		a.inspectResp(resp)
+	}
+	return resp, nil
+}
+
+// postResponsesAPI is the shared transport for every provider's Send:
+// marshal -> POST -> read body -> status check -> unmarshal.
+func postResponsesAPI(ctx context.Context, client HTTPClient, url string,
+	header http.Header, req *ResponsesAPIReq,
+) (_ *ResponsesAPIResp, finalErr error) {
 	body, err := json.Marshal(req)
 	if err != nil {
 		return nil, fmt.Errorf("marshal request: %w", err)
 	}
 
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, a.provider.URL(), bytes.NewReader(body))
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(body))
 	if err != nil {
 		return nil, err
 	}
-	httpReq.Header = a.provider.Header()
+	httpReq.Header = header
 
-	resp, err := a.provider.Do(httpReq)
+	resp, err := client.Do(httpReq)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +66,7 @@ func (a *Agent) post(ctx context.Context, req *ResponsesAPIReq) (_ *ResponsesAPI
 		return nil, newHTTPStatusError(resp, rawBody, httpReq.URL.String())
 	}
 
-	return parseResponsesAPIResponse(rawBody, a.inspectResp)
+	return parseResponsesAPIResponse(rawBody)
 }
 
 type HTTPStatusError struct {
@@ -92,15 +108,10 @@ func responseRequestID(header http.Header) string {
 	return header.Get("X-Request-ID")
 }
 
-func parseResponsesAPIResponse(rawBody []byte, inspectResp InspectEachResponse) (*ResponsesAPIResp, error) {
-
+func parseResponsesAPIResponse(rawBody []byte) (*ResponsesAPIResp, error) {
 	conversationResponse, err := unmarshal[ResponsesAPIResp](rawBody)
 	if err != nil {
 		return nil, errors.Join(err, fmt.Errorf("%s", string(rawBody)))
-	}
-
-	if inspectResp != nil {
-		inspectResp(&conversationResponse)
 	}
 
 	return &conversationResponse, nil

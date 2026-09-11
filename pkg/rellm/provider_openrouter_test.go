@@ -269,9 +269,9 @@ func TestOpenRouterToProviderRepresentation_EmptyElements(t *testing.T) {
 func TestNewOpenRouterProvider_ValidArgs(t *testing.T) {
 	or, err := NewOpenRouterProvider("test-key", Model("test/model"))
 	assert.NoError(t, err)
-	assert.Equal(t, Model("test/model"), or.Model())
-	assert.Equal(t, "https://openrouter.ai/api/v1/responses", or.URL())
-	assert.Equal(t, "Bearer test-key", or.Header().Get("Authorization"))
+	assert.Equal(t, Model("test/model"), or.model)
+	assert.Equal(t, "https://openrouter.ai/api/v1/responses", or.url)
+	assert.Equal(t, "Bearer test-key", or.header.Get("Authorization"))
 }
 
 func TestNewOpenRouterProvider_EmptyModel(t *testing.T) {

@@ -1,13 +1,31 @@
 package rellm
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"strings"
 )
 
-// --- Canonical conversation element types ------------------------------------
+// Provider is the single abstraction the Agent talks to. One implementation
+// per backend (LM Studio, OpenRouter, ...). The Agent holds one Provider and
+// never switches on backend anywhere. Each provider owns its transport
+// (URL/headers/http client) and its wire-format translation
+// (ConversationElement <-> provider JSON).
+type Provider interface {
+	// One round trip: canonical request in, parsed response out.
+	// Stamps req.Model before sending. Owns URL, headers,
+	// http.Client, and HTTP status handling.
+	Send(ctx context.Context, req *ResponsesAPIReq) (*ResponsesAPIResp, error)
+
+	// Parse a backend's raw response output into canonical conversation
+	// elements.
+	ToConversationElements(items []json.RawMessage) ([]ConversationElement, error)
+
+	// Serialize canonical elements back into this backend's wire format for
+	// the next request's Input.
+	ToProviderRepresentation(elements []ConversationElement) ([]json.RawMessage, error)
+}
 
 // ElementKind discriminates conversation elements at runtime. It is
 // canonical (provider-independent): wire "type" values are translated to
@@ -369,35 +387,6 @@ func JoinTextParts(parts []string) string {
 		sb.WriteString(p)
 	}
 	return sb.String()
-}
-
-// Provider is the single abstraction the Agent talks to. One implementation
-// per backend (LM Studio, OpenRouter, ...). The Agent holds one Provider and
-// never switches on backend anywhere. Each provider owns its transport
-// (URL/headers/http client) and its wire-format translation
-// (ConversationElement <-> provider JSON).
-type Provider interface {
-	// Model name as configured (fills ResponsesAPIReq.Model).
-	Model() Model
-
-	// Transport shim: send a pre-built http.Request, return the raw response.
-	// Owns only the http.Client. Agent.post builds the request from
-	// ResponsesAPIReq + URL() + Header() and handles status/unmarshal.
-	Do(request *http.Request) (*http.Response, error)
-
-	// URL for the Responses API endpoint this backend talks to.
-	URL() string
-
-	// HTTP headers for this backend (Authorization, Content-Type, ...).
-	Header() http.Header
-
-	// Parse a backend's raw response output into canonical conversation
-	// elements.
-	ToConversationElements(items []json.RawMessage) ([]ConversationElement, error)
-
-	// Serialize canonical elements back into this backend's wire format for
-	// the next request's Input.
-	ToProviderRepresentation(elements []ConversationElement) ([]json.RawMessage, error)
 }
 
 type ImageURL struct {
