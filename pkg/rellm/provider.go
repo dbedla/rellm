@@ -343,7 +343,7 @@ func ParseConversationElement(raw json.RawMessage) (ConversationElement, error) 
 		}
 		return &e, nil
 	default:
-		return nil, ErrUnknownConversationElement
+		return nil, ErrUnknownTypeForConversationElement
 	}
 }
 

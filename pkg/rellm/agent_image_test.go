@@ -97,7 +97,7 @@ func TestAgentPromptToGetImage_handlerErr(t *testing.T) {
 	ctx := context.Background()
 	finalReport, err := agent.Ask(ctx, q)
 	assert.Error(t, err)
-	assert.ErrorIs(t, err, rellm.ErrCustomImageHandlerFailed)
+	assert.ErrorIs(t, err, rellm.ErrImageHandlerFailed)
 
 	assert.Empty(t, finalReport.Message)
 	assert.Len(t, finalReport.Images, 1)

@@ -164,7 +164,7 @@ func TestFilesystemStorage_LoadUnknownKindReturnsError(t *testing.T) {
 	s := NewFilesystemStorage(path)
 	ctx := context.Background()
 	_, err := s.Load(ctx)
-	assert.ErrorIs(t, err, ErrUnknownConversationElement)
+	assert.ErrorIs(t, err, ErrUnknownTypeForConversationElement)
 }
 
 func TestFilesystemStorage_AppendEmpty(t *testing.T) {

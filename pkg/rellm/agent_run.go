@@ -178,7 +178,7 @@ func (a *Agent) dispatchConversation(ctx context.Context, conversation []Convers
 			processed = append(processed, imageResp...)
 
 		default:
-			return "", nil, nil, ErrUnknownConversationElement
+			return "", nil, nil, ErrUnknownTypeForConversationElement
 		}
 	}
 
@@ -188,7 +188,7 @@ func (a *Agent) dispatchConversation(ctx context.Context, conversation []Convers
 func (a *Agent) executeImageGenerationCallHandler(ctx context.Context, image *ImageGeneration) ([]ConversationElement, error) {
 	response, err := a.handleImageGeneration(ctx, image)
 	if err != nil {
-		return nil, errors.Join(ErrCustomImageHandlerFailed, err)
+		return nil, errors.Join(ErrImageHandlerFailed, err)
 	}
 
 	return response, nil
