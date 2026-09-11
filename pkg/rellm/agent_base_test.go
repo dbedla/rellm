@@ -146,8 +146,8 @@ func TestAgentExecute_NilPrompt(t *testing.T) {
 	assert.ErrorIs(t, err, rellm.ErrEmptyPrompt)
 }
 
-func TestPromptBuilder_AllFields(t *testing.T) {
-	agent, httpDo := buildTestAgent(t)
+func TestAgentAllFields(t *testing.T) {
+	agent, httpDo := buildTestAgentWithTextFormat(t)
 	defer httpDo.AssertExpectations(t)
 
 	httpDo.On("Do", mock.MatchedBy(baseRequestMatch)).
@@ -181,12 +181,6 @@ func TestPromptBuilder_AllFields(t *testing.T) {
 		WithMessage("hi").
 		WithTemperature(0.7).
 		WithReasoning(rellm.ReasoningEffortHigh).
-		WithTextFormat(&rellm.TextFormat{
-			Type:   "json_schema",
-			Name:   "person",
-			Strict: true,
-			Schema: map[string]interface{}{"type": "object"},
-		}).
 		WithMaxOutputTokens(512).
 		WithTopP(0.9).
 		WithPresencePenalty(1.0).
@@ -257,6 +251,33 @@ func TestAgentAsk_RetryAfterProviderFailedMessageStaysInConversation(t *testing.
 	conversation, err := agent.CurrentConversation(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, conversation, 5)
+}
+
+func buildTestAgentWithTextFormat(t *testing.T) (*rellm.Agent, *HTTPDoMock) {
+	agentName := "TestAgentWithTextFormat"
+	mockHttp := new(HTTPDoMock)
+
+	p, err := rellm.NewLMStudioProviderWithHTTPClient("google/gemma-4-26b-a4b", testBaseUrl, testPort, mockHttp)
+	assert.NoError(t, err, "failed to create provider")
+
+	ta, err := rellm.NewAgentBuilder().
+		WithProvider(p).
+		WithAgentName(agentName).
+		WithMaxAgentSteps(20).
+		WithConversationStorage(rellm.NewInMemoryStorage()).
+		WithSystemMessage("You are a helpful assistant with deep weather knowledge.").
+		WithTextFormat(rellm.TextFormat{
+			Type:   "json_schema",
+			Name:   "person",
+			Strict: true,
+			Schema: map[string]interface{}{"type": "object"},
+		}).
+		WithImageGenerationKeepInTheLoop().
+		WithUnknownConversationElementKeepInTheLoop().
+		Build()
+
+	assert.NoError(t, err, "failed to create agent")
+	return ta, mockHttp
 }
 
 func buildTestAgent(t *testing.T) (*rellm.Agent, *HTTPDoMock) {

@@ -32,6 +32,16 @@ func (b *AgentBuilder) WithToolset(toolset Toolset) *AgentBuilder {
 	return b
 }
 
+// WithTextFormat requests structured output via the Responses API text.format
+// field for every request this agent makes, in the same way the toolset
+// applies to every request. Optional. Calling it again replaces the previous
+// format.
+// See https://developers.openai.com/api/docs/guides/structured-outputs?api-mode=responses
+func (b *AgentBuilder) WithTextFormat(f TextFormat) *AgentBuilder {
+	b.agent.textFormat = &f
+	return b
+}
+
 // WithConversationStorage sets the storage used to persist and load the
 // conversation history. Required.
 func (b *AgentBuilder) WithConversationStorage(storage ConversationStorage) *AgentBuilder {
@@ -130,6 +140,13 @@ func (b *AgentBuilder) WithUnknownConversationElementHandler(handler HandleUnkno
 // fall back to defaults. Build returns a copy, so the builder can be reused to
 // create another agent.
 func (b *AgentBuilder) Build() (*Agent, error) {
+	if b.agent.textFormat != nil {
+		err := validateTextFormat(b.agent.textFormat)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	if b.agent.provider == nil {
 		return nil, ErrBuildNoProvider
 	}
@@ -159,3 +176,23 @@ const (
 	// take per prompt before reporting ErrMaxAgentStepsReached.
 	DefaultMaxAgentSteps = 5
 )
+
+// validate checks the fields relevant to the text format type.
+func validateTextFormat(f *TextFormat) error {
+	switch f.Type {
+	case "text", "json_object":
+		return nil
+	case "json_schema":
+		if f.Name == "" {
+			return ErrEmptyTextFormatName
+		}
+		if f.Schema == nil {
+			return ErrEmptyTextFormatSchema
+		}
+		return nil
+	case "":
+		return ErrEmptyTextFormat
+	default:
+		return ErrUnknownTextFormatType
+	}
+}

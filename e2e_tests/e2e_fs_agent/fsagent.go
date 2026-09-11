@@ -123,8 +123,8 @@ func providerForFlag(fl flag) (rellm.Provider, error) {
 	switch fl {
 	case flag_LMS:
 		return buildLMSProvider()
-	case flag_OpenRouterGemini:
-		return buildOpenRouterProvider("google/gemini-3.1-flash-lite")
+	case flag_OpenRouterGlm53flash:
+		return buildOpenRouterProvider("z-ai/glm-5.3-flash")
 	case flag_OpenRouterOpenAILuna:
 		return buildOpenRouterProvider("openai/gpt-5.6-luna")
 	default:
@@ -148,7 +148,7 @@ type flag string
 
 const (
 	flag_LMS                  flag = "--lms"
-	flag_OpenRouterGemini     flag = "--or-google-gemini"
+	flag_OpenRouterGlm53flash flag = "--or-glm53flash"
 	flag_OpenRouterOpenAILuna flag = "--or-openai-luna"
 	flag_Invalid              flag = "NO_FLAG"
 )
@@ -156,7 +156,7 @@ const (
 func help() {
 	color.Yellow("allowed args:")
 	color.Yellow("\t %s", flag_LMS)
-	color.Yellow("\t %s", flag_OpenRouterGemini)
+	color.Yellow("\t %s", flag_OpenRouterGlm53flash)
 	color.Yellow("\t %s", flag_OpenRouterOpenAILuna)
 }
 
@@ -166,7 +166,7 @@ func argsToFlag(args []string) flag {
 	}
 
 	f := flag(args[1])
-	if f == flag_LMS || f == flag_OpenRouterGemini || f == flag_OpenRouterOpenAILuna {
+	if f == flag_LMS || f == flag_OpenRouterGlm53flash || f == flag_OpenRouterOpenAILuna {
 		return f
 	}
 

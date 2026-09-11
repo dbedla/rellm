@@ -49,8 +49,9 @@ type TextConfig struct {
 	Format *TextFormat `json:"format,omitempty"`
 }
 
-// TextFormat requests structured output via text.format. Only the fields
-// relevant to Type should be set: json_schema uses Name, Schema, and Strict.
+// TextFormat requests structured output via text.format. Type must be one of
+// "text", "json_object", or "json_schema"; only the fields relevant to Type
+// should be set: json_schema uses Name, Schema, and Strict.
 type TextFormat struct {
 	Type   string      `json:"type"`
 	Name   string      `json:"name,omitempty"`

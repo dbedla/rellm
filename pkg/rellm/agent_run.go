@@ -21,6 +21,10 @@ func (a *Agent) run(ctx context.Context, msg string, params promptParams) (Repor
 
 	req := toBaseResponsesAPIReq(params, wire)
 
+	if a.textFormat != nil {
+		req.Text = &TextConfig{Format: a.textFormat}
+	}
+
 	if a.toolset != nil {
 		req.Tools = a.toolset.Definitions()
 	}
@@ -229,10 +233,9 @@ func invalidFunctionCallResp(fn *FunctionCall) FunctionCallResp {
 
 func toBaseResponsesAPIReq(params promptParams, conversation []json.RawMessage) *ResponsesAPIReq {
 	return &ResponsesAPIReq{
-		Input:             conversation,
+		Input:            conversation,
 		Temperature:      params.Temperature,
 		Reasoning:        params.Reasoning,
-		Text:             params.Text,
 		MaxOutputTokens:  params.MaxOutputTokens,
 		TopP:             params.TopP,
 		PresencePenalty:  params.PresencePenalty,

@@ -25,12 +25,12 @@ func buildLMSStructuredOutputAgent() (*rellm.Agent, error) {
 	return buildStructuredOutputAgent(p, "lms-agent", lmsSysPrompt)
 }
 
-func buildORGeminiStructuredOutputAgent() (*rellm.Agent, error) {
-	p, err := newOpenRouterProvider("google/gemini-3.1-flash-lite")
+func buildORGlm3flashStructuredOutputAgent() (*rellm.Agent, error) {
+	p, err := newOpenRouterProvider("z-ai/glm-5.3-flash")
 	if err != nil {
 		return nil, err
 	}
-	return buildStructuredOutputAgent(p, "or-gemini-agent", structuredOutputSysPrompt)
+	return buildStructuredOutputAgent(p, "or-glm-5.3-flash-agent", structuredOutputSysPrompt)
 }
 
 func buildORLunaStructuredOutputAgent() (*rellm.Agent, error) {
@@ -49,6 +49,7 @@ func buildStructuredOutputAgent(provider rellm.Provider, name string, sysPrompt 
 		WithMaxAgentSteps(20).
 		WithConversationStorage(rellm.NewInMemoryStorage()).
 		WithSystemMessage(sysPrompt).
+		WithTextFormat(textFormat).
 		WithInspectEachRequest(examplesutils.InspectWithReqLog).
 		WithInspectEachResponse(examplesutils.InspectWithRespLog).
 		WithImageGenerationKeepInTheLoop().
