@@ -42,10 +42,10 @@ func (b *AgentBuilder) WithTextFormat(f TextFormat) *AgentBuilder {
 	return b
 }
 
-// WithConversation sets the storage used to persist and load the
+// WithConversation sets the conversation used to persist and load the
 // conversation history. Required.
 func (b *AgentBuilder) WithConversation(storage Conversation) *AgentBuilder {
-	b.agent.Conversation = storage
+	b.agent.conversation = storage
 	return b
 }
 
@@ -155,8 +155,8 @@ func (b *AgentBuilder) Build() (*Agent, error) {
 		b.agent.maxAgentSteps = DefaultMaxAgentSteps
 	}
 
-	if b.agent.Conversation == nil {
-		return nil, ErrBuildNoConversationStorage
+	if b.agent.conversation == nil {
+		return nil, ErrBuildNoConversation
 	}
 
 	if b.agent.handleUnknownConversationElement == nil {

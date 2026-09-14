@@ -121,7 +121,7 @@ func (a *Agent) appendNewConversationElements(
 	}
 	req.Input = append(req.Input, raw...)
 
-	return a.Conversation.Append(ctx, conversation)
+	return a.conversation.Append(ctx, conversation)
 }
 
 func (a *Agent) dispatchConversation(ctx context.Context, conversation []ConversationElement) (string, []ConversationElement, []ImageReport, error) {
@@ -245,7 +245,7 @@ func toBaseResponsesAPIReq(params promptParams, conversation []json.RawMessage) 
 }
 
 func (a *Agent) appendConversation(ctx context.Context, msg string) ([]ConversationElement, error) {
-	conversation, err := a.Conversation.Load(ctx)
+	conversation, err := a.conversation.Load(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -255,7 +255,7 @@ func (a *Agent) appendConversation(ctx context.Context, msg string) ([]Conversat
 		if err != nil {
 			return nil, err
 		}
-		err = a.Conversation.Append(ctx, []ConversationElement{systemMessage})
+		err = a.conversation.Append(ctx, []ConversationElement{systemMessage})
 		if err != nil {
 			return nil, err
 		}
@@ -268,7 +268,7 @@ func (a *Agent) appendConversation(ctx context.Context, msg string) ([]Conversat
 	}
 
 	conversation = append(conversation, userMsg)
-	if err := a.Conversation.Append(ctx, []ConversationElement{userMsg}); err != nil {
+	if err := a.conversation.Append(ctx, []ConversationElement{userMsg}); err != nil {
 		return nil, err
 	}
 

@@ -66,7 +66,7 @@ func TestAgentBuilder_Build(t *testing.T) {
 			WithAgentName("TestAgent")
 
 		_, err := builder.Build()
-		assert.ErrorIs(t, err, rellm.ErrBuildNoConversationStorage)
+		assert.ErrorIs(t, err, rellm.ErrBuildNoConversation)
 	})
 
 	t.Run("Missing provider", func(t *testing.T) {

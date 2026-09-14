@@ -60,11 +60,11 @@ func (s *FilesystemConversation) Load(_ context.Context) ([]ConversationElement,
 			continue
 		}
 		if !json.Valid(line) {
-			return nil, errors.Join(ErrMalformedConversationStorage, fmt.Errorf("file: %s, line: %d", s.path, lineNum+1))
+			return nil, errors.Join(ErrMalformedConversationLine, fmt.Errorf("file: %s, line: %d", s.path, lineNum+1))
 		}
 		el, err := ParseConversationElement(line)
 		if err != nil {
-			return nil, errors.Join(ErrMalformedConversationStorage, fmt.Errorf("file: %s, line: %d", s.path, lineNum+1), err)
+			return nil, errors.Join(ErrMalformedConversationLine, fmt.Errorf("file: %s, line: %d", s.path, lineNum+1), err)
 		}
 		elements = append(elements, el)
 	}

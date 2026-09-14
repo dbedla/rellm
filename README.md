@@ -137,7 +137,7 @@ func main() {
 		WithProvider(provider).
 		WithAgentName("MyAgent").
 		WithMaxAgentSteps(20).
-		WithConversation(rellm.NewInMemoryStorage()).
+		WithConversation(rellm.NewInMemoryConversation()).
 		WithImageGenerationKeepInTheLoop().
 		WithUnknownConversationElementKeepInTheLoop().
 		WithSystemMessage("You are a helpful assistant.").
@@ -225,7 +225,7 @@ func main() {
 		WithProvider(provider).
 		WithAgentName("StructuredOutputAgent").
 		WithMaxAgentSteps(20).
-		WithConversation(rellm.NewInMemoryStorage()).
+		WithConversation(rellm.NewInMemoryConversation()).
 		WithImageGenerationKeepInTheLoop().
 		WithUnknownConversationElementKeepInTheLoop().
 		WithSystemMessage("You are an assistant that extracts structured information from user text and returns only valid JSON matching the requested schema.").

@@ -470,7 +470,7 @@ func TestAgentLMS_DispatchFailurePersistsPartialToolResults(t *testing.T) {
 	// The inline response carries no usage, so the stat is recorded zero-valued.
 	assert.Equal(t, expectedStepStats(t, response), finalReport.StepsStats)
 
-	conversation, err := agent.Conversation.Load(ctx)
+	conversation, err := agent.Conversation().Load(ctx)
 	assert.NoError(t, err)
 
 	outputsByCallID := make(map[string]string)

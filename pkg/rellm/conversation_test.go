@@ -154,7 +154,7 @@ func TestFilesystemStorage_LoadMalformedLineReturnsError(t *testing.T) {
 	ctx := context.Background()
 	s := NewFilesystemConversation(path)
 	_, err := s.Load(ctx)
-	assert.ErrorIs(t, err, ErrMalformedConversationStorage)
+	assert.ErrorIs(t, err, ErrMalformedConversationLine)
 }
 
 func TestFilesystemStorage_LoadUnknownKindReturnsError(t *testing.T) {
