@@ -53,8 +53,8 @@ type Toolset interface {
 	Dispatch(ctx context.Context, name string, arguments json.RawMessage) (ToolCallResult, error)
 }
 
-// ConversationStorage stores and loads conversation history.
-type ConversationStorage interface {
+// Conversation stores and loads conversation history.
+type Conversation interface {
 	// Load returns the stored conversation elements. A non-nil error breaks
 	// the agentic loop; use ctx to cancel the read.
 	Load(context.Context) ([]ConversationElement, error)
@@ -74,16 +74,16 @@ type HTTPClient interface {
 // requests, dispatches function calls, and returns a final answer. Create it
 // with AgentBuilder.
 //
-// Available methods: Ask, Execute, CurrentConversation, Name.
+// Available methods: Ask, Execute, Conversation, Name, SystemMessage.
 type Agent struct {
-	provider   Provider
-	toolset    Toolset
-	textFormat *TextFormat
-	agentName  string
-	sysMsg     string
+	conversation  Conversation
+	provider      Provider
+	toolset       Toolset
+	textFormat    *TextFormat
+	agentName     string
 
-	conversationStorage ConversationStorage
-	maxAgentSteps       uint64
+	sysMsg        string
+	maxAgentSteps uint64
 
 	handleUnknownConversationElement HandleUnknownConversationElement
 	handleImageGeneration            HandleImageGeneration
@@ -124,8 +124,8 @@ type HandleUnknownConversationElement func(ctx context.Context, el *UnknownEleme
 //
 // A Report is generated exclusively for a single Ask or Execute call: it
 // never carries information from previous calls. What does persist across
-// calls is the conversation history (see CurrentConversation and
-// ConversationStorage); a Report only reflects what its own run received
+// calls is the conversation history (see Conversation and Agent.Conversation);
+// a Report only reflects what its own run received
 // from the provider.
 //
 // When a run ends in error, the Report returned alongside the error holds
@@ -178,11 +178,22 @@ func (a *Agent) Ask(ctx context.Context, question string) (Report, error) {
 	return a.Execute(ctx, prompt)
 }
 
-// CurrentConversation returns the conversation history as stored.
-func (a *Agent) CurrentConversation(ctx context.Context) ([]ConversationElement, error) {
-	return a.conversationStorage.Load(ctx)
-}
-
+// Name returns the agent's name, an identifier set via WithAgentName.
+// It is empty when WithAgentName was not called.
 func (a *Agent) Name() string {
 	return a.agentName
+}
+
+// Conversation returns the agent's conversation. Use it to read the history
+// (Load) and append elements (Append); the implementation cannot be swapped
+// for another one after Build.
+func (a *Agent) Conversation() Conversation {
+	return a.conversation
+}
+
+// SystemMessage returns the agent's system message, the standing
+// instructions sent with every request this agent makes. It is empty when
+// WithSystemMessage was not called.
+func (a *Agent) SystemMessage() string {
+	return a.sysMsg
 }

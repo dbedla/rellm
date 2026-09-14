@@ -5,8 +5,8 @@ import (
 )
 
 var ErrBuildNoProvider = errors.New("missing provider")
-var ErrBuildNoConversationStorage = errors.New("missing conversation storage")
-var ErrMalformedConversationStorage = errors.New("malformed conversation storage line")
+var ErrBuildNoConversation = errors.New("missing conversation")
+var ErrMalformedConversationLine = errors.New("malformed conversation line")
 
 var ErrNoNewConversationElementAfterDispatch = errors.New("no new conversation element")
 var ErrNoToolsetButToolCallRequested = errors.New("no toolset provided but request to call tool received")

@@ -10,42 +10,42 @@ import (
 	"path/filepath"
 )
 
-// InMemoryStorage stores conversation elements in memory. Not safe for
+// InMemoryConversation stores conversation elements in memory. Not safe for
 // concurrent use; data is lost when the process exits.
-type InMemoryStorage struct {
+type InMemoryConversation struct {
 	messages []ConversationElement
 }
 
-// NewInMemoryStorage creates a new instance of InMemoryStorage.
-func NewInMemoryStorage() *InMemoryStorage {
-	return &InMemoryStorage{}
+// NewInMemoryConversation creates a new instance of InMemoryConversation.
+func NewInMemoryConversation() *InMemoryConversation {
+	return &InMemoryConversation{}
 }
 
 // Load returns deep copies of the stored conversation elements. ctx is ignored.
-func (s *InMemoryStorage) Load(_ context.Context) ([]ConversationElement, error) {
+func (s *InMemoryConversation) Load(_ context.Context) ([]ConversationElement, error) {
 	return cloneConversationElements(s.messages), nil
 }
 
 // Append adds elements to the in-memory history. ctx is ignored.
-func (s *InMemoryStorage) Append(_ context.Context, delta []ConversationElement) error {
+func (s *InMemoryConversation) Append(_ context.Context, delta []ConversationElement) error {
 	s.messages = append(s.messages, delta...)
 	return nil
 }
 
-// FilesystemStorage persists conversation elements as JSON lines in a file.
+// FilesystemConversation persists conversation elements as JSON lines in a file.
 // Not safe for concurrent use. A corrupted line makes Load fail.
-type FilesystemStorage struct {
+type FilesystemConversation struct {
 	path string
 }
 
-// NewFilesystemStorage returns a storage using the file at path.
-func NewFilesystemStorage(path string) *FilesystemStorage {
-	return &FilesystemStorage{path: path}
+// NewFilesystemConversation returns a Conversation using the file at path.
+func NewFilesystemConversation(path string) *FilesystemConversation {
+	return &FilesystemConversation{path: path}
 }
 
 // Load reads conversation elements from the file. A missing file yields an
 // empty conversation. ctx is ignored.
-func (s *FilesystemStorage) Load(_ context.Context) ([]ConversationElement, error) {
+func (s *FilesystemConversation) Load(_ context.Context) ([]ConversationElement, error) {
 	data, err := os.ReadFile(s.path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -60,11 +60,11 @@ func (s *FilesystemStorage) Load(_ context.Context) ([]ConversationElement, erro
 			continue
 		}
 		if !json.Valid(line) {
-			return nil, errors.Join(ErrMalformedConversationStorage, fmt.Errorf("file: %s, line: %d", s.path, lineNum+1))
+			return nil, errors.Join(ErrMalformedConversationLine, fmt.Errorf("file: %s, line: %d", s.path, lineNum+1))
 		}
 		el, err := ParseConversationElement(line)
 		if err != nil {
-			return nil, errors.Join(ErrMalformedConversationStorage, fmt.Errorf("file: %s, line: %d", s.path, lineNum+1), err)
+			return nil, errors.Join(ErrMalformedConversationLine, fmt.Errorf("file: %s, line: %d", s.path, lineNum+1), err)
 		}
 		elements = append(elements, el)
 	}
@@ -73,7 +73,7 @@ func (s *FilesystemStorage) Load(_ context.Context) ([]ConversationElement, erro
 
 // Append writes the given elements to the file, one JSON object per line,
 // creating the file and parent directories if missing. ctx is ignored.
-func (s *FilesystemStorage) Append(_ context.Context, delta []ConversationElement) (finalErr error) {
+func (s *FilesystemConversation) Append(_ context.Context, delta []ConversationElement) (finalErr error) {
 	if len(delta) == 0 {
 		return nil
 	}
@@ -93,19 +93,19 @@ func (s *FilesystemStorage) Append(_ context.Context, delta []ConversationElemen
 	// 2. Ensure the parent directory exists
 	if dir := filepath.Dir(s.path); dir != "" {
 		if err := os.MkdirAll(dir, 0755); err != nil {
-			return fmt.Errorf("failed to create storage dir %s: %w", dir, err)
+			return fmt.Errorf("failed to create dir %s: %w", dir, err)
 		}
 	}
 
 	// 3. Write buffered batch to disk
 	f, err := os.OpenFile(s.path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		return fmt.Errorf("failed to open storage file %s: %w", s.path, err)
+		return fmt.Errorf("failed to open file %s: %w", s.path, err)
 	}
 	defer closeWithError(&finalErr, f)
 
 	if _, err = f.Write(buf.Bytes()); err != nil {
-		return fmt.Errorf("failed to write to storage file %s: %w", s.path, err)
+		return fmt.Errorf("failed to write to file %s: %w", s.path, err)
 	}
 	return nil
 }

@@ -39,7 +39,7 @@ func TestAgentAsk_ConversationBeforeAndAfter(t *testing.T) {
 		}, nil)
 
 	ctx := context.Background()
-	conversationBeforeAsk, err := agent.CurrentConversation(ctx)
+	conversationBeforeAsk, err := agent.Conversation().Load(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, conversationBeforeAsk, 0)
 
@@ -54,7 +54,7 @@ func TestAgentAsk_ConversationBeforeAndAfter(t *testing.T) {
 		goldenRespHi)
 	assert.NoError(t, err)
 
-	conversationAfterAsk, err := agent.CurrentConversation(ctx)
+	conversationAfterAsk, err := agent.Conversation().Load(ctx)
 	assert.NoError(t, err)
 
 	assert.Equal(t, conversationFromGolden, conversationAfterAsk)
@@ -131,7 +131,7 @@ func TestAgentLMS_ToolsCallWithConversationCheck(t *testing.T) {
 	assert.Equal(t, "The first tool call to `GetStaticData` returned the value `42`. The second tool call to `GetDataFor` with the input \"the meaning of 42\" returned a list containing `[\"abc\", \"def\"]`. Therefore, based on these specific tool outputs, the data associated with the value 42 is \"abc\" and \"def\".", finalReport.Message, "response message should match")
 	assert.Equal(t, expectedStepStats(t, goldenProRespA1, goldenProRespA2, goldenProRespA3), finalReport.StepsStats)
 
-	agentConversation, err := agent.CurrentConversation(ctx)
+	agentConversation, err := agent.Conversation().Load(ctx)
 	assert.NoError(t, err)
 	assert.Equal(t, 10, len(agentConversation))
 
@@ -215,7 +215,7 @@ func TestAgentLMS_ToolsCallWithConversationCheck_SecondRespFail(t *testing.T) {
 	// Usage of the two successful calls is retained despite the failing third.
 	assert.Equal(t, expectedStepStats(t, goldenProRespA1, goldenProRespA2), finalReport.StepsStats)
 
-	agentConversation, err := agent.CurrentConversation(ctx)
+	agentConversation, err := agent.Conversation().Load(ctx)
 	assert.NoError(t, err)
 	assert.Equal(t, 8, len(agentConversation))
 
@@ -291,7 +291,7 @@ func TestAgentOpenRouterGemma_ConversationCheck(t *testing.T) {
 	assert.Equal(t, "I have access to the following tools:\n\n1.  **`GetDataFor`**: This tool allows me to retrieve specific data based on an input string you provide.\n2.  **`GetStaticData`**: This tool allows me to retrieve pre-defined static data.", finalReport.Message)
 	assert.Equal(t, expectedStepStats(t, goldenOR_Hi_04_resp), finalReport.StepsStats)
 
-	agentConversation, err := agent.CurrentConversation(ctx)
+	agentConversation, err := agent.Conversation().Load(ctx)
 	assert.NoError(t, err)
 
 	conversationFromGolden, err := buildConversationFromGoldenOpenRouter(
@@ -368,7 +368,7 @@ func TestAgentOpenRouterGemini_ConversationCheck(t *testing.T) {
 	assert.Equal(t, "I have access to the following tools:\n\n*   **`GetDataFor`**: This tool allows me to retrieve specific data based on an input you provide.\n*   **`GetStaticData`**: This tool allows me to retrieve general static information.\n\nHow can I help you use these today?", finalReport.Message)
 	assert.Equal(t, expectedStepStats(t, goldenOR_Hi_gemini_04_resp), finalReport.StepsStats)
 
-	agentConversation, err := agent.CurrentConversation(ctx)
+	agentConversation, err := agent.Conversation().Load(ctx)
 	assert.NoError(t, err)
 
 	conversationFromGolden, err := buildConversationFromGoldenOpenRouter(
@@ -488,7 +488,7 @@ func buildTestFileSystemAgentOpenRouter(t *testing.T, model rellm.Model, maxAgen
 		WithProvider(p).
 		WithAgentName(agentName).
 		WithMaxAgentSteps(maxAgentSteps).
-		WithConversationStorage(rellm.NewInMemoryStorage()).
+		WithConversation(rellm.NewInMemoryConversation()).
 		WithSystemMessage("You are a helpful assistant, with limited access to the file system.").
 		WithToolset(fst).
 		WithImageGenerationKeepInTheLoop().

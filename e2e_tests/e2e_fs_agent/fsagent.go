@@ -31,7 +31,7 @@ func buildFSAgent(p rellm.Provider, dirs agentsDirs) (*rellm.Agent, error) {
 		WithProvider(p).
 		WithAgentName(agentName).
 		WithMaxAgentSteps(20).
-		WithConversationStorage(rellm.NewFilesystemStorage(conversationFilePath)).
+		WithConversation(rellm.NewFilesystemConversation(conversationFilePath)).
 		WithToolset(fsToolset).
 		WithSystemMessage(fsAgentSysPrompt).
 		WithInspectEachRequest(examplesutils.InspectWithReqLog).

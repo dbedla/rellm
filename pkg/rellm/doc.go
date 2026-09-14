@@ -20,7 +20,7 @@
 //
 //	agent, err := rellm.NewAgentBuilder().
 //		WithProvider(provider).
-//		WithConversationStorage(rellm.NewInMemoryStorage()).
+//		WithConversation(rellm.NewInMemoryConversation()).
 //		WithUnknownConversationElementKeepInTheLoop().
 //		WithImageGenerationKeepInTheLoop().
 //		Build()

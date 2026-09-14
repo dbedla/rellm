@@ -27,7 +27,7 @@ func buildBaseAgent() (*rellm.Agent, error) {
 		WithProvider(p).
 		WithAgentName(agentName).
 		WithMaxAgentSteps(20).
-		WithConversationStorage(rellm.NewInMemoryStorage()).
+		WithConversation(rellm.NewInMemoryConversation()).
 		WithSystemMessage(baseAgentSysPrompt).
 		WithImageGenerationHandler(handleImage).
 		WithUnknownConversationElementKeepInTheLoop().

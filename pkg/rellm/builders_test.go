@@ -52,7 +52,7 @@ func TestAgentBuilder_Build(t *testing.T) {
 		builder := buildPolicies(rellm.NewAgentBuilder().
 			WithProvider(buildProvider()).
 			WithAgentName("TestAgent").
-			WithConversationStorage(rellm.NewInMemoryStorage()))
+			WithConversation(rellm.NewInMemoryConversation()))
 
 		agent, err := builder.Build()
 		assert.NoError(t, err)
@@ -60,13 +60,13 @@ func TestAgentBuilder_Build(t *testing.T) {
 		assert.Equal(t, "TestAgent", agent.Name())
 	})
 
-	t.Run("Missing conversation storage", func(t *testing.T) {
+	t.Run("Missing conversation", func(t *testing.T) {
 		builder := rellm.NewAgentBuilder().
 			WithProvider(buildProvider()).
 			WithAgentName("TestAgent")
 
 		_, err := builder.Build()
-		assert.ErrorIs(t, err, rellm.ErrBuildNoConversationStorage)
+		assert.ErrorIs(t, err, rellm.ErrBuildNoConversation)
 	})
 
 	t.Run("Missing provider", func(t *testing.T) {
@@ -82,7 +82,7 @@ func TestAgentBuilder_Build(t *testing.T) {
 		builder := rellm.NewAgentBuilder().
 			WithProvider(buildProvider()).
 			WithAgentName("TestAgent").
-			WithConversationStorage(rellm.NewInMemoryStorage()).
+			WithConversation(rellm.NewInMemoryConversation()).
 			WithUnknownConversationElementKeepInTheLoop()
 
 		_, err := builder.Build()
@@ -93,7 +93,7 @@ func TestAgentBuilder_Build(t *testing.T) {
 		builder := rellm.NewAgentBuilder().
 			WithProvider(buildProvider()).
 			WithAgentName("TestAgent").
-			WithConversationStorage(rellm.NewInMemoryStorage()).
+			WithConversation(rellm.NewInMemoryConversation()).
 			WithImageGenerationKeepInTheLoop()
 
 		_, err := builder.Build()
@@ -104,7 +104,7 @@ func TestAgentBuilder_Build(t *testing.T) {
 		builder := rellm.NewAgentBuilder().
 			WithProvider(buildProvider()).
 			WithAgentName("TestAgent").
-			WithConversationStorage(rellm.NewInMemoryStorage()).
+			WithConversation(rellm.NewInMemoryConversation()).
 			WithImageGenerationHandler(nil).
 			WithUnknownConversationElementKeepInTheLoop()
 
@@ -116,7 +116,7 @@ func TestAgentBuilder_Build(t *testing.T) {
 		builder := buildPolicies(rellm.NewAgentBuilder().
 			WithProvider(buildProvider()).
 			WithAgentName("FirstAgent").
-			WithConversationStorage(rellm.NewInMemoryStorage()))
+			WithConversation(rellm.NewInMemoryConversation()))
 
 		agent1, err := builder.Build()
 		assert.NoError(t, err)

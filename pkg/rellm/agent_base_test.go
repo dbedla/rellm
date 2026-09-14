@@ -82,7 +82,7 @@ func TestAgentAskNoSysMsg(t *testing.T) {
 	assert.Equal(t, "Hello! How can I help you today? \n\nIf you have any questions about the weather, meteorology, climate patterns, or even how certain atmospheric phenomena work, feel free to ask!", finalReport.Message, "response message should match")
 	assert.Equal(t, expectedStepStats(t, goldenRespHi), finalReport.StepsStats)
 
-	conversation, err := agent.CurrentConversation(ctx)
+	conversation, err := agent.Conversation().Load(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, conversation, 3)
 }
@@ -248,7 +248,7 @@ func TestAgentAsk_RetryAfterProviderFailedMessageStaysInConversation(t *testing.
 	assert.NoError(t, err)
 	assert.Equal(t, expectedStepStats(t, goldenRespHi), report.StepsStats)
 
-	conversation, err := agent.CurrentConversation(ctx)
+	conversation, err := agent.Conversation().Load(ctx)
 	assert.NoError(t, err)
 	assert.Len(t, conversation, 5)
 }
@@ -264,7 +264,7 @@ func buildTestAgentWithTextFormat(t *testing.T) (*rellm.Agent, *HTTPDoMock) {
 		WithProvider(p).
 		WithAgentName(agentName).
 		WithMaxAgentSteps(20).
-		WithConversationStorage(rellm.NewInMemoryStorage()).
+		WithConversation(rellm.NewInMemoryConversation()).
 		WithSystemMessage("You are a helpful assistant with deep weather knowledge.").
 		WithTextFormat(rellm.TextFormat{
 			Type:   "json_schema",
@@ -292,7 +292,7 @@ func buildTestAgent(t *testing.T) (*rellm.Agent, *HTTPDoMock) {
 		WithProvider(p).
 		WithAgentName(agentName).
 		WithMaxAgentSteps(20).
-		WithConversationStorage(rellm.NewInMemoryStorage()).
+		WithConversation(rellm.NewInMemoryConversation()).
 		WithSystemMessage("You are a helpful assistant with deep weather knowledge.").
 		WithImageGenerationKeepInTheLoop().
 		WithUnknownConversationElementKeepInTheLoop().
@@ -314,7 +314,7 @@ func buildTestAgentNoSysMsg(t *testing.T) (*rellm.Agent, *HTTPDoMock) {
 		WithProvider(p).
 		WithAgentName(agentName).
 		WithMaxAgentSteps(20).
-		WithConversationStorage(rellm.NewInMemoryStorage()).
+		WithConversation(rellm.NewInMemoryConversation()).
 		WithImageGenerationKeepInTheLoop().
 		WithUnknownConversationElementKeepInTheLoop().
 		Build()
