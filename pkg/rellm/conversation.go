@@ -10,42 +10,42 @@ import (
 	"path/filepath"
 )
 
-// InMemoryStorage stores conversation elements in memory. Not safe for
+// InMemoryConversation stores conversation elements in memory. Not safe for
 // concurrent use; data is lost when the process exits.
-type InMemoryStorage struct {
+type InMemoryConversation struct {
 	messages []ConversationElement
 }
 
-// NewInMemoryStorage creates a new instance of InMemoryStorage.
-func NewInMemoryStorage() *InMemoryStorage {
-	return &InMemoryStorage{}
+// NewInMemoryConversation creates a new instance of InMemoryConversation.
+func NewInMemoryConversation() *InMemoryConversation {
+	return &InMemoryConversation{}
 }
 
 // Load returns deep copies of the stored conversation elements. ctx is ignored.
-func (s *InMemoryStorage) Load(_ context.Context) ([]ConversationElement, error) {
+func (s *InMemoryConversation) Load(_ context.Context) ([]ConversationElement, error) {
 	return cloneConversationElements(s.messages), nil
 }
 
 // Append adds elements to the in-memory history. ctx is ignored.
-func (s *InMemoryStorage) Append(_ context.Context, delta []ConversationElement) error {
+func (s *InMemoryConversation) Append(_ context.Context, delta []ConversationElement) error {
 	s.messages = append(s.messages, delta...)
 	return nil
 }
 
-// FilesystemStorage persists conversation elements as JSON lines in a file.
+// FilesystemConversation persists conversation elements as JSON lines in a file.
 // Not safe for concurrent use. A corrupted line makes Load fail.
-type FilesystemStorage struct {
+type FilesystemConversation struct {
 	path string
 }
 
-// NewFilesystemStorage returns a storage using the file at path.
-func NewFilesystemStorage(path string) *FilesystemStorage {
-	return &FilesystemStorage{path: path}
+// NewFilesystemConversation returns a storage using the file at path.
+func NewFilesystemConversation(path string) *FilesystemConversation {
+	return &FilesystemConversation{path: path}
 }
 
 // Load reads conversation elements from the file. A missing file yields an
 // empty conversation. ctx is ignored.
-func (s *FilesystemStorage) Load(_ context.Context) ([]ConversationElement, error) {
+func (s *FilesystemConversation) Load(_ context.Context) ([]ConversationElement, error) {
 	data, err := os.ReadFile(s.path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -73,7 +73,7 @@ func (s *FilesystemStorage) Load(_ context.Context) ([]ConversationElement, erro
 
 // Append writes the given elements to the file, one JSON object per line,
 // creating the file and parent directories if missing. ctx is ignored.
-func (s *FilesystemStorage) Append(_ context.Context, delta []ConversationElement) (finalErr error) {
+func (s *FilesystemConversation) Append(_ context.Context, delta []ConversationElement) (finalErr error) {
 	if len(delta) == 0 {
 		return nil
 	}

@@ -26,7 +26,7 @@ func assertElementJSONEq(t *testing.T, expected string, actual ConversationEleme
 }
 
 func TestInMemoryStorage_LoadEmpty(t *testing.T) {
-	s := NewInMemoryStorage()
+	s := NewInMemoryConversation()
 	ctx := context.Background()
 	msgs, err := s.Load(ctx)
 	assert.NoError(t, err)
@@ -34,7 +34,7 @@ func TestInMemoryStorage_LoadEmpty(t *testing.T) {
 }
 
 func TestInMemoryStorage_AppendAndLoad(t *testing.T) {
-	s := NewInMemoryStorage()
+	s := NewInMemoryConversation()
 	delta := []ConversationElement{testUserMsg("hi")}
 	ctx := context.Background()
 	assert.NoError(t, s.Append(ctx, delta))
@@ -45,7 +45,7 @@ func TestInMemoryStorage_AppendAndLoad(t *testing.T) {
 }
 
 func TestInMemoryStorage_AppendMultiple(t *testing.T) {
-	s := NewInMemoryStorage()
+	s := NewInMemoryConversation()
 	first := []ConversationElement{testUserMsg("a")}
 	second := []ConversationElement{testAssistantMsg("b")}
 	ctx := context.Background()
@@ -59,7 +59,7 @@ func TestInMemoryStorage_AppendMultiple(t *testing.T) {
 }
 
 func TestInMemoryStorage_LoadDoesNotAlias(t *testing.T) {
-	s := NewInMemoryStorage()
+	s := NewInMemoryConversation()
 	ctx := context.Background()
 	assert.NoError(t, s.Append(ctx, []ConversationElement{testUserMsg("x")}))
 
@@ -75,7 +75,7 @@ func TestInMemoryStorage_LoadDoesNotAlias(t *testing.T) {
 }
 
 func TestInMemoryStorage_LoadDoesNotAliasElements(t *testing.T) {
-	s := NewInMemoryStorage()
+	s := NewInMemoryConversation()
 	ctx := context.Background()
 	assert.NoError(t, s.Append(ctx, []ConversationElement{testUserMsg("x")}))
 
@@ -89,7 +89,7 @@ func TestInMemoryStorage_LoadDoesNotAliasElements(t *testing.T) {
 }
 
 func TestInMemoryStorage_AppendEmpty(t *testing.T) {
-	s := NewInMemoryStorage()
+	s := NewInMemoryConversation()
 	ctx := context.Background()
 	assert.NoError(t, s.Append(ctx, nil))
 	msgs, err := s.Load(ctx)
@@ -98,7 +98,7 @@ func TestInMemoryStorage_AppendEmpty(t *testing.T) {
 }
 
 func TestFilesystemStorage_LoadMissingFile(t *testing.T) {
-	s := NewFilesystemStorage(filepath.Join(t.TempDir(), "missing.jsonl"))
+	s := NewFilesystemConversation(filepath.Join(t.TempDir(), "missing.jsonl"))
 	ctx := context.Background()
 	msgs, err := s.Load(ctx)
 	assert.NoError(t, err)
@@ -107,7 +107,7 @@ func TestFilesystemStorage_LoadMissingFile(t *testing.T) {
 
 func TestFilesystemStorage_AppendAndLoad(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "conv.jsonl")
-	s := NewFilesystemStorage(path)
+	s := NewFilesystemConversation(path)
 	delta := []ConversationElement{testUserMsg("hi"), testAssistantMsg("hello")}
 	ctx := context.Background()
 	err := s.Append(ctx, delta)
@@ -130,7 +130,7 @@ func TestFilesystemStorage_AppendAndLoad(t *testing.T) {
 
 func TestFilesystemStorage_AppendAndLoadUnknownElement(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "conv.jsonl")
-	s := NewFilesystemStorage(path)
+	s := NewFilesystemConversation(path)
 	raw := json.RawMessage(`{"type":"future_output","value":42}`)
 	ctx := context.Background()
 
@@ -152,7 +152,7 @@ func TestFilesystemStorage_LoadMalformedLineReturnsError(t *testing.T) {
 	content := `{"kind":"user_message"}` + "\n" + `{broken` + "\n"
 	assert.NoError(t, os.WriteFile(path, []byte(content), 0644))
 	ctx := context.Background()
-	s := NewFilesystemStorage(path)
+	s := NewFilesystemConversation(path)
 	_, err := s.Load(ctx)
 	assert.ErrorIs(t, err, ErrMalformedConversationStorage)
 }
@@ -161,7 +161,7 @@ func TestFilesystemStorage_LoadUnknownKindReturnsError(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "conv.jsonl")
 	content := `{"kind":"time_travel","role":"user"}` + "\n"
 	assert.NoError(t, os.WriteFile(path, []byte(content), 0644))
-	s := NewFilesystemStorage(path)
+	s := NewFilesystemConversation(path)
 	ctx := context.Background()
 	_, err := s.Load(ctx)
 	assert.ErrorIs(t, err, ErrUnknownTypeForConversationElement)
@@ -169,7 +169,7 @@ func TestFilesystemStorage_LoadUnknownKindReturnsError(t *testing.T) {
 
 func TestFilesystemStorage_AppendEmpty(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "conv.jsonl")
-	s := NewFilesystemStorage(path)
+	s := NewFilesystemConversation(path)
 	ctx := context.Background()
 	assert.NoError(t, s.Append(ctx, nil))
 	_, err := os.Stat(path)
@@ -181,7 +181,7 @@ func TestFilesystemStorage_AppendEmpty(t *testing.T) {
 
 func TestFilesystemStorage_AppendCreatesParentDir(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "sub", "conv.jsonl")
-	s := NewFilesystemStorage(path)
+	s := NewFilesystemConversation(path)
 	ctx := context.Background()
 	err := s.Append(ctx, []ConversationElement{testUserMsg("hi")})
 	assert.NoError(t, err)

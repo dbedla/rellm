@@ -53,8 +53,8 @@ type Toolset interface {
 	Dispatch(ctx context.Context, name string, arguments json.RawMessage) (ToolCallResult, error)
 }
 
-// ConversationStorage stores and loads conversation history.
-type ConversationStorage interface {
+// Conversation stores and loads conversation history.
+type Conversation interface {
 	// Load returns the stored conversation elements. A non-nil error breaks
 	// the agentic loop; use ctx to cancel the read.
 	Load(context.Context) ([]ConversationElement, error)
@@ -76,14 +76,14 @@ type HTTPClient interface {
 //
 // Available methods: Ask, Execute, CurrentConversation, Name.
 type Agent struct {
-	provider   Provider
-	toolset    Toolset
-	textFormat *TextFormat
-	agentName  string
-	sysMsg     string
+	Conversation Conversation
+	provider     Provider
+	toolset      Toolset
+	textFormat   *TextFormat
+	agentName    string
 
-	conversationStorage ConversationStorage
-	maxAgentSteps       uint64
+	sysMsg        string
+	maxAgentSteps uint64
 
 	handleUnknownConversationElement HandleUnknownConversationElement
 	handleImageGeneration            HandleImageGeneration
@@ -125,7 +125,7 @@ type HandleUnknownConversationElement func(ctx context.Context, el *UnknownEleme
 // A Report is generated exclusively for a single Ask or Execute call: it
 // never carries information from previous calls. What does persist across
 // calls is the conversation history (see CurrentConversation and
-// ConversationStorage); a Report only reflects what its own run received
+// Conversation); a Report only reflects what its own run received
 // from the provider.
 //
 // When a run ends in error, the Report returned alongside the error holds
@@ -178,11 +178,10 @@ func (a *Agent) Ask(ctx context.Context, question string) (Report, error) {
 	return a.Execute(ctx, prompt)
 }
 
-// CurrentConversation returns the conversation history as stored.
-func (a *Agent) CurrentConversation(ctx context.Context) ([]ConversationElement, error) {
-	return a.conversationStorage.Load(ctx)
-}
-
 func (a *Agent) Name() string {
 	return a.agentName
+}
+
+func (a *Agent) SystemMessage() string {
+	return a.sysMsg
 }

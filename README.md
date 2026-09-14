@@ -119,38 +119,38 @@ Other provider flags: `--lms`, `--or-gemma`, `--or-gemini`, `--or-luna`.
 package main
 
 import (
-    "context"
-    "fmt"
+	"context"
+	"fmt"
 
-    "rellm/pkg/rellm"
+	"rellm/pkg/rellm"
 )
 
 func main() {
-    provider, err := rellm.NewLMStudioProvider(
-        "google/gemma-4-26b-a4b", "http://127.0.0.1", "1234",
-    )
-    if err != nil {
-        panic(err)
-    }
+	provider, err := rellm.NewLMStudioProvider(
+		"google/gemma-4-26b-a4b", "http://127.0.0.1", "1234",
+	)
+	if err != nil {
+		panic(err)
+	}
 
-    agent, err := rellm.NewAgentBuilder().
-        WithProvider(provider).
-        WithAgentName("MyAgent").
-        WithMaxAgentSteps(20).
-        WithConversationStorage(rellm.NewInMemoryStorage()).
-        WithImageGenerationKeepInTheLoop().
-        WithUnknownConversationElementKeepInTheLoop().
-        WithSystemMessage("You are a helpful assistant.").
-        Build()
-    if err != nil {
-        panic(err)
-    }
+	agent, err := rellm.NewAgentBuilder().
+		WithProvider(provider).
+		WithAgentName("MyAgent").
+		WithMaxAgentSteps(20).
+		WithConversation(rellm.NewInMemoryStorage()).
+		WithImageGenerationKeepInTheLoop().
+		WithUnknownConversationElementKeepInTheLoop().
+		WithSystemMessage("You are a helpful assistant.").
+		Build()
+	if err != nil {
+		panic(err)
+	}
 
-    finalReport, err := agent.Ask(context.Background(), "Hello!")
-    if err != nil {
-        panic(err)
-    }
-    fmt.Println(finalReport.Message)
+	finalReport, err := agent.Ask(context.Background(), "Hello!")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(finalReport.Message)
 }
 ```
 
@@ -183,76 +183,76 @@ spell out the expected value range, which the model generally respects.
 package main
 
 import (
-    "context"
-    "encoding/json"
-    "fmt"
-    "os"
+	"context"
+	"encoding/json"
+	"fmt"
+	"os"
 
-    "github.com/invopop/jsonschema"
-    "github.com/joho/godotenv"
+	"github.com/invopop/jsonschema"
+	"github.com/joho/godotenv"
 
-    "rellm/pkg/rellm"
+	"rellm/pkg/rellm"
 )
 
 // The struct tags describe the schema.
 type Person struct {
-    Name string `json:"name" jsonschema:"description=Full name of the person"`
-    Age  int    `json:"age"  jsonschema:"description=Age in years"`
-    City string `json:"city" jsonschema:"description=City of residence"`
+	Name string `json:"name" jsonschema:"description=Full name of the person"`
+	Age  int    `json:"age"  jsonschema:"description=Age in years"`
+	City string `json:"city" jsonschema:"description=City of residence"`
 }
 
 func main() {
-    // Schema generated from the struct tags above.
-    textFormat := rellm.TextFormat{
-        Type:   "json_schema",
-        Name:   "person",
-        Strict: true,
-        Schema: (&jsonschema.Reflector{DoNotReference: true}).Reflect(&Person{}),
-    }
+	// Schema generated from the struct tags above.
+	textFormat := rellm.TextFormat{
+		Type:   "json_schema",
+		Name:   "person",
+		Strict: true,
+		Schema: (&jsonschema.Reflector{DoNotReference: true}).Reflect(&Person{}),
+	}
 
-    _ = godotenv.Load() // reads OPENROUTER_API_KEY from .env
-    apiKey := os.Getenv("OPENROUTER_API_KEY")
-    if apiKey == "" {
-        panic("OPENROUTER_API_KEY is not set")
-    }
+	_ = godotenv.Load() // reads OPENROUTER_API_KEY from .env
+	apiKey := os.Getenv("OPENROUTER_API_KEY")
+	if apiKey == "" {
+		panic("OPENROUTER_API_KEY is not set")
+	}
 
-    provider, err := rellm.NewOpenRouterProvider(apiKey, "openai/gpt-5.6-luna")
-    if err != nil {
-        panic(err)
-    }
+	provider, err := rellm.NewOpenRouterProvider(apiKey, "openai/gpt-5.6-luna")
+	if err != nil {
+		panic(err)
+	}
 
-    agent, err := rellm.NewAgentBuilder().
-        WithProvider(provider).
-        WithAgentName("StructuredOutputAgent").
-        WithMaxAgentSteps(20).
-        WithConversationStorage(rellm.NewInMemoryStorage()).
-        WithImageGenerationKeepInTheLoop().
-        WithUnknownConversationElementKeepInTheLoop().
-        WithSystemMessage("You are an assistant that extracts structured information from user text and returns only valid JSON matching the requested schema.").
-        WithTextFormat(textFormat).
-        Build()
-    if err != nil {
-        panic(err)
-    }
+	agent, err := rellm.NewAgentBuilder().
+		WithProvider(provider).
+		WithAgentName("StructuredOutputAgent").
+		WithMaxAgentSteps(20).
+		WithConversation(rellm.NewInMemoryStorage()).
+		WithImageGenerationKeepInTheLoop().
+		WithUnknownConversationElementKeepInTheLoop().
+		WithSystemMessage("You are an assistant that extracts structured information from user text and returns only valid JSON matching the requested schema.").
+		WithTextFormat(textFormat).
+		Build()
+	if err != nil {
+		panic(err)
+	}
 
-    prompt, err := rellm.NewPromptBuilder().
-        WithMessage("I am John Snow from Winterfell, I have 100 years...").
-        Build()
-    if err != nil {
-        panic(err)
-    }
+	prompt, err := rellm.NewPromptBuilder().
+		WithMessage("I am John Snow from Winterfell, I have 100 years...").
+		Build()
+	if err != nil {
+		panic(err)
+	}
 
-    finalReport, err := agent.Execute(context.Background(), prompt)
-    if err != nil {
-        panic(err)
-    }
+	finalReport, err := agent.Execute(context.Background(), prompt)
+	if err != nil {
+		panic(err)
+	}
 
-    var person Person
-    err = json.Unmarshal([]byte(finalReport.Message), &person)
-    if err != nil {
-        panic(err)
-    }
-    fmt.Printf("after unmarshal to struct: %+v\n", person)
+	var person Person
+	err = json.Unmarshal([]byte(finalReport.Message), &person)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("after unmarshal to struct: %+v\n", person)
 }
 ```
 

@@ -7,7 +7,7 @@ import "context"
 //
 //	agent, err := rellm.NewAgentBuilder().
 //		WithProvider(provider).
-//		WithConversationStorage(rellm.NewInMemoryStorage()).
+//		WithConversation(rellm.NewInMemoryConversation()).
 //		WithUnknownConversationElementKeepInTheLoop(). // other policies: WithUnknownConversationElementDrop, WithUnknownConversationElementHandler
 //		WithImageGenerationKeepInTheLoop().           // other policies: WithImageGenerationDrop, WithImageGenerationHandler
 //		Build()
@@ -42,10 +42,10 @@ func (b *AgentBuilder) WithTextFormat(f TextFormat) *AgentBuilder {
 	return b
 }
 
-// WithConversationStorage sets the storage used to persist and load the
+// WithConversation sets the storage used to persist and load the
 // conversation history. Required.
-func (b *AgentBuilder) WithConversationStorage(storage ConversationStorage) *AgentBuilder {
-	b.agent.conversationStorage = storage
+func (b *AgentBuilder) WithConversation(storage Conversation) *AgentBuilder {
+	b.agent.Conversation = storage
 	return b
 }
 
@@ -136,7 +136,7 @@ func (b *AgentBuilder) WithUnknownConversationElementHandler(handler HandleUnkno
 }
 
 // Build finishes the chain and returns a ready Agent, or an error. Required
-// fields are set via WithProvider and WithConversationStorage; optional fields
+// fields are set via WithProvider and WithConversation; optional fields
 // fall back to defaults. Build returns a copy, so the builder can be reused to
 // create another agent.
 func (b *AgentBuilder) Build() (*Agent, error) {
@@ -155,7 +155,7 @@ func (b *AgentBuilder) Build() (*Agent, error) {
 		b.agent.maxAgentSteps = DefaultMaxAgentSteps
 	}
 
-	if b.agent.conversationStorage == nil {
+	if b.agent.Conversation == nil {
 		return nil, ErrBuildNoConversationStorage
 	}
 

@@ -52,7 +52,7 @@ func TestAgentBuilder_Build(t *testing.T) {
 		builder := buildPolicies(rellm.NewAgentBuilder().
 			WithProvider(buildProvider()).
 			WithAgentName("TestAgent").
-			WithConversationStorage(rellm.NewInMemoryStorage()))
+			WithConversation(rellm.NewInMemoryConversation()))
 
 		agent, err := builder.Build()
 		assert.NoError(t, err)
@@ -82,7 +82,7 @@ func TestAgentBuilder_Build(t *testing.T) {
 		builder := rellm.NewAgentBuilder().
 			WithProvider(buildProvider()).
 			WithAgentName("TestAgent").
-			WithConversationStorage(rellm.NewInMemoryStorage()).
+			WithConversation(rellm.NewInMemoryConversation()).
 			WithUnknownConversationElementKeepInTheLoop()
 
 		_, err := builder.Build()
@@ -93,7 +93,7 @@ func TestAgentBuilder_Build(t *testing.T) {
 		builder := rellm.NewAgentBuilder().
 			WithProvider(buildProvider()).
 			WithAgentName("TestAgent").
-			WithConversationStorage(rellm.NewInMemoryStorage()).
+			WithConversation(rellm.NewInMemoryConversation()).
 			WithImageGenerationKeepInTheLoop()
 
 		_, err := builder.Build()
@@ -104,7 +104,7 @@ func TestAgentBuilder_Build(t *testing.T) {
 		builder := rellm.NewAgentBuilder().
 			WithProvider(buildProvider()).
 			WithAgentName("TestAgent").
-			WithConversationStorage(rellm.NewInMemoryStorage()).
+			WithConversation(rellm.NewInMemoryConversation()).
 			WithImageGenerationHandler(nil).
 			WithUnknownConversationElementKeepInTheLoop()
 
@@ -116,7 +116,7 @@ func TestAgentBuilder_Build(t *testing.T) {
 		builder := buildPolicies(rellm.NewAgentBuilder().
 			WithProvider(buildProvider()).
 			WithAgentName("FirstAgent").
-			WithConversationStorage(rellm.NewInMemoryStorage()))
+			WithConversation(rellm.NewInMemoryConversation()))
 
 		agent1, err := builder.Build()
 		assert.NoError(t, err)

@@ -59,7 +59,7 @@ func TestAgentPromptToGetImage(t *testing.T) {
 	assert.True(t, ok)
 	assert.Equal(t, "image-stored-under-this-id", policyImage.Result)
 
-	conversation, err := agent.CurrentConversation(ctx)
+	conversation, err := agent.Conversation.Load(ctx)
 	assert.NoError(t, err)
 	lastMsg := conversation[len(conversation)-1]
 	imageGeneration, ok := lastMsg.(*rellm.ImageGeneration)
@@ -152,7 +152,7 @@ func TestAgentPromptToGetImagePolicies(t *testing.T) {
 			assert.Len(t, finalReport.Images[0].PolicyOutput, tt.policyOutputSize)
 			assert.Equal(t, expectedStepStats(t, goldenImageResp), finalReport.StepsStats)
 
-			conversation, err := agent.CurrentConversation(context.Background())
+			conversation, err := agent.Conversation.Load(context.Background())
 			assert.NoError(t, err)
 			assert.Len(t, conversation, tt.conversationSize)
 		})
@@ -195,7 +195,7 @@ func TestAgentPromptToGetMultipleImages(t *testing.T) {
 	assert.True(t, ok)
 	policyImage.Result = "MUTATED"
 
-	conversation, err := agent.CurrentConversation(context.Background())
+	conversation, err := agent.Conversation.Load(context.Background())
 	assert.NoError(t, err)
 	assert.Len(t, conversation, 4) // sys + user + 2 images
 	img0, ok0 := conversation[2].(*rellm.ImageGeneration)
@@ -236,7 +236,7 @@ func buildTestImageAgentWithPolicy(t *testing.T, maxAgentSteps uint64,
 		WithProvider(p).
 		WithAgentName(agentName).
 		WithMaxAgentSteps(maxAgentSteps).
-		WithConversationStorage(rellm.NewInMemoryStorage()).
+		WithConversation(rellm.NewInMemoryConversation()).
 		WithSystemMessage("You are a helpful assistant.").
 		WithUnknownConversationElementKeepInTheLoop()
 	configure(builder)
