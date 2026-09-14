@@ -178,6 +178,8 @@ func (a *Agent) Ask(ctx context.Context, question string) (Report, error) {
 	return a.Execute(ctx, prompt)
 }
 
+// Name returns the agent's name, an identifier set via WithAgentName.
+// It is empty when WithAgentName was not called.
 func (a *Agent) Name() string {
 	return a.agentName
 }
@@ -189,6 +191,9 @@ func (a *Agent) Conversation() Conversation {
 	return a.conversation
 }
 
+// SystemMessage returns the agent's system message, the standing
+// instructions sent with every request this agent makes. It is empty when
+// WithSystemMessage was not called.
 func (a *Agent) SystemMessage() string {
 	return a.sysMsg
 }
