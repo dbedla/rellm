@@ -60,7 +60,7 @@ func TestAgentBuilder_Build(t *testing.T) {
 		assert.Equal(t, "TestAgent", agent.Name())
 	})
 
-	t.Run("Missing conversation storage", func(t *testing.T) {
+	t.Run("Missing conversation", func(t *testing.T) {
 		builder := rellm.NewAgentBuilder().
 			WithProvider(buildProvider()).
 			WithAgentName("TestAgent")
