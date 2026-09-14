@@ -44,8 +44,8 @@ func (b *AgentBuilder) WithTextFormat(f TextFormat) *AgentBuilder {
 
 // WithConversation sets the conversation used to persist and load the
 // conversation history. Required.
-func (b *AgentBuilder) WithConversation(storage Conversation) *AgentBuilder {
-	b.agent.conversation = storage
+func (b *AgentBuilder) WithConversation(c Conversation) *AgentBuilder {
+	b.agent.conversation = c
 	return b
 }
 

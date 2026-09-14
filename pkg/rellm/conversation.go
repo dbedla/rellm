@@ -38,7 +38,7 @@ type FilesystemConversation struct {
 	path string
 }
 
-// NewFilesystemConversation returns a storage using the file at path.
+// NewFilesystemConversation returns a Conversation using the file at path.
 func NewFilesystemConversation(path string) *FilesystemConversation {
 	return &FilesystemConversation{path: path}
 }
@@ -93,19 +93,19 @@ func (s *FilesystemConversation) Append(_ context.Context, delta []ConversationE
 	// 2. Ensure the parent directory exists
 	if dir := filepath.Dir(s.path); dir != "" {
 		if err := os.MkdirAll(dir, 0755); err != nil {
-			return fmt.Errorf("failed to create storage dir %s: %w", dir, err)
+			return fmt.Errorf("failed to create dir %s: %w", dir, err)
 		}
 	}
 
 	// 3. Write buffered batch to disk
 	f, err := os.OpenFile(s.path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		return fmt.Errorf("failed to open storage file %s: %w", s.path, err)
+		return fmt.Errorf("failed to open file %s: %w", s.path, err)
 	}
 	defer closeWithError(&finalErr, f)
 
 	if _, err = f.Write(buf.Bytes()); err != nil {
-		return fmt.Errorf("failed to write to storage file %s: %w", s.path, err)
+		return fmt.Errorf("failed to write to file %s: %w", s.path, err)
 	}
 	return nil
 }

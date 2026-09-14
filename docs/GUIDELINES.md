@@ -15,7 +15,7 @@ This document defines practical rules and conventions for writing maintainable, 
 - Example: `NewAgentBuilder().WithProvider(p).Build()`.
 
 ## 1.3 Repository/Storage Pattern
-- Abstract data persistence (e.g., `ConversationStorage`) behind interfaces or dedicated structs to decouple business logic from storage details.
+- Abstract data persistence (e.g., `Conversation`) behind interfaces or dedicated structs to decouple business logic from storage details.
 
 ---
 
