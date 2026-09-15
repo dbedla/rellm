@@ -109,3 +109,17 @@ func TestCutBodySnippet(t *testing.T) {
 	trimmed := bodySnippet([]byte(combined), lenBasedOnChar)
 	assert.Equal(t, stringInput+emoji+"...", trimmed)
 }
+
+func TestBodySnippetLimitAtRuneCount(t *testing.T) {
+	combined := "important string data and 😂 more data"
+	limit := len([]rune(combined))
+	result := bodySnippet([]byte(combined), limit)
+	assert.Equal(t, combined, result)
+}
+
+func TestBodySnippetLimitAboveRuneCount(t *testing.T) {
+	combined := "important string data and 😂 more data"
+	limit := len(combined)
+	result := bodySnippet([]byte(combined), limit)
+	assert.Equal(t, combined, result)
+}
