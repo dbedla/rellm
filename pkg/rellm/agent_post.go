@@ -99,11 +99,11 @@ const maxBodySnippetRuneLimit = 1024
 
 func bodySnippet(rawBody []byte, runeLimit int) string {
 
-	body := string(rawBody)
-	if len(body) <= runeLimit {
-		return body
+	rBody := []rune(string(rawBody))
+	if len(rBody) <= runeLimit {
+		return string(rBody)
 	}
-	rBody := []rune(body)
+
 	rBody = rBody[:runeLimit]
 	return string(rBody) + "..."
 }
