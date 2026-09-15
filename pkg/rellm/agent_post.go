@@ -89,19 +89,23 @@ func (e *HTTPStatusError) Error() string {
 func newHTTPStatusError(resp *http.Response, rawBody []byte, apiURL string) *HTTPStatusError {
 	return &HTTPStatusError{
 		StatusCode: resp.StatusCode,
-		Body:       bodySnippet(rawBody),
+		Body:       bodySnippet(rawBody, maxBodySnippetRuneLimit),
 		URL:        apiURL,
 		RequestID:  responseRequestID(resp.Header),
 	}
 }
 
-func bodySnippet(rawBody []byte) string {
-	const maxBodySnippetLength = 1024
+const maxBodySnippetRuneLimit = 1024
+
+func bodySnippet(rawBody []byte, runeLimit int) string {
+
 	body := string(rawBody)
-	if len(body) <= maxBodySnippetLength {
+	if len(body) <= runeLimit {
 		return body
 	}
-	return body[:maxBodySnippetLength] + "..."
+	rBody := []rune(body)
+	rBody = rBody[:runeLimit]
+	return string(rBody) + "..."
 }
 
 func responseRequestID(header http.Header) string {
