@@ -97,3 +97,29 @@ func TestFuncResultToFunctionCallRespSerializesOutputAsString(t *testing.T) {
 	assert.NoError(t, err, "failed to marshal function call response")
 	assert.JSONEq(t, `{"type":"function_call_output","call_id":"call_123","output":"42"}`, string(jsonResp))
 }
+
+func TestCutBodySnippet(t *testing.T) {
+	emoji := "😂"
+	assert.Len(t, emoji, 4)
+	stringInput := "important string data and "
+	extras := " more data"
+	combined := stringInput + emoji + extras
+	lenBasedOnChar := len(stringInput) + 1
+
+	trimmed := bodySnippet([]byte(combined), lenBasedOnChar)
+	assert.Equal(t, stringInput+emoji+"...", trimmed)
+}
+
+func TestBodySnippetLimitAtRuneCount(t *testing.T) {
+	combined := "important string data and 😂 more data"
+	limit := len([]rune(combined))
+	result := bodySnippet([]byte(combined), limit)
+	assert.Equal(t, combined, result)
+}
+
+func TestBodySnippetLimitAboveRuneCount(t *testing.T) {
+	combined := "important string data and 😂 more data"
+	limit := len(combined)
+	result := bodySnippet([]byte(combined), limit)
+	assert.Equal(t, combined, result)
+}
