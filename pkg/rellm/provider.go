@@ -20,16 +20,16 @@ type Provider interface {
 	// knows them.
 	Model() Model
 
-	// One round trip: canonical request in, parsed response out.
+	// Send one round trip: canonical request in, parsed response out.
 	// The agent guarantees req.Model is already set (from Model) before
 	// calling. Owns URL, headers, http.Client, and HTTP status handling.
 	Send(ctx context.Context, req *ResponsesAPIReq) (*ResponsesAPIResp, error)
 
-	// Parse a backend's raw response output into canonical conversation
+	// ToConversationElements Parse a backend's raw response output into canonical conversation
 	// elements.
 	ToConversationElements(items []json.RawMessage) ([]ConversationElement, error)
 
-	// Serialize canonical elements back into this backend's wire format for
+	// ToProviderRepresentation serialize canonical elements back into this backend's wire format for
 	// the next request's Input.
 	ToProviderRepresentation(elements []ConversationElement) ([]json.RawMessage, error)
 }
