@@ -3,6 +3,7 @@ package main
 import (
 	"rellm/internal/examplesutils"
 	"rellm/pkg/rellm"
+	"rellm/pkg/toolsets"
 )
 
 const (
@@ -24,7 +25,7 @@ func buildMathAgent() (*rellm.Agent, error) {
 		WithMaxAgentSteps(20).
 		WithConversation(rellm.NewInMemoryConversation()).
 		WithSystemMessage(mathAgentSysPrompt).
-		WithToolset(NewCalculatorToolset(&Calculator{}), rellm.ParallelToolCallsDefaultForProvider).
+		WithToolset(toolsets.NewCalculatorToolset(&toolsets.Calculator{}), rellm.ParallelToolCallsDefaultForProvider).
 		WithInspectEachRequest(examplesutils.InspectWithReqLog).
 		WithInspectEachResponse(examplesutils.InspectWithRespLog).
 		WithImageGenerationKeepInTheLoop().

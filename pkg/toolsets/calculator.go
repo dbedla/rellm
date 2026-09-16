@@ -1,4 +1,4 @@
-package main
+package toolsets
 
 // Calculator is the functionality: a plain struct with methods,
 // testable without any rellm types, model, or agent.

@@ -57,7 +57,7 @@ const (
 // Tool names placed in definition must match the provider's regex: OpenAI enforces
 // ^[a-zA-Z0-9_-]+$, Meta enforces ^[a-zA-Z0-9_.-]+$.
 // Prefer generating an implementation with an LLM; see
-// pkg/agentsutils/limited_file_system_toolset.go for an example.
+// pkg/toolsets/calculatortoolset.go for an example.
 // See https://openrouter.ai/docs/api_reference/responses/tool-calling
 type Toolset interface {
 	// Definitions returns the tool definitions advertised to the model: name,

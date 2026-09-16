@@ -6,7 +6,6 @@ import (
 	"path"
 	"path/filepath"
 	"rellm/internal/examplesutils"
-	"rellm/pkg/agentsutils"
 	"rellm/pkg/rellm"
 
 	"github.com/fatih/color"
@@ -59,27 +58,27 @@ func buildOpenRouterProvider(model rellm.Model) (rellm.Provider, error) {
 	return rellm.NewOpenRouterProvider(apiKey, model)
 }
 
-func buildFSToolset(readOnlyDir, outputDir string) (*agentsutils.FSToolset, error) {
-	fs, err := agentsutils.NewLimitedFileSystem([]string{readOnlyDir}, outputDir)
+func buildFSToolset(readOnlyDir, outputDir string) (*examplesutils.FSToolset, error) {
+	fs, err := examplesutils.NewLimitedFileSystem([]string{readOnlyDir}, outputDir)
 	if err != nil {
 		return nil, err
 	}
 
-	return agentsutils.NewFSToolset(fs), nil
+	return examplesutils.NewFSToolset(fs), nil
 }
 
 func buildFsPath() (agentsDirs, error) {
-	workspace, err := agentsutils.CreateDirInSysTmp("agent-log")
+	workspace, err := examplesutils.CreateDirInSysTmp("agent-log")
 	if err != nil {
 		return agentsDirs{}, err
 	}
 
-	readOnlyDir, err := agentsutils.CreateSubDir(workspace, "readonly_agent_input")
+	readOnlyDir, err := examplesutils.CreateSubDir(workspace, "readonly_agent_input")
 	if err != nil {
 		return agentsDirs{}, err
 	}
 
-	outputDir, err := agentsutils.CreateSubDir(workspace, "output")
+	outputDir, err := examplesutils.CreateSubDir(workspace, "output")
 	if err != nil {
 		return agentsDirs{}, err
 	}
