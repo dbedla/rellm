@@ -12,6 +12,10 @@ import (
 )
 
 func (a *Agent) post(ctx context.Context, req *ResponsesAPIReq) (*ResponsesAPIResp, error) {
+	// Stamp the provider-owned model before inspection so the inspector
+	// always sees the complete request.
+	req.Model = string(a.provider.Model())
+
 	if a.inspectReq != nil {
 		a.inspectReq(req)
 	}

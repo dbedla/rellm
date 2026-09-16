@@ -63,10 +63,12 @@ func NewLMStudioProviderWithHTTPClient(model Model, host, port string, c HTTPCli
 	return p, nil
 }
 
-// Send stamps the configured model and performs one round trip against the
-// LM Studio Responses API endpoint.
+// Model reports the model this provider targets.
+func (p *LMStudioProvider) Model() Model { return p.model }
+
+// Send performs one round trip against the LM Studio Responses API
+// endpoint. The agent guarantees req.Model is already set.
 func (p *LMStudioProvider) Send(ctx context.Context, req *ResponsesAPIReq) (*ResponsesAPIResp, error) {
-	req.Model = string(p.model)
 	return postResponsesAPI(ctx, p.client, p.url, p.header, req)
 }
 

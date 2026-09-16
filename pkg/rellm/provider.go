@@ -13,17 +13,24 @@ import (
 // (URL/headers/http client) and its wire-format translation
 // (ConversationElement <-> provider JSON).
 type Provider interface {
-	// One round trip: canonical request in, parsed response out.
-	// Stamps req.Model before sending. Owns URL, headers,
-	// http.Client, and HTTP status handling.
+	// Model reports the model this provider sends requests to. The agent
+	// stamps it onto each request (ResponsesAPIReq.Model) before the
+	// InspectEachRequest hook runs, so inspectors always see a complete
+	// request. Model names are provider-specific, so only the provider
+	// knows them.
+	Model() Model
+
+	// Send one round trip: canonical request in, parsed response out.
+	// The agent guarantees req.Model is already set (from Model) before
+	// calling. Owns URL, headers, http.Client, and HTTP status handling.
 	Send(ctx context.Context, req *ResponsesAPIReq) (*ResponsesAPIResp, error)
 
-	// Parse a backend's raw response output into canonical conversation
-	// elements.
+	// ToConversationElements parses a backend's raw response output into canonical
+	// conversation elements.
 	ToConversationElements(items []json.RawMessage) ([]ConversationElement, error)
 
-	// Serialize canonical elements back into this backend's wire format for
-	// the next request's Input.
+	// ToProviderRepresentation serializes canonical elements back into this
+	// backend's wire format for the next request's Input.
 	ToProviderRepresentation(elements []ConversationElement) ([]json.RawMessage, error)
 }
 
