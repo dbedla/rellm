@@ -12,11 +12,11 @@ var _ rellm.Toolset = (*CalculatorToolset)(nil)
 
 // CalculatorToolset is a thin adapter that exposes Calculator to the agent.
 type CalculatorToolset struct {
-	*Calculator
+	impl *Calculator
 }
 
 func NewCalculatorToolset(c *Calculator) *CalculatorToolset {
-	return &CalculatorToolset{Calculator: c}
+	return &CalculatorToolset{impl: c}
 }
 
 func (t *CalculatorToolset) Definitions() []rellm.ToolDefinition {
@@ -73,11 +73,11 @@ func (t *CalculatorToolset) Dispatch(_ context.Context, name string, args json.R
 
 	switch name {
 	case "Calculator_Add":
-		return rellm.ToolCallResult{Value: t.Add(a.A, a.B)}, nil
+		return rellm.ToolCallResult{Value: t.impl.Add(a.A, a.B)}, nil
 	case "Calculator_Sub":
-		return rellm.ToolCallResult{Value: t.Sub(a.A, a.B)}, nil
+		return rellm.ToolCallResult{Value: t.impl.Sub(a.A, a.B)}, nil
 	case "Calculator_Mul":
-		return rellm.ToolCallResult{Value: t.Mul(a.A, a.B)}, nil
+		return rellm.ToolCallResult{Value: t.impl.Mul(a.A, a.B)}, nil
 	default:
 		return rellm.ToolCallResult{}, fmt.Errorf("unknown tool: %s", name)
 	}
