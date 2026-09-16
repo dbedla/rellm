@@ -62,7 +62,8 @@ func buildLMSSwitchAgent(name string, conversation rellm.Conversation, fsToolset
 	return buildSwitchAgent(p, name, conversation, fsToolset)
 }
 
-func buildSwitchAgent(p rellm.Provider, name string, conversation rellm.Conversation, fsToolset *agentsutils.FSToolset) (*rellm.Agent, error) {	return rellm.NewAgentBuilder().
+func buildSwitchAgent(p rellm.Provider, name string, conversation rellm.Conversation, fsToolset *agentsutils.FSToolset) (*rellm.Agent, error) {
+	return rellm.NewAgentBuilder().
 		WithProvider(p).
 		WithAgentName(name).
 		WithMaxAgentSteps(20).
