@@ -37,6 +37,23 @@ type ToolCallResult struct {
 	Err   error
 }
 
+// ParallelToolCallsMode controls whether the model may return multiple tool
+// calls in a single response.
+type ParallelToolCallsMode string
+
+const (
+	// ParallelToolCallsDefaultForProvider omits the field from the request;
+	// the provider's default behavior applies (true for OpenAI and OpenRouter,
+	// ignored by LM Studio). It is the zero value.
+	ParallelToolCallsDefaultForProvider ParallelToolCallsMode = ""
+	// ParallelToolCallsEnable allows the model to call tools in parallel.
+	// Determinism-pinning: most providers already default to this.
+	ParallelToolCallsEnable ParallelToolCallsMode = "enable"
+	// ParallelToolCallsDisable makes the model call one tool per response, for
+	// toolsets with ordering-dependent side effects.
+	ParallelToolCallsDisable ParallelToolCallsMode = "disable"
+)
+
 // Toolset groups the tools an agent can call.
 // Tool names placed in definition must match the provider's regex: OpenAI enforces
 // ^[a-zA-Z0-9_-]+$, Meta enforces ^[a-zA-Z0-9_.-]+$.
@@ -80,6 +97,7 @@ type Agent struct {
 	provider      Provider
 	toolset       Toolset
 	textFormat    *TextFormat
+	parallelToolCalls ParallelToolCallsMode
 	agentName     string
 
 	sysMsg        string

@@ -3,92 +3,95 @@ package main
 import (
 	"context"
 	"fmt"
-	"rellm/pkg/rellm"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/fatih/color"
 )
 
-// Scenario reproduces the provider-switch test: one shared conversation is
-// used first by an OpenRouter (luna) agent, then by an LMStudio agent. The
-// conversation elements produced by the first provider must be loadable and
-// serializable by the second.
+// Scenario reproduces the e2e_fs_agent flow, but the shared conversation is
+// handled by two agents: the OpenRouter (luna) agent performs the read-only
+// tasks, then the LMStudio agent takes over the last task (creating the
+// output file) — proving the conversation elements are interchangeable.
 func main() {
-	conversation := rellm.NewInMemoryConversation()
 
-	orAgent, err := buildORLunaSwitchAgent(conversation)
+	dirs, orAgent, lmsAgent, err := setup()
 	if err != nil {
 		panic(err)
+	}
+	color.Red("Agent space dir: %s", dirs.workspace)
+
+	f1Name := "names.txt"
+	f1Content := "John Smith"
+	err = createFile(dirs.readOnlyDir, f1Name, f1Content)
+	if err != nil {
+		panicWithLog("cannot create file", err)
+	}
+
+	f2Name := "locations.txt"
+	f2Content := "London"
+	err = createFile(dirs.readOnlyDir, f2Name, f2Content)
+	if err != nil {
+		panicWithLog("cannot create file", err)
 	}
 
 	ctx := context.Background()
 
-	beforeFirst, err := orAgent.Conversation().Load(ctx)
-	if err != nil {
-		panicWithLog("cannot load conversation before first ask", err)
-	}
-	if len(beforeFirst) != 0 {
-		panicWithLog("expected empty conversation before first ask", fmt.Errorf("conversation has %d elements", len(beforeFirst)))
-	}
-
-	msg := "hi"
+	msg := "what files do you see"
 	color.Magenta(msg)
 
-	firstResp, err := orAgent.Ask(ctx, msg)
+	llmResp, err := orAgent.Ask(ctx, msg)
 	if err != nil {
-		panicWithLog("openrouter agent failed for input msg: "+msg, err)
+		panicWithLog("agent failed for input msg: "+msg, err)
 	}
-	color.Green(firstResp.Message)
+	color.Green(llmResp.Message)
 
-	afterFirst, err := orAgent.Conversation().Load(ctx)
-	if err != nil {
-		panicWithLog("cannot load conversation after openrouter turn", err)
+	if !strings.Contains(llmResp.Message, f1Name) {
+		panicWithLog("missing expected file name '"+f1Name+"' in llm output", fmt.Errorf("missing file name"))
 	}
-	if len(afterFirst) < 2 {
-		panicWithLog("expected conversation elements from the openrouter turn", fmt.Errorf("conversation has %d elements", len(afterFirst)))
+	if !strings.Contains(llmResp.Message, f2Name) {
+		panicWithLog("missing expected file name '"+f2Name+"' in llm output", fmt.Errorf("missing file name"))
 	}
 
-	msg = "what tools do you see?"
+	msg = "show me what is in files you mention"
 	color.Magenta(msg)
 
-	secondResp, err := orAgent.Execute(ctx, mustPrompt(msg))
+	llmResp, err = orAgent.Ask(ctx, msg)
+	if err != nil {
+		panicWithLog("agent failed for input msg: "+msg, err)
+	}
+	color.Green(llmResp.Message)
+
+	if !strings.Contains(llmResp.Message, f1Content) {
+		panicWithLog("missing expected file content '"+f1Content+"' in llm output", fmt.Errorf("missing file content"))
+	}
+	if !strings.Contains(llmResp.Message, f2Content) {
+		panicWithLog("missing expected file content '"+f2Content+"' in llm output", fmt.Errorf("missing file content"))
+	}
+
+	// LMStudio agent takes over the same conversation for the last task.
+	msg = "create file in your output directory, file name 'data.txt', file should contain content of both files from read only director"
+	color.Magenta(msg)
+
+	llmResp, err = lmsAgent.Ask(ctx, msg)
 	if err != nil {
 		panicWithLog("lms agent failed with an openrouter-built conversation, msg: "+msg, err)
 	}
-	color.Green(secondResp.Message)
+	color.Green(llmResp.Message)
 
-	if !strings.Contains(secondResp.Message, "GetDataFor") || !strings.Contains(secondResp.Message, "GetStaticData") {
-		panicWithLog("missing expected tool names in lms output", fmt.Errorf("unexpected message"))
-	}
-
-	//LMS take over
-	lmsAgent, err := buildLMSSwitchAgent(conversation)
+	dataPath := filepath.Join(dirs.outputDir, "data.txt")
+	rawData, err := os.ReadFile(dataPath)
 	if err != nil {
-		panic(err)
+		panicWithLog("no output file", err)
 	}
 
-	afterSecond, err := lmsAgent.Conversation().Load(ctx)
-	if err != nil {
-		panicWithLog("cannot load conversation after lms turn", err)
-	}
-	if len(afterSecond) <= len(afterFirst) {
-		panicWithLog("expected conversation to grow after lms turn", fmt.Errorf("conversation has %d elements, was %d", len(afterSecond), len(afterFirst)))
-	}
-}
+	outputContent := string(rawData)
 
-func mustPrompt(msg string) *rellm.Prompt {
-	prompt, err := rellm.NewPromptBuilder().
-		WithMessage(msg).
-		WithReasoning(rellm.ReasoningEffortLow).
-		Build()
-	if err != nil {
-		panicWithLog("unable to build prompt", err)
+	if !strings.Contains(outputContent, f1Content) {
+		panicWithLog("missing expected output file content '"+f1Content+"'", fmt.Errorf("missing file content"))
 	}
-	return prompt
-}
-
-func panicWithLog(msg string, err error) {
-	logMsg := msg + "\n" + err.Error()
-	color.Red(logMsg)
-	panic(logMsg)
+	if !strings.Contains(outputContent, f2Content) {
+		panicWithLog("missing expected output file content '"+f2Content+"'", fmt.Errorf("missing file content"))
+	}
 }

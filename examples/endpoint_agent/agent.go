@@ -28,7 +28,7 @@ func buildLMSAgent() (*rellm.Agent, error) {
 		WithMaxAgentSteps(20).
 		WithConversation(rellm.NewInMemoryConversation()).
 		WithSystemMessage(sysprompt).
-		WithToolset(&examplesutils2.DataSrcToolset{}).
+		WithToolset(&examplesutils2.DataSrcToolset{}, rellm.ParallelToolCallsDefaultForProvider).
 		WithInspectEachRequest(examplesutils2.InspectWithReqLog).
 		WithInspectEachResponse(examplesutils2.InspectWithRespLog).
 		WithImageGenerationKeepInTheLoop().
@@ -51,7 +51,7 @@ func buildOpenRouterAgent(model rellm.Model) (*rellm.Agent, error) {
 		WithMaxAgentSteps(20).
 		WithConversation(rellm.NewInMemoryConversation()).
 		WithSystemMessage(sysprompt).
-		WithToolset(&examplesutils2.DataSrcToolset{}).
+		WithToolset(&examplesutils2.DataSrcToolset{}, rellm.ParallelToolCallsDefaultForProvider).
 		WithInspectEachRequest(examplesutils2.InspectWithReqLog).
 		WithInspectEachResponse(examplesutils2.InspectWithRespLog).
 		WithImageGenerationKeepInTheLoop().

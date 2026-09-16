@@ -27,6 +27,7 @@ func (a *Agent) run(ctx context.Context, msg string, params promptParams) (Repor
 
 	if a.toolset != nil {
 		req.Tools = a.toolset.Definitions()
+		req.ParallelToolCalls = parallelCallsToPtr(a.parallelToolCalls)
 	}
 
 	finalReport, err := a.process(ctx, req)
@@ -229,6 +230,22 @@ func (a *Agent) handleFunctionCall(ctx context.Context, fn *FunctionCall) (*Func
 
 func invalidFunctionCallResp(fn *FunctionCall) FunctionCallResp {
 	return funcResultToFunctionCallResp(fn.CallID, "invalid function call (function not found) "+fn.Name)
+}
+
+// parallelCallsToPtr maps the tool call policy onto the Responses API
+// parallel_tool_calls field. A nil result sends nothing and lets the
+// provider's default apply.
+func parallelCallsToPtr(mode ParallelToolCallsMode) *bool {
+	switch mode {
+	case ParallelToolCallsEnable:
+		enabled := true
+		return &enabled
+	case ParallelToolCallsDisable:
+		enabled := false
+		return &enabled
+	default:
+		return nil
+	}
 }
 
 func toBaseResponsesAPIReq(params promptParams, conversation []json.RawMessage) *ResponsesAPIReq {

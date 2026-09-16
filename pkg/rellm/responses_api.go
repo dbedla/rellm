@@ -23,6 +23,10 @@ type ResponsesAPIReq struct {
 	// Tools and function calling
 	Tools []ToolDefinition `json:"tools,omitempty"`
 
+	// Whether to allow the model to run tool calls in parallel (nil = provider default).
+	// Pointer so "false" is actually sent; omitempty bool would drop it.
+	ParallelToolCalls *bool `json:"parallel_tool_calls,omitempty"`
+
 	// Reasoning models configuration (e.g., o3-family)
 	Reasoning *ReasoningConfig `json:"reasoning,omitempty"`
 
