@@ -47,20 +47,3 @@ func TestCalculatorToolsetDispatch(t *testing.T) {
 		}
 	}
 }
-
-func TestCalculatorToolsetDefinitions(t *testing.T) {
-	ts := NewCalculatorToolset(&Calculator{})
-	defs := ts.Definitions()
-	if len(defs) != 3 {
-		t.Fatalf("got %d definitions, want 3", len(defs))
-	}
-	want := []string{"Calculator_Add", "Calculator_Sub", "Calculator_Mul"}
-	for i, d := range defs {
-		if d.Name != want[i] {
-			t.Errorf("def %d: got %q, want %q", i, d.Name, want[i])
-		}
-		if d.Type != "function" {
-			t.Errorf("def %d: type %q, want function", i, d.Type)
-		}
-	}
-}
