@@ -80,6 +80,14 @@ func TestListFilesIn(t *testing.T) {
 
 	err = os.WriteFile(filepath.Join(readOnlyDir, "file1.txt"), []byte("content1"), 0644)
 	assert.NoError(t, err)
+	err = os.Mkdir(filepath.Join(readOnlyDir, "subdir"), 0755)
+	assert.NoError(t, err)
+	err = os.MkdirAll(filepath.Join(readOnlyDir, "subdir1", "subdir2", "subdir3", "subdir4"), 0755)
+	assert.NoError(t, err)
+	err = os.WriteFile(filepath.Join(readOnlyDir, "subdir1", "subdir2", "subdir3", "subdir4", "somefile.txt"), []byte("deep"), 0644)
+	assert.NoError(t, err)
+	err = os.WriteFile(filepath.Join(readOnlyDir, "subdir", "nested.txt"), []byte("nested"), 0644)
+	assert.NoError(t, err)
 	err = os.WriteFile(filepath.Join(outputDir, "file2.txt"), []byte("content2"), 0644)
 	assert.NoError(t, err)
 	err = os.WriteFile(filepath.Join(outsideDir, "file3.txt"), []byte("content3"), 0644)
@@ -93,8 +101,14 @@ func TestListFilesIn(t *testing.T) {
 		assert.NoError(t, err, "expected no error")
 		expectedPath, err := filepath.EvalSymlinks(filepath.Join(readOnlyDir, "file1.txt"))
 		assert.NoError(t, err)
-		assert.Len(t, files, 1)
-		assert.Equal(t, expectedPath, files[0])
+		nestedPath, err := filepath.EvalSymlinks(filepath.Join(readOnlyDir, "subdir", "nested.txt"))
+		assert.NoError(t, err)
+		deepPath, err := filepath.EvalSymlinks(filepath.Join(readOnlyDir, "subdir1", "subdir2", "subdir3", "subdir4", "somefile.txt"))
+		assert.NoError(t, err)
+		assert.Len(t, files, 3)
+		assert.Contains(t, files, expectedPath)
+		assert.Contains(t, files, nestedPath)
+		assert.Contains(t, files, deepPath)
 	})
 
 	t.Run("List files in output dir", func(t *testing.T) {
@@ -104,6 +118,21 @@ func TestListFilesIn(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Len(t, files, 1)
 		assert.Equal(t, expectedPath, files[0])
+	})
+
+	t.Run("Lists deeply nested files", func(t *testing.T) {
+		deepDir := filepath.Join(outputDir, "subdir1", "subdir2", "subdir3", "subdir4")
+		err := os.MkdirAll(deepDir, 0755)
+		assert.NoError(t, err)
+		deepFile := filepath.Join(deepDir, "somefile.txt")
+		err = os.WriteFile(deepFile, []byte("deep"), 0644)
+		assert.NoError(t, err)
+
+		files, err := sandbox.ListFilesIn(outputDir)
+		assert.NoError(t, err, "expected no error")
+		expectedDeep, err := filepath.EvalSymlinks(deepFile)
+		assert.NoError(t, err)
+		assert.Contains(t, files, expectedDeep)
 	})
 
 	t.Run("Error for outside path", func(t *testing.T) {

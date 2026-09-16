@@ -119,7 +119,8 @@ func (s *LimitedFileSystem) DeleteFile(path string) error {
 	return nil
 }
 
-// ListFilesIn returns a list of files in the given path
+// ListFilesIn returns a list of files in the given path, recursively
+// (all files in the directory and its subdirectories).
 // error will be returned if the path does not exist or is not accessible.
 // error will be returned if the path is not a directory
 // error will be returned if the path is outside FSSandbox.readOnlyDirs or FSSandbox.outputDir
@@ -129,12 +130,20 @@ func (s *LimitedFileSystem) ListFilesIn(path string) ([]string, error) {
 		return nil, err
 	}
 
-	entries, err := os.ReadDir(absPath)
+	var files []string
+	err = filepath.WalkDir(absPath, func(p string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !d.IsDir() {
+			files = append(files, p)
+		}
+		return nil
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to read directory %s: %w", path, err)
 	}
-
-	return filterFiles(absPath, entries), nil
+	return files, nil
 }
 
 // WriteStringToFile writes a given string into a specific file.
@@ -306,16 +315,6 @@ func isInsideDir(baseDir, targetPath string) (bool, error) {
 		return false, fmt.Errorf("failed to compare paths: %w", err)
 	}
 	return rel == "." || (!strings.HasPrefix(rel, "..") && !filepath.IsAbs(rel)), nil
-}
-
-func filterFiles(basePath string, entries []os.DirEntry) []string {
-	var files []string
-	for _, entry := range entries {
-		if !entry.IsDir() {
-			files = append(files, filepath.Join(basePath, entry.Name()))
-		}
-	}
-	return files
 }
 
 func (s *LimitedFileSystem) isAllowed(path string) (bool, error) {
