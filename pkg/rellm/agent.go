@@ -43,8 +43,7 @@ type ParallelToolCallsMode string
 
 const (
 	// ParallelToolCallsDefaultForProvider omits the field from the request;
-	// the provider's default behavior applies (true for OpenAI and OpenRouter,
-	// ignored by LM Studio). It is the zero value.
+	// the provider's default behavior applies. It is the zero value.
 	ParallelToolCallsDefaultForProvider ParallelToolCallsMode = ""
 	// ParallelToolCallsEnable allows the model to call tools in parallel.
 	// Determinism-pinning: most providers already default to this.
@@ -93,15 +92,14 @@ type HTTPClient interface {
 //
 // Available methods: Ask, Execute, Conversation, Name, SystemMessage.
 type Agent struct {
-	conversation  Conversation
-	provider      Provider
-	toolset       Toolset
-	textFormat    *TextFormat
+	conversation      Conversation
+	provider          Provider
+	toolset           Toolset
+	textFormat        *TextFormat
 	parallelToolCalls ParallelToolCallsMode
-	agentName     string
-
-	sysMsg        string
-	maxAgentSteps uint64
+	agentName         string
+	sysMsg            string
+	maxAgentSteps     uint64
 
 	handleUnknownConversationElement HandleUnknownConversationElement
 	handleImageGeneration            HandleImageGeneration

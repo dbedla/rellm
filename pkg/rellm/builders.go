@@ -27,12 +27,11 @@ func (b *AgentBuilder) WithProvider(provider Provider) *AgentBuilder {
 }
 
 // WithToolset sets the toolset used to dispatch tool calls, together with
-// the policy controlling whether the model may call it with multiple tool
-// calls in a single response. Optional. The policy forces a direct choice:
+// the mode controlling whether the model may call it with multiple tool
+// calls in a single response. Optional. The mode forces a direct choice:
 //
 //   - ParallelToolCallsDefaultForProvider sends nothing and applies the
-//     provider's default (parallel for OpenAI and OpenRouter; ignored by LM
-//     Studio). The choice for toolsets with no ordering constraints.
+//     provider's default. The choice for toolsets with no ordering constraints.
 //   - ParallelToolCallsEnable pins parallel emission. Determinism-pinning,
 //     not a speedup: it is only a win when the toolset is parallel-safe,
 //     i.e. its tools are independent and order-oblivious.
@@ -41,9 +40,9 @@ func (b *AgentBuilder) WithProvider(provider Provider) *AgentBuilder {
 //
 // Check the toolset's documentation for ordering constraints before choosing
 // Enable. See https://platform.openai.com/docs/guides/function-calling
-func (b *AgentBuilder) WithToolset(toolset Toolset, policy ParallelToolCallsMode) *AgentBuilder {
+func (b *AgentBuilder) WithToolset(toolset Toolset, mode ParallelToolCallsMode) *AgentBuilder {
 	b.agent.toolset = toolset
-	b.agent.parallelToolCalls = policy
+	b.agent.parallelToolCalls = mode
 	return b
 }
 
