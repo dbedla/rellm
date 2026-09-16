@@ -25,12 +25,12 @@ type Provider interface {
 	// calling. Owns URL, headers, http.Client, and HTTP status handling.
 	Send(ctx context.Context, req *ResponsesAPIReq) (*ResponsesAPIResp, error)
 
-	// ToConversationElements Parse a backend's raw response output into canonical conversation
-	// elements.
+	// ToConversationElements parses a backend's raw response output into canonical
+	// conversation elements.
 	ToConversationElements(items []json.RawMessage) ([]ConversationElement, error)
 
-	// ToProviderRepresentation serialize canonical elements back into this backend's wire format for
-	// the next request's Input.
+	// ToProviderRepresentation serializes canonical elements back into this
+	// backend's wire format for the next request's Input.
 	ToProviderRepresentation(elements []ConversationElement) ([]json.RawMessage, error)
 }
 
