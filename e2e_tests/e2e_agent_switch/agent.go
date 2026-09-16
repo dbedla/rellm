@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"path/filepath"
 	"rellm/internal/examplesutils"
 	"rellm/pkg/agentsutils"
 	"rellm/pkg/rellm"
@@ -13,27 +12,64 @@ import (
 	"github.com/joho/godotenv"
 )
 
-const (
-	fsAgentSysPrompt = `You are a helpful assistant, with limited access to the file system.`
-)
+const switchAgentSysPrompt = `You are a helpful assistant, with limited access to the file system.`
 
-func buildFSAgent(p rellm.Provider, dirs agentsDirs) (*rellm.Agent, error) {
+// setup builds the shared workspace dirs and two agents over the same
+// conversation: the OpenRouter (luna) agent runs first, then the LMStudio
+// agent takes over. Both share the same FS toolset configuration.
+func setup() (agentsDirs, *rellm.Agent, *rellm.Agent, error) {
 
-	agentName := "FSAgent"
+	dirs, err := buildDirs()
+	if err != nil {
+		return agentsDirs{}, nil, nil, err
+	}
 
 	fsToolset, err := buildFSToolset(dirs.readOnlyDir, dirs.outputDir)
+	if err != nil {
+		return agentsDirs{}, nil, nil, err
+	}
+
+	conversation := rellm.NewInMemoryConversation()
+
+	orAgent, err := buildORLunaSwitchAgent("or-luna-switch-agent", conversation, fsToolset)
+	if err != nil {
+		return agentsDirs{}, nil, nil, err
+	}
+
+	lmsAgent, err := buildLMSSwitchAgent("lms-switch-agent", conversation, fsToolset)
+	if err != nil {
+		return agentsDirs{}, nil, nil, err
+	}
+
+	return dirs, orAgent, lmsAgent, nil
+}
+
+func buildORLunaSwitchAgent(name string, conversation rellm.Conversation, fsToolset *agentsutils.FSToolset) (*rellm.Agent, error) {
+	p, err := buildOpenRouterProvider("openai/gpt-5.6-luna")
 	if err != nil {
 		return nil, err
 	}
 
-	conversationFilePath := path.Join(dirs.workspace, agentName+"_conversation.json")
+	return buildSwitchAgent(p, name, conversation, fsToolset)
+}
+
+func buildLMSSwitchAgent(name string, conversation rellm.Conversation, fsToolset *agentsutils.FSToolset) (*rellm.Agent, error) {
+	p, err := buildLMSProvider()
+	if err != nil {
+		return nil, err
+	}
+
+	return buildSwitchAgent(p, name, conversation, fsToolset)
+}
+
+func buildSwitchAgent(p rellm.Provider, name string, conversation rellm.Conversation, fsToolset *agentsutils.FSToolset) (*rellm.Agent, error) {
 	return rellm.NewAgentBuilder().
 		WithProvider(p).
-		WithAgentName(agentName).
+		WithAgentName(name).
 		WithMaxAgentSteps(20).
-		WithConversation(rellm.NewFilesystemConversation(conversationFilePath)).
-		WithToolset(fsToolset, rellm.ParallelToolCallsDefaultForProvider).
-		WithSystemMessage(fsAgentSysPrompt).
+		WithConversation(conversation).
+		WithToolset(fsToolset, rellm.ParallelToolCallsEnable).
+		WithSystemMessage(switchAgentSysPrompt).
 		WithInspectEachRequest(examplesutils.InspectWithReqLog).
 		WithInspectEachResponse(examplesutils.InspectWithRespLog).
 		WithImageGenerationKeepInTheLoop().
@@ -68,7 +104,7 @@ func buildFSToolset(readOnlyDir, outputDir string) (*agentsutils.FSToolset, erro
 	return agentsutils.NewFSToolset(fs), nil
 }
 
-func buildFsPath() (agentsDirs, error) {
+func buildDirs() (agentsDirs, error) {
 	workspace, err := agentsutils.CreateDirInSysTmp("agent-log")
 	if err != nil {
 		return agentsDirs{}, err
@@ -84,53 +120,17 @@ func buildFsPath() (agentsDirs, error) {
 		return agentsDirs{}, err
 	}
 
-	dirs := agentsDirs{
+	return agentsDirs{
 		readOnlyDir: readOnlyDir,
 		outputDir:   outputDir,
 		workspace:   workspace,
-	}
-
-	return dirs, nil
+	}, nil
 }
 
 type agentsDirs struct {
 	workspace   string
 	readOnlyDir string
 	outputDir   string
-}
-
-func setup(fl flag) (agentsDirs, *rellm.Agent, error) {
-
-	dirs, err := buildFsPath()
-	if err != nil {
-		return agentsDirs{}, nil, err
-	}
-
-	ep, err := providerForFlag(fl)
-	if err != nil {
-		return agentsDirs{}, nil, err
-	}
-
-	fsAgent, err := buildFSAgent(ep, dirs)
-	if err != nil {
-		return agentsDirs{}, nil, err
-	}
-
-	return dirs, fsAgent, nil
-}
-
-func providerForFlag(fl flag) (rellm.Provider, error) {
-	switch fl {
-	case flag_LMS:
-		return buildLMSProvider()
-	case flag_OpenRouterGlm53flash:
-		return buildOpenRouterProvider("z-ai/glm-5.3-flash")
-	case flag_OpenRouterOpenAILuna:
-		return buildOpenRouterProvider("openai/gpt-5.6-luna")
-	default:
-		return nil, fmt.Errorf("unknown flag provided: %s", fl)
-	}
-
 }
 
 func panicWithLog(msg string, err error) {
@@ -140,35 +140,6 @@ func panicWithLog(msg string, err error) {
 }
 
 func createFile(locationPath, fname, content string) error {
-	filePath := filepath.Join(locationPath, fname)
+	filePath := path.Join(locationPath, fname)
 	return os.WriteFile(filePath, []byte(content), 0644)
-}
-
-type flag string
-
-const (
-	flag_LMS                  flag = "--lms"
-	flag_OpenRouterGlm53flash flag = "--or-glm53flash"
-	flag_OpenRouterOpenAILuna flag = "--or-openai-luna"
-	flag_Invalid              flag = "NO_FLAG"
-)
-
-func help() {
-	color.Yellow("allowed args:")
-	color.Yellow("\t %s", flag_LMS)
-	color.Yellow("\t %s", flag_OpenRouterGlm53flash)
-	color.Yellow("\t %s", flag_OpenRouterOpenAILuna)
-}
-
-func argsToFlag(args []string) flag {
-	if len(args) != 2 {
-		return flag_Invalid
-	}
-
-	f := flag(args[1])
-	if f == flag_LMS || f == flag_OpenRouterGlm53flash || f == flag_OpenRouterOpenAILuna {
-		return f
-	}
-
-	return flag_Invalid
 }

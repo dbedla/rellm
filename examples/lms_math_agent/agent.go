@@ -24,7 +24,7 @@ func buildMathAgent() (*rellm.Agent, error) {
 		WithMaxAgentSteps(20).
 		WithConversation(rellm.NewInMemoryConversation()).
 		WithSystemMessage(mathAgentSysPrompt).
-		WithToolset(NewCalculatorToolset(&Calculator{})).
+		WithToolset(NewCalculatorToolset(&Calculator{}), rellm.ParallelToolCallsDefaultForProvider).
 		WithInspectEachRequest(examplesutils.InspectWithReqLog).
 		WithInspectEachResponse(examplesutils.InspectWithRespLog).
 		WithImageGenerationKeepInTheLoop().

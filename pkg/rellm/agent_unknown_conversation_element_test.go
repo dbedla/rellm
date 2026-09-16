@@ -258,7 +258,7 @@ func buildTestProToolAgentLMSWithUnknownElHandler(
 		WithConversation(rellm.NewInMemoryConversation()).
 		WithSystemMessage("You are a helpful assistant.").
 		WithImageGenerationKeepInTheLoop().
-		WithToolset(&examplesutils.DataSrcToolset{})
+		WithToolset(&examplesutils.DataSrcToolset{}, rellm.ParallelToolCallsDefaultForProvider)
 
 	switch uh {
 	case unknownConversationElementHandlerKeepInTheLoop:

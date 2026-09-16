@@ -23,6 +23,9 @@ e2e-or-glm53flash: go-clean-build
 e2e-format-text: go-clean-build
 	$(BIN_PATH)e2e_format_text_agent
 
+e2e-agent-switch: go-clean-build
+	$(BIN_PATH)e2e_agent_switch
+
 go-test:
 	go test -v ./...
 

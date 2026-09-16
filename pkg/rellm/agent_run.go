@@ -27,6 +27,7 @@ func (a *Agent) run(ctx context.Context, msg string, params promptParams) (Repor
 
 	if a.toolset != nil {
 		req.Tools = a.toolset.Definitions()
+		req.ParallelToolCalls = parallelCallsModeReqRepresentation(a.parallelToolCalls)
 	}
 
 	finalReport, err := a.process(ctx, req)
@@ -229,6 +230,19 @@ func (a *Agent) handleFunctionCall(ctx context.Context, fn *FunctionCall) (*Func
 
 func invalidFunctionCallResp(fn *FunctionCall) FunctionCallResp {
 	return funcResultToFunctionCallResp(fn.CallID, "invalid function call (function not found) "+fn.Name)
+}
+
+func parallelCallsModeReqRepresentation(mode ParallelToolCallsMode) *bool {
+	switch mode {
+	case ParallelToolCallsEnable:
+		enabled := true
+		return &enabled
+	case ParallelToolCallsDisable:
+		enabled := false
+		return &enabled
+	default:
+		return nil
+	}
 }
 
 func toBaseResponsesAPIReq(params promptParams, conversation []json.RawMessage) *ResponsesAPIReq {

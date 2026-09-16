@@ -553,7 +553,7 @@ func buildTestProToolAgentLMS(t *testing.T, maxAgentSteps uint64) (*rellm.Agent,
 		WithMaxAgentSteps(maxAgentSteps).
 		WithConversation(rellm.NewInMemoryConversation()).
 		WithSystemMessage("You are a helpful assistant.").
-		WithToolset(&examplesutils.DataSrcToolset{}).
+		WithToolset(&examplesutils.DataSrcToolset{}, rellm.ParallelToolCallsDefaultForProvider).
 		WithImageGenerationKeepInTheLoop().
 		WithUnknownConversationElementKeepInTheLoop().
 		Build()
@@ -576,7 +576,7 @@ func buildTestProToolAgentOpenRouter(t *testing.T, model rellm.Model, maxAgentSt
 		WithMaxAgentSteps(maxAgentSteps).
 		WithConversation(rellm.NewInMemoryConversation()).
 		WithSystemMessage("You are a helpful assistant.").
-		WithToolset(&examplesutils.DataSrcToolset{}).
+		WithToolset(&examplesutils.DataSrcToolset{}, rellm.ParallelToolCallsDefaultForProvider).
 		WithImageGenerationKeepInTheLoop().
 		WithUnknownConversationElementKeepInTheLoop().
 		Build()

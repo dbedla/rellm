@@ -490,7 +490,7 @@ func buildTestFileSystemAgentOpenRouter(t *testing.T, model rellm.Model, maxAgen
 		WithMaxAgentSteps(maxAgentSteps).
 		WithConversation(rellm.NewInMemoryConversation()).
 		WithSystemMessage("You are a helpful assistant, with limited access to the file system.").
-		WithToolset(fst).
+		WithToolset(fst, rellm.ParallelToolCallsDefaultForProvider).
 		WithImageGenerationKeepInTheLoop().
 		WithUnknownConversationElementKeepInTheLoop().
 		Build()
