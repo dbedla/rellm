@@ -5,7 +5,6 @@ import (
 	"os"
 	"path"
 	"rellm/internal/examplesutils"
-	"rellm/pkg/agentsutils"
 	"rellm/pkg/rellm"
 
 	"github.com/fatih/color"
@@ -44,7 +43,7 @@ func setup() (agentsDirs, *rellm.Agent, *rellm.Agent, error) {
 	return dirs, orAgent, lmsAgent, nil
 }
 
-func buildORLunaSwitchAgent(name string, conversation rellm.Conversation, fsToolset *agentsutils.FSToolset) (*rellm.Agent, error) {
+func buildORLunaSwitchAgent(name string, conversation rellm.Conversation, fsToolset *examplesutils.FSToolset) (*rellm.Agent, error) {
 	p, err := buildOpenRouterProvider("openai/gpt-5.6-luna")
 	if err != nil {
 		return nil, err
@@ -53,7 +52,7 @@ func buildORLunaSwitchAgent(name string, conversation rellm.Conversation, fsTool
 	return buildSwitchAgent(p, name, conversation, fsToolset)
 }
 
-func buildLMSSwitchAgent(name string, conversation rellm.Conversation, fsToolset *agentsutils.FSToolset) (*rellm.Agent, error) {
+func buildLMSSwitchAgent(name string, conversation rellm.Conversation, fsToolset *examplesutils.FSToolset) (*rellm.Agent, error) {
 	p, err := buildLMSProvider()
 	if err != nil {
 		return nil, err
@@ -62,7 +61,7 @@ func buildLMSSwitchAgent(name string, conversation rellm.Conversation, fsToolset
 	return buildSwitchAgent(p, name, conversation, fsToolset)
 }
 
-func buildSwitchAgent(p rellm.Provider, name string, conversation rellm.Conversation, fsToolset *agentsutils.FSToolset) (*rellm.Agent, error) {
+func buildSwitchAgent(p rellm.Provider, name string, conversation rellm.Conversation, fsToolset *examplesutils.FSToolset) (*rellm.Agent, error) {
 	return rellm.NewAgentBuilder().
 		WithProvider(p).
 		WithAgentName(name).
@@ -95,27 +94,27 @@ func buildOpenRouterProvider(model rellm.Model) (rellm.Provider, error) {
 	return rellm.NewOpenRouterProvider(apiKey, model)
 }
 
-func buildFSToolset(readOnlyDir, outputDir string) (*agentsutils.FSToolset, error) {
-	fs, err := agentsutils.NewLimitedFileSystem([]string{readOnlyDir}, outputDir)
+func buildFSToolset(readOnlyDir, outputDir string) (*examplesutils.FSToolset, error) {
+	fs, err := examplesutils.NewLimitedFileSystem([]string{readOnlyDir}, outputDir)
 	if err != nil {
 		return nil, err
 	}
 
-	return agentsutils.NewFSToolset(fs), nil
+	return examplesutils.NewFSToolset(fs), nil
 }
 
 func buildDirs() (agentsDirs, error) {
-	workspace, err := agentsutils.CreateDirInSysTmp("agent-log")
+	workspace, err := examplesutils.CreateDirInSysTmp("agent-log")
 	if err != nil {
 		return agentsDirs{}, err
 	}
 
-	readOnlyDir, err := agentsutils.CreateSubDir(workspace, "readonly_agent_input")
+	readOnlyDir, err := examplesutils.CreateSubDir(workspace, "readonly_agent_input")
 	if err != nil {
 		return agentsDirs{}, err
 	}
 
-	outputDir, err := agentsutils.CreateSubDir(workspace, "output")
+	outputDir, err := examplesutils.CreateSubDir(workspace, "output")
 	if err != nil {
 		return agentsDirs{}, err
 	}

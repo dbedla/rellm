@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"rellm/pkg/agentsutils"
+	"rellm/internal/examplesutils"
 	"rellm/pkg/rellm"
 	"strings"
 	"testing"
@@ -59,7 +59,7 @@ func TestAgentSwitchProvider(t *testing.T) {
 	defer orTools.AssertExpectations(t)
 
 	orTools.On("Definitions").
-		Return(agentsutils.NewFSToolset(nil).Definitions()).Once()
+		Return(examplesutils.NewFSToolset(nil).Definitions()).Once()
 	orTools.On("Dispatch", mock.Anything, "FSToolset_GetFileContentAsString",
 		quotedJSONString(`{"path":"`+asReadOnlyDir+`/locations.txt"}`)).
 		Return(rellm.ToolCallResult{Value: "London"}, nil).Once()
@@ -89,7 +89,7 @@ func TestAgentSwitchProvider(t *testing.T) {
 	defer lmsTools.AssertExpectations(t)
 
 	lmsTools.On("Definitions").
-		Return(agentsutils.NewFSToolset(nil).Definitions()).Once()
+		Return(examplesutils.NewFSToolset(nil).Definitions()).Once()
 	lmsTools.On("Dispatch", mock.Anything, "FSToolset_WriteStringToFile",
 		quotedJSONString(`{"content":"London\nJohn Smith","path":"`+asOutputDir+`/data.txt"}`)).
 		Return(rellm.ToolCallResult{Value: "ok"}, nil).Once()

@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"rellm/pkg/agentsutils"
+	"rellm/internal/examplesutils"
 	"rellm/pkg/rellm"
 	"strings"
 	"testing"
@@ -404,7 +404,7 @@ func TestAgentAskGetSummaryFromOpenAiWithFsToolset(t *testing.T) {
 	defer fsToolset.AssertExpectations(t)
 
 	fsToolset.On("Definitions").
-		Return(agentsutils.NewFSToolset(nil).Definitions()).Once()
+		Return(examplesutils.NewFSToolset(nil).Definitions()).Once()
 	fsToolset.On("Dispatch", mock.Anything, "FSToolset_GetReadOnlyPaths", json.RawMessage(`"{}"`)).
 		Return(rellm.ToolCallResult{Value: []string{"/input"}}, nil).Once()
 	fsToolset.On("Dispatch", mock.Anything, "FSToolset_GetOutputDir", json.RawMessage(`"{}"`)).

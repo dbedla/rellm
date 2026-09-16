@@ -1,4 +1,4 @@
-package agentsutils
+package examplesutils
 
 import (
 	"errors"
