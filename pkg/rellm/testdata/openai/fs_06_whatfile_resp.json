@@ -16,7 +16,7 @@
             "id": "fc_0e78c7600f8b5b51006aad3736a78c87d2b31d50797dfbb5a2",
             "type": "function_call",
             "status": "completed",
-            "arguments": "{\"path\":\"/var/folders/nj/bkj2m2nx3292lgx0x2zsh35h0000gn/T/agent-log-28700364/readonly_agent_input\"}",
+            "arguments": "{\"path\":\"/test/readonly_agent_input\"}",
             "call_id": "call_HMjv8BvdXxhIX3tVlNJnF1Gx",
             "name": "FSToolset_ListFilesIn"
         },
@@ -24,7 +24,7 @@
             "id": "fc_0e78c7600f8b5b51006aad3736a79c87d2aa9eb5864c90c173",
             "type": "function_call",
             "status": "completed",
-            "arguments": "{\"path\":\"/var/folders/nj/bkj2m2nx3292lgx0x2zsh35h0000gn/T/agent-log-28700364/output\"}",
+            "arguments": "{\"path\":\"/test/output\"}",
             "call_id": "call_IoD0eQEswYzHDa6bNAM9Y0KT",
             "name": "FSToolset_ListFilesIn"
         }

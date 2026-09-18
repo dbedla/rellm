@@ -32,7 +32,7 @@
         },
         {
             "call_id": "call_UIOtqxvdWGwkIj02jTc3LzBB",
-            "output": "[\"/var/folders/nj/bkj2m2nx3292lgx0x2zsh35h0000gn/T/agent-log-28700364/readonly_agent_input\"]",
+            "output": "[\"/test/readonly_agent_input\"]",
             "type": "function_call_output"
         },
         {
@@ -45,7 +45,7 @@
         },
         {
             "call_id": "call_csAeFCDUPbimWX6icOxUt0y0",
-            "output": "\"/var/folders/nj/bkj2m2nx3292lgx0x2zsh35h0000gn/T/agent-log-28700364/output\"",
+            "output": "\"/test/output\"",
             "type": "function_call_output"
         }
     ],

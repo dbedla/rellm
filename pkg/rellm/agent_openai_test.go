@@ -6,6 +6,8 @@ import (
 	"rellm/pkg/rellm"
 	"testing"
 
+	_ "embed"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -13,34 +15,74 @@ import (
 const testReadOnlyDir = "/test/readonly_agent_input"
 const testDir = "/test/output"
 
-func disable_TestXXX(t *testing.T) {
+var (
+	//go:embed testdata/openai/fs_01_whatfile_req.json
+	goldenOS01Req string
 
-	openAIAgent, httpMock, fsMock, err := buildTestOpenAIFSAgent()
-	assert.NoError(t, err)
+	//go:embed testdata/openai/fs_02_whatfie_resp.json
+	goldenOS02Resp string
+
+	//go:embed testdata/openai/fs_03_what_file_req.json
+	goldenOS03Req string
+
+	//go:embed testdata/openai/fs_04_whatfile_resp.json
+	goldenOS04Resp string
+
+	//go:embed testdata/openai/fs_05_what_file_req.json
+	goldenOS05Req string
+
+	//go:embed testdata/openai/fs_06_whatfile_resp.json
+	goldenOS06Resp string
+
+	//go:embed testdata/openai/fs_07_what_file_req.json
+	goldenOS07Req string
+
+	//go:embed testdata/openai/fs_08_whatfile_resp.json
+	goldenOS08Resp string
+)
+
+func TestOpenAIAgentFSScenario(t *testing.T) {
+	openAIAgent, httpMock, fsMock := buildTestOpenAIFSAgent(t)
 	defer httpMock.AssertExpectations(t)
-	assert.NoError(t, err)
+	defer fsMock.AssertExpectations(t)
 
 	fsMock.On("Definitions").
 		Return(examplesutils.NewFSToolset(nil).Definitions()).Once()
-	fsMock.On("Dispatch", mock.Anything, "FSToolset_GetFileContentAsString",
-		quotedJSONString(`{"path":"`+testReadOnlyDir+`/locations.txt"}`)).
-		Return(rellm.ToolCallResult{Value: "London"}, nil).Once()
-	fsMock.On("Dispatch", mock.Anything, "FSToolset_GetFileContentAsString",
-		quotedJSONString(`{"path":"`+testReadOnlyDir+`/names.txt"}`)).
-		Return(rellm.ToolCallResult{Value: "John Smith"}, nil).Once()
+	fsMock.On("Dispatch", mock.Anything, "FSToolset_GetReadOnlyPaths",
+		quotedJSONString(`{}`)).
+		Return(rellm.ToolCallResult{Value: []string{testReadOnlyDir}}, nil).Once()
+	fsMock.On("Dispatch", mock.Anything, "FSToolset_GetOutputDir",
+		quotedJSONString(`{}`)).
+		Return(rellm.ToolCallResult{Value: testDir}, nil).Once()
+	fsMock.On("Dispatch", mock.Anything, "FSToolset_ListFilesIn",
+		quotedJSONString(`{"path":"`+testReadOnlyDir+`"}`)).
+		Return(rellm.ToolCallResult{Value: []string{testReadOnlyDir + "/locations.txt", testReadOnlyDir + "/names.txt"}}, nil).Once()
+	fsMock.On("Dispatch", mock.Anything, "FSToolset_ListFilesIn",
+		quotedJSONString(`{"path":"`+testDir+`"}`)).
+		Return(rellm.ToolCallResult{}, nil).Once()
+
+	expectGoldenReqAndReturnGoldenResp(t, httpMock, goldenOS01Req, goldenOS02Resp)
+	expectGoldenReqAndReturnGoldenResp(t, httpMock, goldenOS03Req, goldenOS04Resp)
+	expectGoldenReqAndReturnGoldenResp(t, httpMock, goldenOS05Req, goldenOS06Resp)
+	expectGoldenReqAndReturnGoldenResp(t, httpMock, goldenOS07Req, goldenOS08Resp)
 
 	ctx := context.Background()
-	report, err := openAIAgent.Ask(ctx, "Hello")
+	finalReport, err := openAIAgent.Ask(ctx, "what files do you see")
 	assert.NoError(t, err)
-	assert.Equal(t, "zzzzz", report.Message)
-	assert.Empty(t, report.Images)
+	assert.Equal(t, "I can see these files:\n\n- `locations.txt`\n- `names.txt`\n\nThe output directory is currently empty.", finalReport.Message)
+	assert.Empty(t, finalReport.Images)
+	assert.Equal(t, expectedStepStats(t, goldenOS02Resp, goldenOS04Resp, goldenOS06Resp, goldenOS08Resp), finalReport.StepsStats)
+
+	conversation, err := openAIAgent.Conversation().Load(ctx)
+	assert.NoError(t, err)
+	assert.Len(t, conversation, 13)
 }
 
-func buildTestOpenAIFSAgent() (*rellm.Agent, *HTTPDoMock, *ToolsetMock, error) {
+func buildTestOpenAIFSAgent(t *testing.T) (*rellm.Agent, *HTTPDoMock, *ToolsetMock) {
+	t.Helper()
+
 	openAI, httpMock, err := buildTestOpenAIProvider("gpt-5.6-luna")
-	if err != nil {
-		return nil, nil, nil, err
-	}
+	assert.NoError(t, err, "failed to create provider")
 
 	sysPrompt := "You are a helpful assistant, with limited access to the file system."
 	fsToolset := new(ToolsetMock)
@@ -50,7 +92,7 @@ func buildTestOpenAIFSAgent() (*rellm.Agent, *HTTPDoMock, *ToolsetMock, error) {
 		WithAgentName("TestOpenAIAgent").
 		WithMaxAgentSteps(20).
 		WithConversation(rellm.NewInMemoryConversation()).
-		WithToolset(fsToolset, rellm.ParallelToolCallsEnable).
+		WithToolset(fsToolset, rellm.ParallelToolCallsDefaultForProvider).
 		WithSystemMessage(sysPrompt).
 		WithInspectEachRequest(examplesutils.InspectWithReqLog).
 		WithInspectEachResponse(examplesutils.InspectWithRespLog).
@@ -58,11 +100,8 @@ func buildTestOpenAIFSAgent() (*rellm.Agent, *HTTPDoMock, *ToolsetMock, error) {
 		WithUnknownConversationElementKeepInTheLoop().
 		Build()
 
-	if err != nil {
-		return nil, nil, nil, err
-	}
-
-	return openAIAgent, httpMock, fsToolset, nil
+	assert.NoError(t, err, "failed to create agent")
+	return openAIAgent, httpMock, fsToolset
 }
 
 func buildTestOpenAIProvider(model rellm.Model) (rellm.Provider, *HTTPDoMock, error) {
