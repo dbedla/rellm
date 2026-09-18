@@ -2,34 +2,32 @@ package rellm_test
 
 import (
 	"context"
-	"fmt"
-	"os"
 	"rellm/internal/examplesutils"
 	"rellm/pkg/rellm"
 	"testing"
 
-	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
+const testReadOnlyDir = "/test/readonly_agent_input"
+const testDir = "/test/output"
+
 func disable_TestXXX(t *testing.T) {
-	openAI, err := buildOpenAIProvider(rellm.Model("gpt-5.6-luna"))
+
+	openAIAgent, httpMock, fsMock, err := buildTestOpenAIFSAgent()
+	assert.NoError(t, err)
+	defer httpMock.AssertExpectations(t)
 	assert.NoError(t, err)
 
-	openAIAgent, err := rellm.NewAgentBuilder().
-		WithProvider(openAI).
-		WithAgentName("TestOpenAIAgent").
-		WithMaxAgentSteps(20).
-		WithConversation(rellm.NewInMemoryConversation()).
-		//WithToolset(fsToolset, rellm.ParallelToolCallsEnable).
-		//WithSystemMessage(switchAgentSysPrompt).
-		WithInspectEachRequest(examplesutils.InspectWithReqLog).
-		WithInspectEachResponse(examplesutils.InspectWithRespLog).
-		WithImageGenerationKeepInTheLoop().
-		WithUnknownConversationElementKeepInTheLoop().
-		Build()
-
-	assert.NoError(t, err)
+	fsMock.On("Definitions").
+		Return(examplesutils.NewFSToolset(nil).Definitions()).Once()
+	fsMock.On("Dispatch", mock.Anything, "FSToolset_GetFileContentAsString",
+		quotedJSONString(`{"path":"`+testReadOnlyDir+`/locations.txt"}`)).
+		Return(rellm.ToolCallResult{Value: "London"}, nil).Once()
+	fsMock.On("Dispatch", mock.Anything, "FSToolset_GetFileContentAsString",
+		quotedJSONString(`{"path":"`+testReadOnlyDir+`/names.txt"}`)).
+		Return(rellm.ToolCallResult{Value: "John Smith"}, nil).Once()
 
 	ctx := context.Background()
 	report, err := openAIAgent.Ask(ctx, "Hello")
@@ -38,16 +36,40 @@ func disable_TestXXX(t *testing.T) {
 	assert.Empty(t, report.Images)
 }
 
-func buildOpenAIProvider(model rellm.Model) (rellm.Provider, error) {
-	err := godotenv.Overload("/Users/dawidbedla/development/rellm/rellm/.env")
+func buildTestOpenAIFSAgent() (*rellm.Agent, *HTTPDoMock, *ToolsetMock, error) {
+	openAI, httpMock, err := buildTestOpenAIProvider("gpt-5.6-luna")
 	if err != nil {
-		return nil, fmt.Errorf("cannot load .env: %w", err)
+		return nil, nil, nil, err
 	}
 
-	apiKey := os.Getenv("OPENAI_API_KEY")
-	if apiKey == "" {
-		return nil, fmt.Errorf("missing apikey for OPENAI_API_KEY")
+	sysPrompt := "You are a helpful assistant, with limited access to the file system."
+	fsToolset := new(ToolsetMock)
+
+	openAIAgent, err := rellm.NewAgentBuilder().
+		WithProvider(openAI).
+		WithAgentName("TestOpenAIAgent").
+		WithMaxAgentSteps(20).
+		WithConversation(rellm.NewInMemoryConversation()).
+		WithToolset(fsToolset, rellm.ParallelToolCallsEnable).
+		WithSystemMessage(sysPrompt).
+		WithInspectEachRequest(examplesutils.InspectWithReqLog).
+		WithInspectEachResponse(examplesutils.InspectWithRespLog).
+		WithImageGenerationKeepInTheLoop().
+		WithUnknownConversationElementKeepInTheLoop().
+		Build()
+
+	if err != nil {
+		return nil, nil, nil, err
 	}
 
-	return rellm.NewOpenAIProvider(apiKey, model)
+	return openAIAgent, httpMock, fsToolset, nil
+}
+
+func buildTestOpenAIProvider(model rellm.Model) (rellm.Provider, *HTTPDoMock, error) {
+	mock := HTTPDoMock{}
+	p, err := rellm.NewOpenAIProviderWithHTTPClient("test-api-key-openai", model, &mock)
+	if err != nil {
+		return nil, nil, err
+	}
+	return p, &mock, nil
 }
