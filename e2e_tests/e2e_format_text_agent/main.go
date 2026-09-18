@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"os"
 	"rellm/pkg/rellm"
 
 	"github.com/fatih/color"
@@ -24,29 +25,18 @@ type Person struct {
 }
 
 func main() {
-	lmsAgent, err := buildLMSStructuredOutputAgent()
-	if err != nil {
-		panic(err)
+	providerFlag := argsToFlag(os.Args)
+	if providerFlag == flag_Invalid {
+		help()
+		return
 	}
-	orGlm53flashAgent, err := buildORGlm3flashStructuredOutputAgent()
-	if err != nil {
-		panic(err)
-	}
-	orLunaAgent, err := buildORLunaStructuredOutputAgent()
+
+	agent, err := buildAgentForFlag(providerFlag)
 	if err != nil {
 		panic(err)
 	}
 
-	openAIAgent, er := buildOpenAIStructuredOutputAgent()
-	if er != nil {
-		panic(er)
-	}
-
-	agents := []*rellm.Agent{lmsAgent, orGlm53flashAgent, orLunaAgent, openAIAgent}
-
-	for _, a := range agents {
-		scenario(a)
-	}
+	scenario(agent)
 }
 
 func scenario(agent *rellm.Agent) {

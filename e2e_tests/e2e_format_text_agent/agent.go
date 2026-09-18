@@ -7,6 +7,7 @@ import (
 	"rellm/internal/examplesutils"
 	"rellm/pkg/rellm"
 
+	"github.com/fatih/color"
 	"github.com/joho/godotenv"
 )
 
@@ -63,6 +64,52 @@ func buildStructuredOutputAgent(provider rellm.Provider, name string, sysPrompt 
 		WithImageGenerationKeepInTheLoop().
 		WithUnknownConversationElementKeepInTheLoop().
 		Build()
+}
+
+func buildAgentForFlag(fl flag) (*rellm.Agent, error) {
+	switch fl {
+	case flag_LMS:
+		return buildLMSStructuredOutputAgent()
+	case flag_OpenRouterGlm53flash:
+		return buildORGlm3flashStructuredOutputAgent()
+	case flag_OpenRouterOpenAILuna:
+		return buildORLunaStructuredOutputAgent()
+	case flag_OpenAI:
+		return buildOpenAIStructuredOutputAgent()
+	default:
+		return nil, fmt.Errorf("unknown flag provided: %s", fl)
+	}
+}
+
+type flag string
+
+const (
+	flag_LMS                  flag = "--lms"
+	flag_OpenRouterGlm53flash flag = "--or-glm53flash"
+	flag_OpenRouterOpenAILuna flag = "--or-openai-luna"
+	flag_OpenAI               flag = "--openai"
+	flag_Invalid              flag = "NO_FLAG"
+)
+
+func help() {
+	color.Yellow("allowed args:")
+	color.Yellow("\t %s", flag_LMS)
+	color.Yellow("\t %s", flag_OpenRouterGlm53flash)
+	color.Yellow("\t %s", flag_OpenRouterOpenAILuna)
+	color.Yellow("\t %s", flag_OpenAI)
+}
+
+func argsToFlag(args []string) flag {
+	if len(args) != 2 {
+		return flag_Invalid
+	}
+
+	f := flag(args[1])
+	if f == flag_LMS || f == flag_OpenRouterGlm53flash || f == flag_OpenRouterOpenAILuna || f == flag_OpenAI {
+		return f
+	}
+
+	return flag_Invalid
 }
 
 func newOpenRouterProvider(model rellm.Model) (rellm.Provider, error) {
