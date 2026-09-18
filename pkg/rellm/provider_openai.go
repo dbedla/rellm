@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-// OpenAIProvider talks to the OpenRouter Responses API.
+// OpenAIProvider talks to the OpenAI Responses API.
 type OpenAIProvider struct {
 	model  Model
 	url    string
@@ -37,7 +37,7 @@ func NewOpenAIProvider(apiKey string, model Model) (*OpenAIProvider, error) {
 	}, nil
 }
 
-// NewOpenAIProviderWithHTTPClient builds an OpenRouter provider with custom HTTP client. apiKey and model are required.
+// NewOpenAIProviderWithHTTPClient builds an OpenAI provider with custom HTTP client. apiKey and model are required.
 func NewOpenAIProviderWithHTTPClient(apiKey string, model Model, client HTTPClient) (*OpenAIProvider, error) {
 	if client == nil {
 		return nil, ErrMissingHTTPClientForProvider
@@ -53,7 +53,7 @@ func NewOpenAIProviderWithHTTPClient(apiKey string, model Model, client HTTPClie
 // Model reports the model this provider targets.
 func (p *OpenAIProvider) Model() Model { return p.model }
 
-// Send performs one round trip against the OpenRouter Responses API
+// Send performs one round trip against the OpenAI Responses API
 // endpoint. The agent guarantees req.Model is already set.
 func (p *OpenAIProvider) Send(ctx context.Context, req *ResponsesAPIReq) (*ResponsesAPIResp, error) {
 	return postResponsesAPI(ctx, p.client, p.url, p.header, req)
@@ -75,7 +75,7 @@ func (p *OpenAIProvider) ToConversationElements(items []json.RawMessage) ([]Conv
 			elements = append(elements, parseFunctionCallRespItem(raw, msg))
 
 		case "message", "": // messages often lack an explicit type field; infer from role
-			elements = append(elements, parseMessageWithStatus(raw, ProviderOpenRouter, msg.ID, msg.Type, msg.Role, msg.Content))
+			elements = append(elements, parseMessageWithStatus(raw, ProviderOpenAI, msg.ID, msg.Type, msg.Role, msg.Content))
 
 		case "reasoning":
 			elm, err := parseReasoningSigned(raw)
@@ -92,7 +92,7 @@ func (p *OpenAIProvider) ToConversationElements(items []json.RawMessage) ([]Conv
 			elements = append(elements, elem)
 
 		default:
-			elements = append(elements, newUnknownElement(ProviderOpenRouter, msg.Type, msg.Role, raw))
+			elements = append(elements, newUnknownElement(ProviderOpenAI, msg.Type, msg.Role, raw))
 		}
 	}
 	return elements, nil
@@ -133,9 +133,9 @@ func (p *OpenAIProvider) marshalConversationElement(element ConversationElement)
 	case *ImageGeneration:
 		return marshalImageGeneration(el)
 	case *UnknownElement:
-		return unknownElementRepresentation(el, ProviderOpenRouter)
+		return unknownElementRepresentation(el, ProviderOpenAI)
 	default:
-		return nil, errors.Join(ErrOpenRouterMarshalingConversationElement, fmt.Errorf("unknown element type: %T", el))
+		return nil, errors.Join(ErrOpenAIMarshalingConversationElement, fmt.Errorf("unknown element type: %T", el))
 	}
 }
 

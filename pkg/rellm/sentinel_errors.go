@@ -19,6 +19,7 @@ var ErrUnknownElementProviderMismatch = errors.New("unknown element provider mis
 var ErrMalformedUnknownElement = errors.New("malformed unknown element")
 var ErrLMSMarshalingConversationElement = errors.New("error marshaling LM Studio conversation element")
 var ErrOpenRouterMarshalingConversationElement = errors.New("error marshaling OpenRouter conversation element")
+var ErrOpenAIMarshalingConversationElement = errors.New("error marshaling OpenAI conversation element")
 
 var ErrEndpointNilResponse = errors.New("endpoint returned nil response")
 var ErrEndpointNilBodyInResponse = errors.New("endpoint returned nil body in response")

@@ -53,6 +53,7 @@ const (
 const (
 	ProviderOpenRouter = "openrouter"
 	ProviderLMStudio   = "lmstudio"
+	ProviderOpenAI     = "openai"
 )
 
 // ConversationElement is a typed item in a conversation. Providers convert their

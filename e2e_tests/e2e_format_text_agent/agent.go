@@ -31,7 +31,7 @@ func buildOpenAIStructuredOutputAgent() (*rellm.Agent, error) {
 	if err != nil {
 		return nil, err
 	}
-	return buildStructuredOutputAgent(p, "or-glm-5.3-flash-agent", structuredOutputSysPrompt)
+	return buildStructuredOutputAgent(p, "openai-agent", structuredOutputSysPrompt)
 }
 
 func buildORGlm3flashStructuredOutputAgent() (*rellm.Agent, error) {

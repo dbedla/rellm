@@ -94,8 +94,6 @@ func buildTestOpenAIFSAgent(t *testing.T) (*rellm.Agent, *HTTPDoMock, *ToolsetMo
 		WithConversation(rellm.NewInMemoryConversation()).
 		WithToolset(fsToolset, rellm.ParallelToolCallsDefaultForProvider).
 		WithSystemMessage(sysPrompt).
-		WithInspectEachRequest(examplesutils.InspectWithReqLog).
-		WithInspectEachResponse(examplesutils.InspectWithRespLog).
 		WithImageGenerationKeepInTheLoop().
 		WithUnknownConversationElementKeepInTheLoop().
 		Build()
