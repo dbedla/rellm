@@ -19,7 +19,7 @@ var (
 	//go:embed testdata/openai/fs_01_whatfile_req.json
 	goldenOS01Req string
 
-	//go:embed testdata/openai/fs_02_whatfie_resp.json
+	//go:embed testdata/openai/fs_02_whatfile_resp.json
 	goldenOS02Resp string
 
 	//go:embed testdata/openai/fs_03_what_file_req.json
