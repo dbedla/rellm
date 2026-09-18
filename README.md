@@ -59,6 +59,7 @@ Officially supported providers:
 
 - **LM Studio** — run models locally
 - **OpenRouter** — unified gateway to many hosted models
+- **OpenAI** — direct access to OpenAI models
 
 Need something else? The provider interface is public — implement your own
 as needed.
@@ -112,6 +113,16 @@ OPENROUTER_API_KEY=sk-...
 
 then run with a provider flag, e.g. `./output/bin/endpoint_agent --or-gemma`.
 Other provider flags: `--lms`, `--or-gemma`, `--or-gemini`, `--or-luna`.
+
+To use OpenAI directly, set up a `.env` file with an API key
+([generate one here](https://platform.openai.com/api-keys)):
+
+```
+OPENAI_API_KEY=sk-...
+```
+
+The OpenAI provider is used by the `e2e_tests` binaries via the `--openai`
+flag, e.g. `./output/bin/e2e_fs_agent --openai` (model `gpt-5.6-luna`).
 
 ### Build your own agent
 
