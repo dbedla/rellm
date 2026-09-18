@@ -22,19 +22,19 @@ var (
 	//go:embed testdata/openai/fs_02_whatfile_resp.json
 	goldenOS02Resp string
 
-	//go:embed testdata/openai/fs_03_what_file_req.json
+	//go:embed testdata/openai/fs_03_whatfile_req.json
 	goldenOS03Req string
 
 	//go:embed testdata/openai/fs_04_whatfile_resp.json
 	goldenOS04Resp string
 
-	//go:embed testdata/openai/fs_05_what_file_req.json
+	//go:embed testdata/openai/fs_05_whatfile_req.json
 	goldenOS05Req string
 
 	//go:embed testdata/openai/fs_06_whatfile_resp.json
 	goldenOS06Resp string
 
-	//go:embed testdata/openai/fs_07_what_file_req.json
+	//go:embed testdata/openai/fs_07_whatfile_req.json
 	goldenOS07Req string
 
 	//go:embed testdata/openai/fs_08_whatfile_resp.json
