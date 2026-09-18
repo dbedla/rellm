@@ -11,14 +11,12 @@ go-build:
 	go build -o ./output/bin/ ./examples/...
 	go build -o ./output/bin/ ./e2e_tests/...
 
-e2e-lms: go-clean-build
+e2e-fs-tools: go-clean-build
 	$(BIN_PATH)e2e_fs_agent --lms
-
-e2e-or-luna: go-clean-build
 	$(BIN_PATH)e2e_fs_agent --or-openai-luna
-
-e2e-or-glm53flash: go-clean-build
 	$(BIN_PATH)e2e_fs_agent --or-glm53flash
+	$(BIN_PATH)e2e_fs_agent --openai
+	
 
 e2e-format-text: go-clean-build
 	$(BIN_PATH)e2e_format_text_agent

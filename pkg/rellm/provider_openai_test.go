@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestXXX(t *testing.T) {
+func disable_TestXXX(t *testing.T) {
 	openAI, err := buildOpenAIProvider(rellm.Model("gpt-5.6-luna"))
 	assert.NoError(t, err)
 

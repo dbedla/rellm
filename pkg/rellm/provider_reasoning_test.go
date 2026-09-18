@@ -42,6 +42,9 @@ func TestReasoningSummaryAndEncryptedContentRoundTrip(t *testing.T) {
 					require.NoError(t, err)
 					require.Len(t, elements, 1)
 					require.IsType(t, &Reasoning{}, elements[0])
+					reasoning, ok := elements[0].(*Reasoning)
+					assert.True(t, ok)
+					assert.Equal(t, "completed", reasoning.Status)
 
 					wire, err := p.provider.ToProviderRepresentation(elements)
 					require.NoError(t, err)
