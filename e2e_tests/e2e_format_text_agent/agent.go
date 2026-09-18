@@ -7,6 +7,7 @@ import (
 	"rellm/internal/examplesutils"
 	"rellm/pkg/rellm"
 
+	"github.com/fatih/color"
 	"github.com/joho/godotenv"
 )
 
@@ -23,6 +24,14 @@ func buildLMSStructuredOutputAgent() (*rellm.Agent, error) {
 	}
 	lmsSysPrompt := structuredOutputSysPrompt + string(schema) + "\nONLY parsable json string allowed as result, no additional markdown formatting\n"
 	return buildStructuredOutputAgent(p, "lms-agent", lmsSysPrompt)
+}
+
+func buildOpenAIStructuredOutputAgent() (*rellm.Agent, error) {
+	p, err := newOpenAIProvider("gpt-5.6-luna")
+	if err != nil {
+		return nil, err
+	}
+	return buildStructuredOutputAgent(p, "openai-agent", structuredOutputSysPrompt)
 }
 
 func buildORGlm3flashStructuredOutputAgent() (*rellm.Agent, error) {
@@ -57,6 +66,52 @@ func buildStructuredOutputAgent(provider rellm.Provider, name string, sysPrompt 
 		Build()
 }
 
+func buildAgentForFlag(fl flag) (*rellm.Agent, error) {
+	switch fl {
+	case flag_LMS:
+		return buildLMSStructuredOutputAgent()
+	case flag_OpenRouterGlm53flash:
+		return buildORGlm3flashStructuredOutputAgent()
+	case flag_OpenRouterOpenAILuna:
+		return buildORLunaStructuredOutputAgent()
+	case flag_OpenAI:
+		return buildOpenAIStructuredOutputAgent()
+	default:
+		return nil, fmt.Errorf("unknown flag provided: %s", fl)
+	}
+}
+
+type flag string
+
+const (
+	flag_LMS                  flag = "--lms"
+	flag_OpenRouterGlm53flash flag = "--or-glm53flash"
+	flag_OpenRouterOpenAILuna flag = "--or-openai-luna"
+	flag_OpenAI               flag = "--openai"
+	flag_Invalid              flag = "NO_FLAG"
+)
+
+func help() {
+	color.Yellow("allowed args:")
+	color.Yellow("\t %s", flag_LMS)
+	color.Yellow("\t %s", flag_OpenRouterGlm53flash)
+	color.Yellow("\t %s", flag_OpenRouterOpenAILuna)
+	color.Yellow("\t %s", flag_OpenAI)
+}
+
+func argsToFlag(args []string) flag {
+	if len(args) != 2 {
+		return flag_Invalid
+	}
+
+	f := flag(args[1])
+	if f == flag_LMS || f == flag_OpenRouterGlm53flash || f == flag_OpenRouterOpenAILuna || f == flag_OpenAI {
+		return f
+	}
+
+	return flag_Invalid
+}
+
 func newOpenRouterProvider(model rellm.Model) (rellm.Provider, error) {
 	err := godotenv.Load()
 	if err != nil {
@@ -69,4 +124,18 @@ func newOpenRouterProvider(model rellm.Model) (rellm.Provider, error) {
 	}
 
 	return rellm.NewOpenRouterProvider(apiKey, model)
+}
+
+func newOpenAIProvider(model rellm.Model) (rellm.Provider, error) {
+	err := godotenv.Load()
+	if err != nil {
+		return nil, fmt.Errorf("cannot load .env: %w", err)
+	}
+
+	apiKey := os.Getenv("OPENAI_API_KEY")
+	if apiKey == "" {
+		return nil, fmt.Errorf("missing apikey for OPENAI_API_KEY")
+	}
+
+	return rellm.NewOpenAIProvider(apiKey, model)
 }

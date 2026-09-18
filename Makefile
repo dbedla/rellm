@@ -11,21 +11,6 @@ go-build:
 	go build -o ./output/bin/ ./examples/...
 	go build -o ./output/bin/ ./e2e_tests/...
 
-e2e-lms: go-clean-build
-	$(BIN_PATH)e2e_fs_agent --lms
-
-e2e-or-luna: go-clean-build
-	$(BIN_PATH)e2e_fs_agent --or-openai-luna
-
-e2e-or-glm53flash: go-clean-build
-	$(BIN_PATH)e2e_fs_agent --or-glm53flash
-
-e2e-format-text: go-clean-build
-	$(BIN_PATH)e2e_format_text_agent
-
-e2e-agent-switch: go-clean-build
-	$(BIN_PATH)e2e_agent_switch
-
 go-test:
 	go test -v ./...
 
@@ -52,9 +37,24 @@ go-nuke:
 	rm ${COVERAGE_PATH}* || true
 	rm ${COMPLEXITY_PATH}* || true
 
-
 e2e-lms-env:
 	lms unload --all
 	lms get gemma-4-26b-a4b --yes
 	lms load gemma-4-26b-a4b
 	lms server start --port 1234
+
+e2e-fs-tools: go-clean-build
+	$(BIN_PATH)e2e_fs_agent --lms
+	$(BIN_PATH)e2e_fs_agent --or-openai-luna
+	$(BIN_PATH)e2e_fs_agent --or-glm53flash
+	$(BIN_PATH)e2e_fs_agent --openai
+
+
+e2e-format-text: go-clean-build
+	$(BIN_PATH)e2e_format_text_agent --lms
+	$(BIN_PATH)e2e_format_text_agent --or-openai-luna
+	$(BIN_PATH)e2e_format_text_agent --or-glm53flash
+	$(BIN_PATH)e2e_format_text_agent --openai
+
+e2e-agent-switch: go-clean-build
+	$(BIN_PATH)e2e_agent_switch

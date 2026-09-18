@@ -176,7 +176,7 @@ type ReasoningContentPart struct {
 
 // parseReasoningSigned extracts reasoning text, summary, and provider
 // continuation state; fails on malformed items (OpenRouter wire shape).
-func parseReasoningSigned(raw json.RawMessage) (ConversationElement, error) {
+func parseReasoningSigned(raw json.RawMessage) (*Reasoning, error) {
 	var item struct {
 		ID               string                 `json:"id"`
 		Status           string                 `json:"status"`
@@ -391,9 +391,12 @@ func marshalReasoningWithSignature(el *Reasoning) (json.RawMessage, error) {
 		return nil, nil
 	}
 	r := map[string]interface{}{
-		"id":     el.ID,
-		"status": el.Status,
-		"type":   "reasoning",
+		"id":   el.ID,
+		"type": "reasoning",
+	}
+
+	if len(el.Status) > 0 {
+		r["status"] = el.Status
 	}
 	// Signed and encrypted reasoning blocks are provider continuation state; preserve
 	// their summary field even when it is empty.
@@ -422,10 +425,14 @@ func marshalReasoningWithSignature(el *Reasoning) (json.RawMessage, error) {
 // support (LM Studio shape).
 func marshalReasoningWithSummary(el *Reasoning) (json.RawMessage, error) {
 	payload := map[string]interface{}{
-		"id":     el.ID,
-		"status": el.Status,
-		"type":   "reasoning",
+		"id":   el.ID,
+		"type": "reasoning",
 	}
+
+	if len(el.Status) > 0 {
+		payload["status"] = el.Status
+	}
+
 	payload["summary"] = []ReasoningSummaryPart{}
 	if len(el.Summary) > 0 {
 		payload["summary"] = el.Summary

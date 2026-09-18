@@ -58,6 +58,20 @@ func buildOpenRouterProvider(model rellm.Model) (rellm.Provider, error) {
 	return rellm.NewOpenRouterProvider(apiKey, model)
 }
 
+func buildOpenAIProvider(model rellm.Model) (rellm.Provider, error) {
+	err := godotenv.Load()
+	if err != nil {
+		return nil, fmt.Errorf("cannot load .env: %w", err)
+	}
+
+	apiKey := os.Getenv("OPENAI_API_KEY")
+	if apiKey == "" {
+		return nil, fmt.Errorf("missing apikey for OPENAI_API_KEY")
+	}
+
+	return rellm.NewOpenAIProvider(apiKey, model)
+}
+
 func buildFSToolset(readOnlyDir, outputDir string) (*examplesutils.FSToolset, error) {
 	fs, err := examplesutils.NewLimitedFileSystem([]string{readOnlyDir}, outputDir)
 	if err != nil {
@@ -126,6 +140,8 @@ func providerForFlag(fl flag) (rellm.Provider, error) {
 		return buildOpenRouterProvider("z-ai/glm-5.3-flash")
 	case flag_OpenRouterOpenAILuna:
 		return buildOpenRouterProvider("openai/gpt-5.6-luna")
+	case flag_OpenAI:
+		return buildOpenAIProvider("gpt-5.6-luna")
 	default:
 		return nil, fmt.Errorf("unknown flag provided: %s", fl)
 	}
@@ -149,6 +165,7 @@ const (
 	flag_LMS                  flag = "--lms"
 	flag_OpenRouterGlm53flash flag = "--or-glm53flash"
 	flag_OpenRouterOpenAILuna flag = "--or-openai-luna"
+	flag_OpenAI               flag = "--openai"
 	flag_Invalid              flag = "NO_FLAG"
 )
 
@@ -157,6 +174,7 @@ func help() {
 	color.Yellow("\t %s", flag_LMS)
 	color.Yellow("\t %s", flag_OpenRouterGlm53flash)
 	color.Yellow("\t %s", flag_OpenRouterOpenAILuna)
+	color.Yellow("\t %s", flag_OpenAI)
 }
 
 func argsToFlag(args []string) flag {
@@ -165,7 +183,7 @@ func argsToFlag(args []string) flag {
 	}
 
 	f := flag(args[1])
-	if f == flag_LMS || f == flag_OpenRouterGlm53flash || f == flag_OpenRouterOpenAILuna {
+	if f == flag_LMS || f == flag_OpenRouterGlm53flash || f == flag_OpenRouterOpenAILuna || f == flag_OpenAI {
 		return f
 	}
 

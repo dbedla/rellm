@@ -15,23 +15,33 @@ func TestReasoningSummaryAndEncryptedContentRoundTrip(t *testing.T) {
 		provider Provider
 	}{
 		{name: "OpenRouter", provider: &OpenRouterProvider{}},
+		{name: "OpenAI", provider: &OpenAIProvider{}},
 		{name: "LMStudio", provider: &LMStudioProvider{}},
 	}
 	cases := []struct {
-		name string
-		raw  string
+		name   string
+		raw    string
+		status string
 	}{
 		{
-			name: "structured summary",
-			raw:  `{"id":"rs-1","type":"reasoning","status":"completed","summary":[{"type":"summary_text","text":"List the files."},{"type":"summary_text","text":"Summarize their contents."}]}`,
+			name:   "structured summary",
+			status: "completed",
+			raw:    `{"id":"rs-1","type":"reasoning","status":"completed","summary":[{"type":"summary_text","text":"List the files."},{"type":"summary_text","text":"Summarize their contents."}]}`,
 		},
 		{
-			name: "summary and encrypted content",
-			raw:  `{"id":"rs-1","type":"reasoning","status":"completed","summary":[{"type":"summary_text","text":"List the files."}],"encrypted_content":"opaque-replay-state","format":"openai-responses-v1"}`,
+			name:   "summary and encrypted content",
+			status: "completed",
+			raw:    `{"id":"rs-1","type":"reasoning","status":"completed","summary":[{"type":"summary_text","text":"List the files."}],"encrypted_content":"opaque-replay-state","format":"openai-responses-v1"}`,
 		},
 		{
-			name: "encrypted content only",
-			raw:  `{"id":"rs-1","type":"reasoning","status":"completed","summary":[],"encrypted_content":"opaque-replay-state","format":"openai-responses-v1"}`,
+			name:   "encrypted content only",
+			status: "completed",
+			raw:    `{"id":"rs-1","type":"reasoning","status":"completed","summary":[],"encrypted_content":"opaque-replay-state","format":"openai-responses-v1"}`,
+		},
+		{
+			// OpenAI omits the status field entirely on reasoning items.
+			name: "no status",
+			raw:  `{"id":"rs-1","type":"reasoning","summary":[{"type":"summary_text","text":"List the files."}],"encrypted_content":"opaque-replay-state","format":"openai-responses-v1"}`,
 		},
 	}
 	for _, p := range providers {
@@ -42,6 +52,9 @@ func TestReasoningSummaryAndEncryptedContentRoundTrip(t *testing.T) {
 					require.NoError(t, err)
 					require.Len(t, elements, 1)
 					require.IsType(t, &Reasoning{}, elements[0])
+					reasoning, ok := elements[0].(*Reasoning)
+					assert.True(t, ok)
+					assert.Equal(t, tc.status, reasoning.Status)
 
 					wire, err := p.provider.ToProviderRepresentation(elements)
 					require.NoError(t, err)
