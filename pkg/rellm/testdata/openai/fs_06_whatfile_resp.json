@@ -1,1 +1,193 @@
-{"id":"resp_0e78c7600f8b5b51006aad3734fe1c87d2ae0261c9695b570f","object":"response","created_at":1789736757,"model":"gpt-5.6-luna","instructions":null,"output":[{"id":"rs_0e78c7600f8b5b51006aad37357edc87d2805feecdeba77055","type":"reasoning","content":[],"encrypted_content":"gAAAAABqrTc2llFt6lMUO-0xl4sBJmh2vWEG7QMdauD-K86jQhSFmX5SM6sL8YyUc_c8BCd3Z2s_2mZqpIeKSoq9hyId_JC4U3rJ2hirwATDDbKo9aawLaTIQnpeaZ87l-vx_3sonUL2q4jN_K1vrOzhbn9gnszNVpsISOcwfVca60QxhhKtV8TnH5lP5IdbK2Xz1kDxPV3xGe0ZeSreEfzhjT4RRVMgLRrXhAORF4mx2ceWzTv1vMkAetwqD1LUWYrDZJ3hGW5AyPT877ryKZF8QNW4RlgNEepmu7y2G-k5bizyAvMR3v7fO319vhjQEyXIxY5OeHiwZGTXYphf5YrFycY5Bdj0NFnnYGE3pn_tW8Mpcoe5CllFK0UcOM_nM62ypxB7x_pLp6Nn96RA4qNfb_PQL6XFI52G0VWCXUn2qOF30dxxigPdARuWqzOWo5xh-I_9fuJyG9BO_aj009g9yJ9c2cqC7IbmC6WMLylffRV2RO77p8KxU6PqJ9lQqr_XiiMz5ypEd9w21LtSCMVPZb8lUOTGOYrlKfFvItsTj1lytaMttb3oHUDozRJbaUrEBQxuMEO0iUnHN8RWXWkv0YtSO2QcVGZke8QzoAJrpYc6DKP6b9sJeXz0qvAHlDggl6wpp9AlpzsFHIRuM-VvgMG5H4Yowho1OKiBy9E7hvwjK5oe8cXAYT_hKr_91JFPcHqRoMwAjHz4RHlWo-lgdxZ_Q15AhSJk-fIOZ-JDwtynjbSOQ0L2EV-qP7WW1Sd26OlMgAzGie_IvkWuw5_gcg2GK8fBBLziB3c48WMk-4XH9pMvDdAGNhmH3Ke6aopjhlYX4PxbThYlUALpVK_xmwJ9OHvpdnunlt__hzv8CKdrYY9CDODcSFweqwacskNrNE-YHbYIrkEkmH5hgtRalGz119uS-AGTJtrMsQ69MAvWxl-vCNwF-0l8N6QvGmUm60Sg6n4SH64_TWAKb9YopJ4r_BcVcJMMsWjAcxXyLwiDIZs7LvojMNb48BO37_qPOMLDXH09e7Od2PBOtZkxNHn1_O3txB2i_JxrmS5ul4VHyKrr3rZq-RPGOTZ_BMbfrCzBCLOAmo6yfZy60HL-1UNnsqOuOEvd2xG8ww4_7uodz66h_7BYHyp-hkXwAkxsozxoDZ3wsQsVzi8RibxlWSgvZd3B4Nj33sutg4TJQBD5l2rk73e3vkOuDH3fLqCrfFTx6NYBxk5Rf98fk0fT905KR1Ftmw==","summary":[]},{"id":"fc_0e78c7600f8b5b51006aad3736a78c87d2b31d50797dfbb5a2","type":"function_call","status":"completed","arguments":"{\"path\":\"/var/folders/nj/bkj2m2nx3292lgx0x2zsh35h0000gn/T/agent-log-28700364/readonly_agent_input\"}","call_id":"call_HMjv8BvdXxhIX3tVlNJnF1Gx","name":"FSToolset_ListFilesIn"},{"id":"fc_0e78c7600f8b5b51006aad3736a79c87d2aa9eb5864c90c173","type":"function_call","status":"completed","arguments":"{\"path\":\"/var/folders/nj/bkj2m2nx3292lgx0x2zsh35h0000gn/T/agent-log-28700364/output\"}","call_id":"call_IoD0eQEswYzHDa6bNAM9Y0KT","name":"FSToolset_ListFilesIn"}],"error":null,"incomplete_details":null,"tools":[{"type":"function","name":"FSToolset_GetReadOnlyPaths","description":"GetReadOnlyPaths returns a list of paths that are allowed to be read-only from","parameters":{"additionalProperties":false,"properties":{},"required":[],"type":"object"},"strict":true},{"type":"function","name":"FSToolset_GetOutputDir","description":"GetOutputDir returns the path of the output directory\nin this directory read, write and delete operation are allowed","parameters":{"additionalProperties":false,"properties":{},"required":[],"type":"object"},"strict":true},{"type":"function","name":"FSToolset_GetFileContentAsString","description":"GetFileContentAsString returns the content of the file at the given path as a string\nerror will be returned if the path is outside FSSandbox.readOnlyDirs or FSSandbox.outputDir\nerror will be returned if the path does not exist or is not accessible.","parameters":{"additionalProperties":false,"properties":{"path":{"type":"string"}},"required":["path"],"type":"object"},"strict":true},{"type":"function","name":"FSToolset_GetFileContentAsBytes","description":"GetFileContentAsBytes returns the content of the file at the given path as a []byte\nerror will be returned if the path is outside FSSandbox.readOnlyDirs or FSSandbox.outputDir\nerror will be returned if the path does not exist or is not accessible.","parameters":{"additionalProperties":false,"properties":{"path":{"type":"string"}},"required":["path"],"type":"object"},"strict":true},{"type":"function","name":"FSToolset_WriteStringToFile","description":"WriteStringToFile writes a given string into a specific file.\nif the file does not exist, it will be created\nerror will be if the file already exists\nerror will be returned if the path is outside FSSandbox.outputDir","parameters":{"additionalProperties":false,"properties":{"content":{"type":"string"},"path":{"type":"string"}},"required":["content","path"],"type":"object"},"strict":true},{"type":"function","name":"FSToolset_WriteBytesToFile","description":"WriteBytesToFile writes bytes into a specific file.\nif the file does not exist, it will be created\nerror will be if the file already exists\nerror will be returned if the path is outside FSSandbox.outputDir","parameters":{"additionalProperties":false,"properties":{"content":{"description":"base64 encoded bytes","type":"string"},"path":{"type":"string"}},"required":["content","path"],"type":"object"},"strict":true},{"type":"function","name":"FSToolset_DeleteFile","description":"DeleteFile delete file.\nerror will be returned if the path is outside FSSandbox.outputDir\nerror will be returned in any other standard case during deletion","parameters":{"additionalProperties":false,"properties":{"path":{"type":"string"}},"required":["path"],"type":"object"},"strict":true},{"type":"function","name":"FSToolset_ListFilesIn","description":"ListFilesIn returns a list of files in the given path\nerror will be returned if the path does not exist or is not accessible.\nerror will be returned if the path is not a directory\nerror will be returned if the path is outside FSSandbox.readOnlyDirs or FSSandbox.outputDir","parameters":{"additionalProperties":false,"properties":{"path":{"type":"string"}},"required":["path"],"type":"object"},"strict":true}],"tool_choice":"auto","parallel_tool_calls":true,"temperature":1,"top_p":0.98,"metadata":{},"usage":{"input_tokens":722,"input_tokens_details":{"cached_tokens":0},"output_tokens":144,"output_tokens_details":{"reasoning_tokens":13},"total_tokens":866}}
+{
+    "id": "resp_0e78c7600f8b5b51006aad3734fe1c87d2ae0261c9695b570f",
+    "object": "response",
+    "created_at": 1789736757,
+    "model": "gpt-5.6-luna",
+    "instructions": null,
+    "output": [
+        {
+            "id": "rs_0e78c7600f8b5b51006aad37357edc87d2805feecdeba77055",
+            "type": "reasoning",
+            "content": [],
+            "encrypted_content": "gAAAAABqrTc2llFt6lMUO-0xl4sBJmh2vWEG7QMdauD-K86jQhSFmX5SM6sL8YyUc_c8BCd3Z2s_2mZqpIeKSoq9hyId_JC4U3rJ2hirwATDDbKo9aawLaTIQnpeaZ87l-vx_3sonUL2q4jN_K1vrOzhbn9gnszNVpsISOcwfVca60QxhhKtV8TnH5lP5IdbK2Xz1kDxPV3xGe0ZeSreEfzhjT4RRVMgLRrXhAORF4mx2ceWzTv1vMkAetwqD1LUWYrDZJ3hGW5AyPT877ryKZF8QNW4RlgNEepmu7y2G-k5bizyAvMR3v7fO319vhjQEyXIxY5OeHiwZGTXYphf5YrFycY5Bdj0NFnnYGE3pn_tW8Mpcoe5CllFK0UcOM_nM62ypxB7x_pLp6Nn96RA4qNfb_PQL6XFI52G0VWCXUn2qOF30dxxigPdARuWqzOWo5xh-I_9fuJyG9BO_aj009g9yJ9c2cqC7IbmC6WMLylffRV2RO77p8KxU6PqJ9lQqr_XiiMz5ypEd9w21LtSCMVPZb8lUOTGOYrlKfFvItsTj1lytaMttb3oHUDozRJbaUrEBQxuMEO0iUnHN8RWXWkv0YtSO2QcVGZke8QzoAJrpYc6DKP6b9sJeXz0qvAHlDggl6wpp9AlpzsFHIRuM-VvgMG5H4Yowho1OKiBy9E7hvwjK5oe8cXAYT_hKr_91JFPcHqRoMwAjHz4RHlWo-lgdxZ_Q15AhSJk-fIOZ-JDwtynjbSOQ0L2EV-qP7WW1Sd26OlMgAzGie_IvkWuw5_gcg2GK8fBBLziB3c48WMk-4XH9pMvDdAGNhmH3Ke6aopjhlYX4PxbThYlUALpVK_xmwJ9OHvpdnunlt__hzv8CKdrYY9CDODcSFweqwacskNrNE-YHbYIrkEkmH5hgtRalGz119uS-AGTJtrMsQ69MAvWxl-vCNwF-0l8N6QvGmUm60Sg6n4SH64_TWAKb9YopJ4r_BcVcJMMsWjAcxXyLwiDIZs7LvojMNb48BO37_qPOMLDXH09e7Od2PBOtZkxNHn1_O3txB2i_JxrmS5ul4VHyKrr3rZq-RPGOTZ_BMbfrCzBCLOAmo6yfZy60HL-1UNnsqOuOEvd2xG8ww4_7uodz66h_7BYHyp-hkXwAkxsozxoDZ3wsQsVzi8RibxlWSgvZd3B4Nj33sutg4TJQBD5l2rk73e3vkOuDH3fLqCrfFTx6NYBxk5Rf98fk0fT905KR1Ftmw==",
+            "summary": []
+        },
+        {
+            "id": "fc_0e78c7600f8b5b51006aad3736a78c87d2b31d50797dfbb5a2",
+            "type": "function_call",
+            "status": "completed",
+            "arguments": "{\"path\":\"/var/folders/nj/bkj2m2nx3292lgx0x2zsh35h0000gn/T/agent-log-28700364/readonly_agent_input\"}",
+            "call_id": "call_HMjv8BvdXxhIX3tVlNJnF1Gx",
+            "name": "FSToolset_ListFilesIn"
+        },
+        {
+            "id": "fc_0e78c7600f8b5b51006aad3736a79c87d2aa9eb5864c90c173",
+            "type": "function_call",
+            "status": "completed",
+            "arguments": "{\"path\":\"/var/folders/nj/bkj2m2nx3292lgx0x2zsh35h0000gn/T/agent-log-28700364/output\"}",
+            "call_id": "call_IoD0eQEswYzHDa6bNAM9Y0KT",
+            "name": "FSToolset_ListFilesIn"
+        }
+    ],
+    "error": null,
+    "incomplete_details": null,
+    "tools": [
+        {
+            "type": "function",
+            "name": "FSToolset_GetReadOnlyPaths",
+            "description": "GetReadOnlyPaths returns a list of paths that are allowed to be read-only from",
+            "parameters": {
+                "additionalProperties": false,
+                "properties": {},
+                "required": [],
+                "type": "object"
+            },
+            "strict": true
+        },
+        {
+            "type": "function",
+            "name": "FSToolset_GetOutputDir",
+            "description": "GetOutputDir returns the path of the output directory\nin this directory read, write and delete operation are allowed",
+            "parameters": {
+                "additionalProperties": false,
+                "properties": {},
+                "required": [],
+                "type": "object"
+            },
+            "strict": true
+        },
+        {
+            "type": "function",
+            "name": "FSToolset_GetFileContentAsString",
+            "description": "GetFileContentAsString returns the content of the file at the given path as a string\nerror will be returned if the path is outside FSSandbox.readOnlyDirs or FSSandbox.outputDir\nerror will be returned if the path does not exist or is not accessible.",
+            "parameters": {
+                "additionalProperties": false,
+                "properties": {
+                    "path": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "path"
+                ],
+                "type": "object"
+            },
+            "strict": true
+        },
+        {
+            "type": "function",
+            "name": "FSToolset_GetFileContentAsBytes",
+            "description": "GetFileContentAsBytes returns the content of the file at the given path as a []byte\nerror will be returned if the path is outside FSSandbox.readOnlyDirs or FSSandbox.outputDir\nerror will be returned if the path does not exist or is not accessible.",
+            "parameters": {
+                "additionalProperties": false,
+                "properties": {
+                    "path": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "path"
+                ],
+                "type": "object"
+            },
+            "strict": true
+        },
+        {
+            "type": "function",
+            "name": "FSToolset_WriteStringToFile",
+            "description": "WriteStringToFile writes a given string into a specific file.\nif the file does not exist, it will be created\nerror will be if the file already exists\nerror will be returned if the path is outside FSSandbox.outputDir",
+            "parameters": {
+                "additionalProperties": false,
+                "properties": {
+                    "content": {
+                        "type": "string"
+                    },
+                    "path": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "content",
+                    "path"
+                ],
+                "type": "object"
+            },
+            "strict": true
+        },
+        {
+            "type": "function",
+            "name": "FSToolset_WriteBytesToFile",
+            "description": "WriteBytesToFile writes bytes into a specific file.\nif the file does not exist, it will be created\nerror will be if the file already exists\nerror will be returned if the path is outside FSSandbox.outputDir",
+            "parameters": {
+                "additionalProperties": false,
+                "properties": {
+                    "content": {
+                        "description": "base64 encoded bytes",
+                        "type": "string"
+                    },
+                    "path": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "content",
+                    "path"
+                ],
+                "type": "object"
+            },
+            "strict": true
+        },
+        {
+            "type": "function",
+            "name": "FSToolset_DeleteFile",
+            "description": "DeleteFile delete file.\nerror will be returned if the path is outside FSSandbox.outputDir\nerror will be returned in any other standard case during deletion",
+            "parameters": {
+                "additionalProperties": false,
+                "properties": {
+                    "path": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "path"
+                ],
+                "type": "object"
+            },
+            "strict": true
+        },
+        {
+            "type": "function",
+            "name": "FSToolset_ListFilesIn",
+            "description": "ListFilesIn returns a list of files in the given path\nerror will be returned if the path does not exist or is not accessible.\nerror will be returned if the path is not a directory\nerror will be returned if the path is outside FSSandbox.readOnlyDirs or FSSandbox.outputDir",
+            "parameters": {
+                "additionalProperties": false,
+                "properties": {
+                    "path": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "path"
+                ],
+                "type": "object"
+            },
+            "strict": true
+        }
+    ],
+    "tool_choice": "auto",
+    "parallel_tool_calls": true,
+    "temperature": 1,
+    "top_p": 0.98,
+    "metadata": {},
+    "usage": {
+        "input_tokens": 722,
+        "input_tokens_details": {
+            "cached_tokens": 0
+        },
+        "output_tokens": 144,
+        "output_tokens_details": {
+            "reasoning_tokens": 13
+        },
+        "total_tokens": 866
+    }
+}
