@@ -25,6 +25,14 @@ func buildLMSStructuredOutputAgent() (*rellm.Agent, error) {
 	return buildStructuredOutputAgent(p, "lms-agent", lmsSysPrompt)
 }
 
+func buildOpenAIStructuredOutputAgent() (*rellm.Agent, error) {
+	p, err := newOpenAIProvider("gpt-5.6-luna")
+	if err != nil {
+		return nil, err
+	}
+	return buildStructuredOutputAgent(p, "or-glm-5.3-flash-agent", structuredOutputSysPrompt)
+}
+
 func buildORGlm3flashStructuredOutputAgent() (*rellm.Agent, error) {
 	p, err := newOpenRouterProvider("z-ai/glm-5.3-flash")
 	if err != nil {
@@ -69,4 +77,18 @@ func newOpenRouterProvider(model rellm.Model) (rellm.Provider, error) {
 	}
 
 	return rellm.NewOpenRouterProvider(apiKey, model)
+}
+
+func newOpenAIProvider(model rellm.Model) (rellm.Provider, error) {
+	err := godotenv.Load()
+	if err != nil {
+		return nil, fmt.Errorf("cannot load .env: %w", err)
+	}
+
+	apiKey := os.Getenv("OPENAI_API_KEY")
+	if apiKey == "" {
+		return nil, fmt.Errorf("missing apikey for OPENAI_API_KEY")
+	}
+
+	return rellm.NewOpenAIProvider(apiKey, model)
 }

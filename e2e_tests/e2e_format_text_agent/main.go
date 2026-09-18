@@ -36,7 +36,13 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	agents := []*rellm.Agent{lmsAgent, orGlm53flashAgent, orLunaAgent}
+
+	openAIAgent, er := buildOpenAIStructuredOutputAgent()
+	if er != nil {
+		panic(er)
+	}
+
+	agents := []*rellm.Agent{lmsAgent, orGlm53flashAgent, orLunaAgent, openAIAgent}
 
 	for _, a := range agents {
 		scenario(a)
