@@ -399,6 +399,13 @@ For a general introduction to tool calling, see
 
 ## Tips
 
+- **Explore from `rellm.New...`.** The API is self-explanatory: type
+  `rellm.New` and your IDE lists the constructors — providers, conversations,
+  prompts, agents — each returning the type you need next. The builders
+  (`NewAgentBuilder`, `NewPromptBuilder`, ...) walk you through the options, so
+  intellisense is the documentation. Ergonomic and easygoing — and for agentic
+  coding it just works: a coding agent explores the API the same way your IDE
+  does.
 - **Building a custom provider?** Start from the built-ins — read
   [provider_openai.go](pkg/rellm/provider_openai.go) and
   [provider_openrouter.go](pkg/rellm/provider_openrouter.go). If your backend
