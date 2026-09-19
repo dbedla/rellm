@@ -18,6 +18,17 @@ func TestTextFromContent(t *testing.T) {
 	assert.Empty(t, TextFromContent(nil))
 }
 
+type bogusElement struct{}
+
+func (bogusElement) Kind() ElementKind          { return ElementKind("bogus") }
+func (bogusElement) Clone() ConversationElement { return bogusElement{} }
+
+func TestStdToProviderRepresentation_UnsupportedElement(t *testing.T) {
+	wire, err := StdToProviderRepresentation([]ConversationElement{bogusElement{}})
+	assert.Nil(t, wire)
+	assert.ErrorIs(t, err, ErrMarshalingConversationElement)
+}
+
 func TestConversationElements_MarshalParseRoundTrip(t *testing.T) {
 	elements := []ConversationElement{
 		&UserMessage{MessageContent: MessageContent{Role: "user", Content: []MessagePart{{Type: "input_text", Text: "hi"}}}},

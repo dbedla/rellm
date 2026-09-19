@@ -17,8 +17,7 @@ var ErrConversationElementConversion = errors.New("error converting conversation
 var ErrUnknownTypeForConversationElement = errors.New("unknown type for conversation element")
 var ErrMalformedUnknownElement = errors.New("malformed unknown element")
 var ErrLMSMarshalingConversationElement = errors.New("error marshaling LM Studio conversation element")
-var ErrOpenRouterMarshalingConversationElement = errors.New("error marshaling OpenRouter conversation element")
-var ErrOpenAIMarshalingConversationElement = errors.New("error marshaling OpenAI conversation element")
+var ErrMarshalingConversationElement = errors.New("error marshaling conversation element")
 
 var ErrEndpointNilResponse = errors.New("endpoint returned nil response")
 var ErrEndpointNilBodyInResponse = errors.New("endpoint returned nil body in response")

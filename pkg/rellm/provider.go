@@ -421,6 +421,12 @@ func cloneMessageParts(parts []MessagePart) []MessagePart {
 	return clones
 }
 
+// StdToConversationElements is the shared wire-to-canonical parser for providers
+// that speak the OpenAI/OpenRouter Responses API dialect (typed message parts,
+// signed reasoning). pTag is used only as provenance metadata: it is stamped
+// onto UnknownElement.Provider when rellm encounters an item type it cannot
+// parse. A custom provider implementation calling this function should pass
+// its own tag so unknown items are attributed to the right source.
 func StdToConversationElements(items []json.RawMessage, pTag ProviderTag) ([]ConversationElement, error) {
 	elements := make([]ConversationElement, 0, len(items))
 	for _, raw := range items {
@@ -460,6 +466,11 @@ func StdToConversationElements(items []json.RawMessage, pTag ProviderTag) ([]Con
 	return elements, nil
 }
 
+// StdToProviderRepresentation is the shared canonical-to-wire serializer for
+// providers that speak the OpenAI/OpenRouter Responses API dialect. It is
+// provider-agnostic: no tag is needed because UnknownElement.Raw is replayed
+// verbatim regardless of which provider emitted it, and all marshal errors
+// carry ErrMarshalingConversationElement.
 func StdToProviderRepresentation(elements []ConversationElement) ([]json.RawMessage, error) {
 	if len(elements) == 0 {
 		return nil, nil
@@ -497,6 +508,6 @@ func marshalConversationElement(element ConversationElement) (json.RawMessage, e
 	case *UnknownElement:
 		return unknownElementRepresentation(el)
 	default:
-		return nil, errors.Join(ErrOpenAIMarshalingConversationElement, fmt.Errorf("unknown element type: %T", el))
+		return nil, errors.Join(ErrMarshalingConversationElement, fmt.Errorf("unknown element type: %T", el))
 	}
 }
