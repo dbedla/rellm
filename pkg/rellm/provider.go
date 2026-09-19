@@ -423,7 +423,7 @@ func cloneMessageParts(parts []MessagePart) []MessagePart {
 
 // StdToConversationElements is the shared wire-to-canonical parser for providers
 // that speak the OpenAI/OpenRouter Responses API dialect (typed message parts,
-// signed reasoning). pTag is used only as provenance metadata: it is stamped
+// signed reasoning). pTag is used only as metadata: it is stamped
 // onto UnknownElement.Provider when rellm encounters an item type it cannot
 // parse. A custom provider implementation calling this function should pass
 // its own tag so unknown items are attributed to the right source.
