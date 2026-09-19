@@ -3,6 +3,7 @@ package rellm
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -50,10 +51,12 @@ const (
 	KindUnknown          ElementKind = "unknown"
 )
 
+type ProviderTag string
+
 const (
-	ProviderOpenRouter = "openrouter"
-	ProviderLMStudio   = "lmstudio"
-	ProviderOpenAI     = "openai"
+	ProviderTagProviderOpenRouter ProviderTag = "openrouter"
+	ProviderTagProviderLMStudio   ProviderTag = "lmstudio"
+	ProviderTagProviderOpenAI     ProviderTag = "openai"
 )
 
 // ConversationElement is a typed item in a conversation. Providers convert their
@@ -417,4 +420,84 @@ func cloneMessageParts(parts []MessagePart) []MessagePart {
 		}
 	}
 	return clones
+}
+
+func StdToConversationElements(items []json.RawMessage, pTag ProviderTag) ([]ConversationElement, error) {
+	elements := make([]ConversationElement, 0, len(items))
+	for _, raw := range items {
+		msg, err := parseWireItem(raw)
+		if err != nil {
+			return nil, err
+		}
+
+		switch msg.Type {
+		case "function_call":
+			elements = append(elements, parseFunctionCallItem(msg))
+
+		case "function_call_output":
+			elements = append(elements, parseFunctionCallRespItem(raw, msg))
+
+		case "message", "": // messages often lack an explicit type field; infer from role
+			elements = append(elements, parseMessageWithStatus(raw, string(pTag), msg.ID, msg.Type, msg.Role, msg.Content))
+
+		case "reasoning":
+			elm, err := parseReasoningSigned(raw)
+			if err != nil {
+				return nil, err
+			}
+			elements = append(elements, elm)
+
+		case "image_generation_call":
+			elem, err := parseImageGeneration(raw)
+			if err != nil {
+				return nil, err
+			}
+			elements = append(elements, elem)
+
+		default:
+			elements = append(elements, newUnknownElement(string(pTag), msg.Type, msg.Role, raw))
+		}
+	}
+	return elements, nil
+}
+
+func StdToProviderRepresentation(elements []ConversationElement, pTag ProviderTag) ([]json.RawMessage, error) {
+	if len(elements) == 0 {
+		return nil, nil
+	}
+	raw := make([]json.RawMessage, 0, len(elements))
+	for _, e := range elements {
+		b, err := marshalConversationElement(e, pTag)
+		if err != nil {
+			return nil, err
+		}
+		if b == nil {
+			continue
+		}
+		raw = append(raw, b)
+	}
+	return raw, nil
+}
+
+func marshalConversationElement(element ConversationElement, pTag ProviderTag) (json.RawMessage, error) {
+	switch el := element.(type) {
+	case *UserMessage:
+		return marshalMessageAsTypedParts(el.MessageContent)
+	case *AssistantMessage:
+		return marshalMessageAsTypedText(el.MessageContent)
+	case *SystemMessage:
+		return marshalMessageAsTypedText(el.MessageContent)
+	case *FunctionCall:
+		return marshalFunctionCall(el)
+	case *FunctionCallResp:
+		return marshalFunctionCallResp(el)
+	case *Reasoning:
+		return marshalReasoningWithSignature(el)
+	case *ImageGeneration:
+		return marshalImageGeneration(el)
+	case *UnknownElement:
+		return unknownElementRepresentation(el, string(pTag))
+	default:
+		return nil, errors.Join(ErrOpenAIMarshalingConversationElement, fmt.Errorf("unknown element type: %T", el))
+	}
 }

@@ -134,7 +134,7 @@ func TestFilesystemConversation_AppendAndLoadUnknownElement(t *testing.T) {
 	raw := json.RawMessage(`{"type":"future_output","value":42}`)
 	ctx := context.Background()
 
-	err := s.Append(ctx, []ConversationElement{newUnknownElement(ProviderOpenRouter, "future_output", "", raw)})
+	err := s.Append(ctx, []ConversationElement{newUnknownElement(string(ProviderTagProviderOpenRouter), "future_output", "", raw)})
 	assert.NoError(t, err)
 
 	elements, err := s.Load(ctx)
@@ -142,7 +142,7 @@ func TestFilesystemConversation_AppendAndLoadUnknownElement(t *testing.T) {
 	assert.Len(t, elements, 1)
 	unknown, ok := elements[0].(*UnknownElement)
 	assert.True(t, ok)
-	assert.Equal(t, ProviderOpenRouter, unknown.Provider)
+	assert.Equal(t, string(ProviderTagProviderOpenRouter), unknown.Provider)
 	assert.Equal(t, "future_output", unknown.Type)
 	assert.JSONEq(t, string(raw), string(unknown.Raw))
 }

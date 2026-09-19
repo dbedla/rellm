@@ -102,10 +102,10 @@ func (p *LMStudioProvider) ToConversationElements(items []json.RawMessage) ([]Co
 			elements = append(elements, parseFunctionCallRespItem(raw, msg))
 
 		case "message", "": // messages often lack an explicit type field
-			elements = append(elements, parseMessageByRole(raw, ProviderLMStudio, msg.ID, msg.Type, msg.Role, msg.Content))
+			elements = append(elements, parseMessageByRole(raw, string(ProviderTagProviderLMStudio), msg.ID, msg.Type, msg.Role, msg.Content))
 
 		default:
-			elements = append(elements, newUnknownElement(ProviderLMStudio, msg.Type, msg.Role, raw))
+			elements = append(elements, newUnknownElement(string(ProviderTagProviderLMStudio), msg.Type, msg.Role, raw))
 		}
 	}
 	return elements, nil
@@ -146,7 +146,7 @@ func (p *LMStudioProvider) marshalConversationElement(element ConversationElemen
 	case *ImageGeneration:
 		return marshalImageGeneration(el)
 	case *UnknownElement:
-		return unknownElementRepresentation(el, ProviderLMStudio)
+		return unknownElementRepresentation(el, string(ProviderTagProviderLMStudio))
 	default:
 		return nil, errors.Join(ErrLMSMarshalingConversationElement, fmt.Errorf("unknown conversation element type: %T", el))
 	}

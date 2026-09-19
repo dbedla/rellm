@@ -125,7 +125,7 @@ func TestOpenRouterToConversationElements_Unknown(t *testing.T) {
 
 			unknown, ok := elements[0].(*UnknownElement)
 			assert.True(t, ok)
-			assert.Equal(t, ProviderOpenRouter, unknown.Provider)
+			assert.Equal(t, string(ProviderTagProviderOpenRouter), unknown.Provider)
 			assert.Equal(t, tt.typeName, unknown.Type)
 			assert.Equal(t, tt.role, unknown.Role)
 			assert.JSONEq(t, string(tt.raw), string(unknown.Raw))
@@ -140,7 +140,7 @@ func TestOpenRouterToConversationElements_Unknown(t *testing.T) {
 
 func TestOpenRouterToProviderRepresentation_UnknownFromOtherProvider(t *testing.T) {
 	p := &OpenRouterProvider{}
-	element := newUnknownElement(ProviderLMStudio, "future_output", "", json.RawMessage(`{"type":"future_output"}`))
+	element := newUnknownElement(string(ProviderTagProviderOpenAI), "future_output", "", json.RawMessage(`{"type":"future_output"}`))
 
 	wire, err := p.ToProviderRepresentation([]ConversationElement{element})
 	assert.ErrorIs(t, err, ErrUnknownElementProviderMismatch)
