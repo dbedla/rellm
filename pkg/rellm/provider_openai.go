@@ -54,7 +54,7 @@ func (p *OpenAIProvider) Model() Model { return p.model }
 // Send performs one round trip against the OpenAI Responses API
 // endpoint. The agent guarantees req.Model is already set.
 func (p *OpenAIProvider) Send(ctx context.Context, req *ResponsesAPIReq) (*ResponsesAPIResp, error) {
-	return postResponsesAPI(ctx, p.client, p.url, p.header, req)
+	return StdSendResponsesAPI(ctx, p.client, p.url, p.header, req)
 }
 
 func (p *OpenAIProvider) ToConversationElements(items []json.RawMessage) ([]ConversationElement, error) {
