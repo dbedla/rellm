@@ -102,10 +102,10 @@ func (p *LMStudioProvider) ToConversationElements(items []json.RawMessage) ([]Co
 			elements = append(elements, parseFunctionCallRespItem(raw, msg))
 
 		case "message", "": // messages often lack an explicit type field
-			elements = append(elements, parseMessageByRole(raw, string(ProviderTagProviderLMStudio), msg.ID, msg.Type, msg.Role, msg.Content))
+			elements = append(elements, parseMessageByRole(raw, string(ProviderTagLMStudio), msg.ID, msg.Type, msg.Role, msg.Content))
 
 		default:
-			elements = append(elements, newUnknownElement(string(ProviderTagProviderLMStudio), msg.Type, msg.Role, raw))
+			elements = append(elements, newUnknownElement(string(ProviderTagLMStudio), msg.Type, msg.Role, raw))
 		}
 	}
 	return elements, nil

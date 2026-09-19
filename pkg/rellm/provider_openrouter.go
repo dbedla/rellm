@@ -58,7 +58,7 @@ func (p *OpenRouterProvider) Send(ctx context.Context, req *ResponsesAPIReq) (*R
 }
 
 func (p *OpenRouterProvider) ToConversationElements(items []json.RawMessage) ([]ConversationElement, error) {
-	return StdToConversationElements(items, ProviderTagProviderOpenRouter)
+	return StdToConversationElements(items, ProviderTagOpenRouter)
 }
 
 func (p *OpenRouterProvider) ToProviderRepresentation(elements []ConversationElement) ([]json.RawMessage, error) {

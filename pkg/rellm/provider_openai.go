@@ -58,7 +58,7 @@ func (p *OpenAIProvider) Send(ctx context.Context, req *ResponsesAPIReq) (*Respo
 }
 
 func (p *OpenAIProvider) ToConversationElements(items []json.RawMessage) ([]ConversationElement, error) {
-	return StdToConversationElements(items, ProviderTagProviderOpenAI)
+	return StdToConversationElements(items, ProviderTagOpenAI)
 }
 
 func (p *OpenAIProvider) ToProviderRepresentation(elements []ConversationElement) ([]json.RawMessage, error) {

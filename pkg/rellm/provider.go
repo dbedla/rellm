@@ -54,9 +54,9 @@ const (
 type ProviderTag string
 
 const (
-	ProviderTagProviderOpenRouter ProviderTag = "openrouter"
-	ProviderTagProviderLMStudio   ProviderTag = "lmstudio"
-	ProviderTagProviderOpenAI     ProviderTag = "openai"
+	ProviderTagOpenRouter ProviderTag = "openrouter"
+	ProviderTagLMStudio   ProviderTag = "lmstudio"
+	ProviderTagOpenAI     ProviderTag = "openai"
 )
 
 // ConversationElement is a typed item in a conversation. Providers convert their
