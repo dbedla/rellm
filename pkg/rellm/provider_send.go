@@ -11,29 +11,9 @@ import (
 	"strings"
 )
 
-func (a *Agent) post(ctx context.Context, req *ResponsesAPIReq) (*ResponsesAPIResp, error) {
-	// Stamp the provider-owned model before inspection so the inspector
-	// always sees the complete request.
-	req.Model = string(a.provider.Model())
-
-	if a.inspectReq != nil {
-		a.inspectReq(req)
-	}
-
-	resp, err := a.provider.Send(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-
-	if a.inspectResp != nil {
-		a.inspectResp(resp)
-	}
-	return resp, nil
-}
-
-// postResponsesAPI is the shared transport for every provider's Send:
+// StdSendResponsesAPI is the shared transport for every provider's Send:
 // marshal -> POST -> read body -> status check -> unmarshal.
-func postResponsesAPI(ctx context.Context, client HTTPClient, url string,
+func StdSendResponsesAPI(ctx context.Context, client HTTPClient, url string,
 	header http.Header, req *ResponsesAPIReq,
 ) (_ *ResponsesAPIResp, finalErr error) {
 	body, err := json.Marshal(req)

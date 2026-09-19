@@ -99,7 +99,7 @@ func parseMessageByRole(raw json.RawMessage, provider, id, itemType, role string
 }
 
 // parseMessageWithStatus parses a message item into a role-typed message,
-// extracting the status field when present (OpenRouter wire shape).
+// extracting the status field when present (OpenRouter and OpenAI wire shape).
 func parseMessageWithStatus(raw json.RawMessage, provider, id, itemType, role string, content json.RawMessage) ConversationElement {
 	var statusInfo struct {
 		Status string `json:"status"`

@@ -46,7 +46,7 @@ func TestLMStudioToConversationElements_Unknown(t *testing.T) {
 
 			unknown, ok := elements[0].(*UnknownElement)
 			assert.True(t, ok)
-			assert.Equal(t, ProviderLMStudio, unknown.Provider)
+			assert.Equal(t, string(ProviderTagLMStudio), unknown.Provider)
 			assert.Equal(t, tt.typeName, unknown.Type)
 			assert.Equal(t, tt.role, unknown.Role)
 			assert.JSONEq(t, string(tt.raw), string(unknown.Raw))
@@ -61,11 +61,14 @@ func TestLMStudioToConversationElements_Unknown(t *testing.T) {
 
 func TestLMStudioToProviderRepresentation_UnknownFromOtherProvider(t *testing.T) {
 	p := &LMStudioProvider{}
-	element := newUnknownElement(ProviderOpenRouter, "future_output", "", json.RawMessage(`{"type":"future_output"}`))
+	element := newUnknownElement(string(ProviderTagOpenRouter), "future_output", "", json.RawMessage(`{"type":"future_output"}`))
 
+	// Unknown-to-rellm is not unknown-to-provider: Raw replays verbatim
+	// across a provider switch.
 	wire, err := p.ToProviderRepresentation([]ConversationElement{element})
-	assert.ErrorIs(t, err, ErrUnknownElementProviderMismatch)
-	assert.Nil(t, wire)
+	assert.NoError(t, err)
+	assert.Len(t, wire, 1)
+	assert.JSONEq(t, `{"type":"future_output"}`, string(wire[0]))
 }
 
 func TestLMStudioToConversationElements_ImageGeneration(t *testing.T) {

@@ -3,6 +3,7 @@ package rellm
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -50,10 +51,12 @@ const (
 	KindUnknown          ElementKind = "unknown"
 )
 
+type ProviderTag string
+
 const (
-	ProviderOpenRouter = "openrouter"
-	ProviderLMStudio   = "lmstudio"
-	ProviderOpenAI     = "openai"
+	ProviderTagOpenRouter ProviderTag = "openrouter"
+	ProviderTagLMStudio   ProviderTag = "lmstudio"
+	ProviderTagOpenAI     ProviderTag = "openai"
 )
 
 // ConversationElement is a typed item in a conversation. Providers convert their
@@ -207,8 +210,10 @@ func (e *ImageGeneration) Clone() ConversationElement {
 }
 
 // UnknownElement preserves a provider output item that rellm does not yet
-// understand. Raw is the original provider representation; Provider identifies
-// the wire format needed to interpret it, while Type and Role are routing hints.
+// understand. Raw is the original provider representation and is replayed
+// verbatim on serialization (unknown to rellm may still be known to a
+// provider). Provider is provenance metadata naming the provider that
+// emitted it; Type and Role are routing hints.
 type UnknownElement struct {
 	Provider string          `json:"provider"`
 	Type     string          `json:"type,omitempty"`
@@ -233,21 +238,18 @@ func newUnknownElement(provider, itemType, role string, raw json.RawMessage) *Un
 	}
 }
 
-func unknownElementRepresentation(element *UnknownElement, provider string) (json.RawMessage, error) {
+func unknownElementRepresentation(element *UnknownElement) (json.RawMessage, error) {
 	if element == nil {
 		return nil, fmt.Errorf("%w: nil unknown element", ErrMalformedUnknownElement)
-	}
-	if element.Provider != provider {
-		return nil, fmt.Errorf(
-			"%w: element belongs to %q, target provider is %q",
-			ErrUnknownElementProviderMismatch,
-			element.Provider,
-			provider,
-		)
 	}
 	if !json.Valid(element.Raw) {
 		return nil, fmt.Errorf("%w: invalid raw JSON", ErrMalformedUnknownElement)
 	}
+	// Replay Raw verbatim regardless of which provider emitted it: unknown
+	// to rellm does not mean unknown to the target provider (all backends
+	// speak a Responses API dialect, and providers adopt new item types
+	// before rellm parses them). The Provider field is provenance metadata
+	// only; if the target provider rejects the item, the API error says so.
 	return append(json.RawMessage(nil), element.Raw...), nil
 }
 
@@ -417,4 +419,95 @@ func cloneMessageParts(parts []MessagePart) []MessagePart {
 		}
 	}
 	return clones
+}
+
+// StdToConversationElements is the shared wire-to-canonical parser for providers
+// that speak the OpenAI/OpenRouter Responses API dialect (typed message parts,
+// signed reasoning). pTag is used only as metadata: it is stamped
+// onto UnknownElement.Provider when rellm encounters an item type it cannot
+// parse. A custom provider implementation calling this function should pass
+// its own tag so unknown items are attributed to the right source.
+func StdToConversationElements(items []json.RawMessage, pTag ProviderTag) ([]ConversationElement, error) {
+	elements := make([]ConversationElement, 0, len(items))
+	for _, raw := range items {
+		msg, err := parseWireItem(raw)
+		if err != nil {
+			return nil, err
+		}
+
+		switch msg.Type {
+		case "function_call":
+			elements = append(elements, parseFunctionCallItem(msg))
+
+		case "function_call_output":
+			elements = append(elements, parseFunctionCallRespItem(raw, msg))
+
+		case "message", "": // messages often lack an explicit type field; infer from role
+			elements = append(elements, parseMessageWithStatus(raw, string(pTag), msg.ID, msg.Type, msg.Role, msg.Content))
+
+		case "reasoning":
+			elm, err := parseReasoningSigned(raw)
+			if err != nil {
+				return nil, err
+			}
+			elements = append(elements, elm)
+
+		case "image_generation_call":
+			elem, err := parseImageGeneration(raw)
+			if err != nil {
+				return nil, err
+			}
+			elements = append(elements, elem)
+
+		default:
+			elements = append(elements, newUnknownElement(string(pTag), msg.Type, msg.Role, raw))
+		}
+	}
+	return elements, nil
+}
+
+// StdToProviderRepresentation is the shared canonical-to-wire serializer for
+// providers that speak the OpenAI/OpenRouter Responses API dialect. It is
+// provider-agnostic: no tag is needed because UnknownElement.Raw is replayed
+// verbatim regardless of which provider emitted it, and all marshal errors
+// carry ErrMarshalingConversationElement.
+func StdToProviderRepresentation(elements []ConversationElement) ([]json.RawMessage, error) {
+	if len(elements) == 0 {
+		return nil, nil
+	}
+	raw := make([]json.RawMessage, 0, len(elements))
+	for _, e := range elements {
+		b, err := marshalConversationElement(e)
+		if err != nil {
+			return nil, err
+		}
+		if b == nil {
+			continue
+		}
+		raw = append(raw, b)
+	}
+	return raw, nil
+}
+
+func marshalConversationElement(element ConversationElement) (json.RawMessage, error) {
+	switch el := element.(type) {
+	case *UserMessage:
+		return marshalMessageAsTypedParts(el.MessageContent)
+	case *AssistantMessage:
+		return marshalMessageAsTypedText(el.MessageContent)
+	case *SystemMessage:
+		return marshalMessageAsTypedText(el.MessageContent)
+	case *FunctionCall:
+		return marshalFunctionCall(el)
+	case *FunctionCallResp:
+		return marshalFunctionCallResp(el)
+	case *Reasoning:
+		return marshalReasoningWithSignature(el)
+	case *ImageGeneration:
+		return marshalImageGeneration(el)
+	case *UnknownElement:
+		return unknownElementRepresentation(el)
+	default:
+		return nil, errors.Join(ErrMarshalingConversationElement, fmt.Errorf("unknown element type: %T", el))
+	}
 }

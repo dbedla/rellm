@@ -69,7 +69,7 @@ func (p *LMStudioProvider) Model() Model { return p.model }
 // Send performs one round trip against the LM Studio Responses API
 // endpoint. The agent guarantees req.Model is already set.
 func (p *LMStudioProvider) Send(ctx context.Context, req *ResponsesAPIReq) (*ResponsesAPIResp, error) {
-	return postResponsesAPI(ctx, p.client, p.url, p.header, req)
+	return StdSendResponsesAPI(ctx, p.client, p.url, p.header, req)
 }
 
 func (p *LMStudioProvider) ToConversationElements(items []json.RawMessage) ([]ConversationElement, error) {
@@ -102,10 +102,10 @@ func (p *LMStudioProvider) ToConversationElements(items []json.RawMessage) ([]Co
 			elements = append(elements, parseFunctionCallRespItem(raw, msg))
 
 		case "message", "": // messages often lack an explicit type field
-			elements = append(elements, parseMessageByRole(raw, ProviderLMStudio, msg.ID, msg.Type, msg.Role, msg.Content))
+			elements = append(elements, parseMessageByRole(raw, string(ProviderTagLMStudio), msg.ID, msg.Type, msg.Role, msg.Content))
 
 		default:
-			elements = append(elements, newUnknownElement(ProviderLMStudio, msg.Type, msg.Role, raw))
+			elements = append(elements, newUnknownElement(string(ProviderTagLMStudio), msg.Type, msg.Role, raw))
 		}
 	}
 	return elements, nil
@@ -146,7 +146,7 @@ func (p *LMStudioProvider) marshalConversationElement(element ConversationElemen
 	case *ImageGeneration:
 		return marshalImageGeneration(el)
 	case *UnknownElement:
-		return unknownElementRepresentation(el, ProviderLMStudio)
+		return unknownElementRepresentation(el)
 	default:
 		return nil, errors.Join(ErrLMSMarshalingConversationElement, fmt.Errorf("unknown conversation element type: %T", el))
 	}

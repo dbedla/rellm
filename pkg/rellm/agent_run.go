@@ -289,6 +289,30 @@ func (a *Agent) appendConversation(ctx context.Context, msg string) ([]Conversat
 	return conversation, nil
 }
 
+func (a *Agent) post(ctx context.Context, req *ResponsesAPIReq) (*ResponsesAPIResp, error) {
+	// Stamp the provider-owned model before inspection so the inspector
+	// always sees the complete request.
+	req.Model = string(a.provider.Model())
+
+	if a.inspectReq != nil {
+		a.inspectReq(req)
+	}
+
+	resp, err := a.provider.Send(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp == nil {
+		return nil, ErrEmptyResponse
+	}
+
+	if a.inspectResp != nil {
+		a.inspectResp(resp)
+	}
+	return resp, nil
+}
+
 func funcResultToFunctionCallResp(callID string, funcResult any) FunctionCallResp {
 	b, err := json.Marshal(funcResult)
 	if err != nil {

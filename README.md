@@ -27,6 +27,7 @@ ends, on what it can do and on what it can say.
   - [Build your own agent](#build-your-own-agent)
   - [Structured output (JSON schema)](#structured-output-json-schema)
   - [Adding tools to your agent](#adding-tools-to-your-agent)
+- [Tips](#tips)
 - [External links](#external-links)
 
 ## Why small, specialized agents?
@@ -395,6 +396,31 @@ struct and let it produce the adapter, then review and test the result.
 
 For a general introduction to tool calling, see
 [Tool & Function Calling (OpenRouter docs)](https://openrouter.ai/docs/guides/features/tool-calling).
+
+## Tips
+
+- **Explore from `rellm.New...`.** The API is self-explanatory: type
+  `rellm.New` and your IDE lists the constructors — providers, conversations,
+  prompts, agents — each returning the type you need next. The builders
+  (`NewAgentBuilder`, `NewPromptBuilder`, ...) walk you through the options, so
+  intellisense is the documentation. Ergonomic and easygoing — and for agentic
+  coding it just works: a coding agent explores the API the same way your IDE
+  does.
+- **Building a custom provider?** Start from the built-ins — read
+  [provider_openai.go](pkg/rellm/provider_openai.go) and
+  [provider_openrouter.go](pkg/rellm/provider_openrouter.go). If your backend
+  conforms to the Responses API, the shared `Std` helpers do most of the work:
+  `StdSendResponsesAPI` (transport), `StdToConversationElements` (parsing) and
+  `StdToProviderRepresentation` (serialization). What is left is your URL,
+  headers, and a `ProviderTag` of your own.
+- **The agent runs only while you wait.** `Ask` and `Execute` are fully
+  synchronous — when they return, everything is done, nothing runs in the
+  background. The stage before and after each call belongs to you: prepare the
+  prompt, then post-process the report before asking again.
+- **Timeouts:** pass a `context.Context` with a deadline to `Ask`/`Execute`, or
+  inject an `http.Client` with a `Timeout` via
+  `NewLMStudioProviderWithHTTPClient`, `NewOpenRouterProviderWithHTTPClient`
+  or `NewOpenAIProviderWithHTTPClient`.
 
 ## External links
 
