@@ -63,9 +63,12 @@ func TestLMStudioToProviderRepresentation_UnknownFromOtherProvider(t *testing.T)
 	p := &LMStudioProvider{}
 	element := newUnknownElement(string(ProviderTagProviderOpenRouter), "future_output", "", json.RawMessage(`{"type":"future_output"}`))
 
+	// Unknown-to-rellm is not unknown-to-provider: Raw replays verbatim
+	// across a provider switch.
 	wire, err := p.ToProviderRepresentation([]ConversationElement{element})
-	assert.ErrorIs(t, err, ErrUnknownElementProviderMismatch)
-	assert.Nil(t, wire)
+	assert.NoError(t, err)
+	assert.Len(t, wire, 1)
+	assert.JSONEq(t, `{"type":"future_output"}`, string(wire[0]))
 }
 
 func TestLMStudioToConversationElements_ImageGeneration(t *testing.T) {

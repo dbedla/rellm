@@ -210,8 +210,10 @@ func (e *ImageGeneration) Clone() ConversationElement {
 }
 
 // UnknownElement preserves a provider output item that rellm does not yet
-// understand. Raw is the original provider representation; Provider identifies
-// the wire format needed to interpret it, while Type and Role are routing hints.
+// understand. Raw is the original provider representation and is replayed
+// verbatim on serialization (unknown to rellm may still be known to a
+// provider). Provider is provenance metadata naming the provider that
+// emitted it; Type and Role are routing hints.
 type UnknownElement struct {
 	Provider string          `json:"provider"`
 	Type     string          `json:"type,omitempty"`
@@ -236,21 +238,18 @@ func newUnknownElement(provider, itemType, role string, raw json.RawMessage) *Un
 	}
 }
 
-func unknownElementRepresentation(element *UnknownElement, provider string) (json.RawMessage, error) {
+func unknownElementRepresentation(element *UnknownElement) (json.RawMessage, error) {
 	if element == nil {
 		return nil, fmt.Errorf("%w: nil unknown element", ErrMalformedUnknownElement)
-	}
-	if element.Provider != provider {
-		return nil, fmt.Errorf(
-			"%w: element belongs to %q, target provider is %q",
-			ErrUnknownElementProviderMismatch,
-			element.Provider,
-			provider,
-		)
 	}
 	if !json.Valid(element.Raw) {
 		return nil, fmt.Errorf("%w: invalid raw JSON", ErrMalformedUnknownElement)
 	}
+	// Replay Raw verbatim regardless of which provider emitted it: unknown
+	// to rellm does not mean unknown to the target provider (all backends
+	// speak a Responses API dialect, and providers adopt new item types
+	// before rellm parses them). The Provider field is provenance metadata
+	// only; if the target provider rejects the item, the API error says so.
 	return append(json.RawMessage(nil), element.Raw...), nil
 }
 
@@ -461,13 +460,13 @@ func StdToConversationElements(items []json.RawMessage, pTag ProviderTag) ([]Con
 	return elements, nil
 }
 
-func StdToProviderRepresentation(elements []ConversationElement, pTag ProviderTag) ([]json.RawMessage, error) {
+func StdToProviderRepresentation(elements []ConversationElement) ([]json.RawMessage, error) {
 	if len(elements) == 0 {
 		return nil, nil
 	}
 	raw := make([]json.RawMessage, 0, len(elements))
 	for _, e := range elements {
-		b, err := marshalConversationElement(e, pTag)
+		b, err := marshalConversationElement(e)
 		if err != nil {
 			return nil, err
 		}
@@ -479,7 +478,7 @@ func StdToProviderRepresentation(elements []ConversationElement, pTag ProviderTa
 	return raw, nil
 }
 
-func marshalConversationElement(element ConversationElement, pTag ProviderTag) (json.RawMessage, error) {
+func marshalConversationElement(element ConversationElement) (json.RawMessage, error) {
 	switch el := element.(type) {
 	case *UserMessage:
 		return marshalMessageAsTypedParts(el.MessageContent)
@@ -496,7 +495,7 @@ func marshalConversationElement(element ConversationElement, pTag ProviderTag) (
 	case *ImageGeneration:
 		return marshalImageGeneration(el)
 	case *UnknownElement:
-		return unknownElementRepresentation(el, string(pTag))
+		return unknownElementRepresentation(el)
 	default:
 		return nil, errors.Join(ErrOpenAIMarshalingConversationElement, fmt.Errorf("unknown element type: %T", el))
 	}

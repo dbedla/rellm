@@ -141,10 +141,15 @@ func TestOpenRouterToConversationElements_Unknown(t *testing.T) {
 func TestOpenRouterToProviderRepresentation_UnknownFromOtherProvider(t *testing.T) {
 	p := &OpenRouterProvider{}
 	element := newUnknownElement(string(ProviderTagProviderOpenAI), "future_output", "", json.RawMessage(`{"type":"future_output"}`))
+	known := &UserMessage{MessageContent{Role: "user", Content: []MessagePart{{Type: "input_text", Text: "hi"}}}}
 
-	wire, err := p.ToProviderRepresentation([]ConversationElement{element})
-	assert.ErrorIs(t, err, ErrUnknownElementProviderMismatch)
-	assert.Nil(t, wire)
+	// Unknown-to-rellm is not unknown-to-provider: Raw replays verbatim
+	// across a provider switch; the known element serializes normally.
+	wire, err := p.ToProviderRepresentation([]ConversationElement{element, known})
+	assert.NoError(t, err)
+	assert.Len(t, wire, 2)
+	assert.JSONEq(t, `{"type":"future_output"}`, string(wire[0]))
+	assert.JSONEq(t, `{"role":"user","type":"message","content":[{"type":"input_text","text":"hi"}]}`, string(wire[1]))
 }
 
 func TestOpenRouterReasoningContentRoundTrip(t *testing.T) {

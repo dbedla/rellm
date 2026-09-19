@@ -146,7 +146,7 @@ func (p *LMStudioProvider) marshalConversationElement(element ConversationElemen
 	case *ImageGeneration:
 		return marshalImageGeneration(el)
 	case *UnknownElement:
-		return unknownElementRepresentation(el, string(ProviderTagProviderLMStudio))
+		return unknownElementRepresentation(el)
 	default:
 		return nil, errors.Join(ErrLMSMarshalingConversationElement, fmt.Errorf("unknown conversation element type: %T", el))
 	}

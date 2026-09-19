@@ -62,7 +62,7 @@ func (p *OpenRouterProvider) ToConversationElements(items []json.RawMessage) ([]
 }
 
 func (p *OpenRouterProvider) ToProviderRepresentation(elements []ConversationElement) ([]json.RawMessage, error) {
-	return StdToProviderRepresentation(elements, ProviderTagProviderOpenRouter)
+	return StdToProviderRepresentation(elements)
 }
 
 var _ Provider = &OpenRouterProvider{}

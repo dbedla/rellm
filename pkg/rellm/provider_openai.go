@@ -62,7 +62,7 @@ func (p *OpenAIProvider) ToConversationElements(items []json.RawMessage) ([]Conv
 }
 
 func (p *OpenAIProvider) ToProviderRepresentation(elements []ConversationElement) ([]json.RawMessage, error) {
-	return StdToProviderRepresentation(elements, ProviderTagProviderOpenAI)
+	return StdToProviderRepresentation(elements)
 }
 
 var _ Provider = &OpenAIProvider{}
