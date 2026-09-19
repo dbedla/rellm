@@ -8,6 +8,7 @@ var ErrBuildNoProvider = errors.New("missing provider")
 var ErrBuildNoConversation = errors.New("missing conversation")
 var ErrMalformedConversationLine = errors.New("malformed conversation line")
 
+var ErrEmptyResponse = errors.New("empty response")
 var ErrNoNewConversationElementAfterDispatch = errors.New("no new conversation element")
 var ErrNoToolsetButToolCallRequested = errors.New("no toolset provided but request to call tool received")
 var ErrWhileDispatchToolCall = errors.New("unable to dispatch tool call")

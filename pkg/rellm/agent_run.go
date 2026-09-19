@@ -303,6 +303,10 @@ func (a *Agent) post(ctx context.Context, req *ResponsesAPIReq) (*ResponsesAPIRe
 		return nil, err
 	}
 
+	if resp == nil {
+		return nil, ErrEmptyResponse
+	}
+
 	if a.inspectResp != nil {
 		a.inspectResp(resp)
 	}
