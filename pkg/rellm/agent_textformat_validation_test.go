@@ -3,7 +3,7 @@ package rellm_test
 import (
 	"testing"
 
-	"rellm/pkg/rellm"
+	"github.com/dbedla/rellm/pkg/rellm"
 
 	"github.com/stretchr/testify/assert"
 )

@@ -2,8 +2,8 @@ package rellm_test
 
 import (
 	"context"
-	"rellm/internal/examplesutils"
-	"rellm/pkg/rellm"
+	"github.com/dbedla/rellm/internal/examplesutils"
+	"github.com/dbedla/rellm/pkg/rellm"
 	"testing"
 
 	_ "embed"

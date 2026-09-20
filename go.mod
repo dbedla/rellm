@@ -1,4 +1,4 @@
-module rellm
+module github.com/dbedla/rellm
 
 go 1.26.4
 

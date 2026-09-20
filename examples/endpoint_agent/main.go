@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"rellm/internal/examplesutils"
-	"rellm/pkg/rellm"
+	"github.com/dbedla/rellm/internal/examplesutils"
+	"github.com/dbedla/rellm/pkg/rellm"
 
 	"github.com/fatih/color"
 )

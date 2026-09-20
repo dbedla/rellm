@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"rellm/internal/examplesutils"
-	"rellm/pkg/rellm"
+	"github.com/dbedla/rellm/internal/examplesutils"
+	"github.com/dbedla/rellm/pkg/rellm"
 	"testing"
 
 	"github.com/stretchr/testify/mock"

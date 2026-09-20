@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"rellm/pkg/rellm"
+	"github.com/dbedla/rellm/pkg/rellm"
 	"strings"
 
 	"github.com/fatih/color"

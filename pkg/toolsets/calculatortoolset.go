@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"rellm/pkg/rellm"
+	"github.com/dbedla/rellm/pkg/rellm"
 )
 
 var _ rellm.Toolset = (*CalculatorToolset)(nil)

@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"rellm/pkg/rellm"
+	"github.com/dbedla/rellm/pkg/rellm"
 	"strings"
 	"testing"
 
@@ -124,11 +124,18 @@ type Person struct {
 	City string `json:"city" jsonschema:"description=City of residence"`
 }
 
+// golden files contain no $id; strip the one the reflector derives from the module path
+var testTextFormatSchema = func() *jsonschema.Schema {
+	s := (&jsonschema.Reflector{DoNotReference: true}).Reflect(&Person{})
+	s.ID = ""
+	return s
+}()
+
 var testTextFormat = rellm.TextFormat{
 	Type:   "json_schema",
 	Name:   "person",
 	Strict: true,
-	Schema: (&jsonschema.Reflector{DoNotReference: true}).Reflect(&Person{}),
+	Schema: testTextFormatSchema,
 }
 
 const structuredOutputSysPrompt = `You are an assistant that extracts structured information from user text and returns only valid JSON matching the requested schema.`

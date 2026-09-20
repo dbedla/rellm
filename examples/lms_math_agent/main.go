@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"rellm/internal/examplesutils"
+	"github.com/dbedla/rellm/internal/examplesutils"
 
 	"github.com/fatih/color"
 )
