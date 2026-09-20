@@ -3,7 +3,7 @@ package examplesutils_test
 import (
 	"os"
 	"path/filepath"
-	"rellm/internal/examplesutils"
+	"github.com/dbedla/rellm/internal/examplesutils"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

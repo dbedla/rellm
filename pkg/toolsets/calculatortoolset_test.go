@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"rellm/pkg/rellm"
+	"github.com/dbedla/rellm/pkg/rellm"
 )
 
 func dispatch(t *testing.T, tool, args string) rellm.ToolCallResult {

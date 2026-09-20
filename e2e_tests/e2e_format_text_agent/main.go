@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"os"
-	"rellm/pkg/rellm"
+	"github.com/dbedla/rellm/pkg/rellm"
 
 	"github.com/fatih/color"
 	"github.com/invopop/jsonschema"

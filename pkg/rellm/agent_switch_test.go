@@ -7,8 +7,8 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"rellm/internal/examplesutils"
-	"rellm/pkg/rellm"
+	"github.com/dbedla/rellm/internal/examplesutils"
+	"github.com/dbedla/rellm/pkg/rellm"
 	"strings"
 	"testing"
 

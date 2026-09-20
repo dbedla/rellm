@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
-	examplesutils2 "rellm/internal/examplesutils"
-	"rellm/pkg/rellm"
+	examplesutils2 "github.com/dbedla/rellm/internal/examplesutils"
+	"github.com/dbedla/rellm/pkg/rellm"
 
 	"github.com/joho/godotenv"
 )

@@ -6,7 +6,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
-	"rellm/pkg/rellm"
+	"github.com/dbedla/rellm/pkg/rellm"
 	"strings"
 	"testing"
 

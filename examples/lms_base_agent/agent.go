@@ -1,8 +1,8 @@
 package main
 
 import (
-	"rellm/internal/examplesutils"
-	"rellm/pkg/rellm"
+	"github.com/dbedla/rellm/internal/examplesutils"
+	"github.com/dbedla/rellm/pkg/rellm"
 )
 
 const (

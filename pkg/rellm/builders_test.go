@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"rellm/pkg/rellm"
+	"github.com/dbedla/rellm/pkg/rellm"
 
 	"github.com/stretchr/testify/assert"
 )

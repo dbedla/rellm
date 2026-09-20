@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"rellm/pkg/rellm"
+	"github.com/dbedla/rellm/pkg/rellm"
 	"strings"
 
 	"github.com/fatih/color"

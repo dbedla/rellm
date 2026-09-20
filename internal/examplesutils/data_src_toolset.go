@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"rellm/pkg/rellm"
+	"github.com/dbedla/rellm/pkg/rellm"
 )
 
 var _ rellm.Toolset = (*DataSrcToolset)(nil)
