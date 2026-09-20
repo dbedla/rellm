@@ -8,7 +8,8 @@ to balance cost and result quality.
 
 A key feature is easy custom toolset injection: you decide exactly how the
 agent can interact with your system. More control over the toolset means
-fewer unexpected side effects when the model hallucinates.
+fewer unexpected side effects when the model hallucinates (see
+[Adding tools to your agent](#adding-tools-to-your-agent)).
 
 Another is a predefined JSON output format: instead of parsing free text, the
 agent returns a schema-validated structure (see
@@ -17,11 +18,15 @@ the two — a narrow toolset and a strict output schema — and a small,
 specialized agent becomes very powerful: the model is constrained at both
 ends, on what it can do and on what it can say.
 
+## Installation
+```bash
+go get github.com/dbedla/rellm/pkg/rellm
+```
+
 ## Table of contents
 
 - [Why small, specialized agents?](#why-small-specialized-agents)
 - [Supported providers & models](#supported-providers--models)
-- [Installation](#installation)
 - [Quick start](#quick-start)
   - [Run the example agent](#run-the-example-agent)
   - [Build your own agent](#build-your-own-agent)
@@ -82,9 +87,6 @@ Benchmarks:
 - [LiveBench](https://livebench.ai)
 - [LMArena](https://arena.ai/leaderboard)
 - [Model Evaluation & Threat Research](https://metr.org)
-
-## Installation
-Intentionally left blank.
 
 ## Quick start
 
