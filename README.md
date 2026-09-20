@@ -12,7 +12,7 @@ fewer unexpected side effects when the model hallucinates (see
 [Adding tools to your agent](#adding-tools-to-your-agent)).
 
 Another is a predefined JSON output format: instead of parsing free text, the
-agent returns a schema-validated structure (see
+agent returns a schema-constrained structure (see
 [Structured output (JSON schema)](#structured-output-json-schema)). Combine
 the two — a narrow toolset and a strict output schema — and a small,
 specialized agent becomes very powerful: the model is constrained at both
@@ -136,7 +136,7 @@ import (
 	"context"
 	"fmt"
 
-	"rellm/pkg/rellm"
+	"github.com/dbedla/rellm/pkg/rellm"
 )
 
 func main() {
@@ -205,7 +205,7 @@ import (
 	"github.com/invopop/jsonschema"
 	"github.com/joho/godotenv"
 
-	"rellm/pkg/rellm"
+	"github.com/dbedla/rellm/pkg/rellm"
 )
 
 // The struct tags describe the schema.
