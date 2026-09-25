@@ -113,12 +113,11 @@ func TestFilesystemConversation_AppendAndLoad(t *testing.T) {
 	err := s.Append(ctx, delta)
 	assert.NoError(t, err)
 
-	// Storage format: one canonical kind-tagged element per line (map marshal
-	// sorts keys alphabetically).
+	// Storage format: one canonical kind-tagged element per line.
 	content, err := os.ReadFile(path)
 	assert.NoError(t, err)
-	expected := `{"content":[{"type":"input_text","text":"hi"}],"kind":"user_message","role":"user"}` + "\n" +
-		`{"content":[{"type":"output_text","text":"hello"}],"kind":"assistant_message","role":"assistant"}` + "\n"
+	expected := `{"kind":"user_message","role":"user","content":[{"type":"input_text","text":"hi"}]}` + "\n" +
+		`{"kind":"assistant_message","role":"assistant","content":[{"type":"output_text","text":"hello"}]}` + "\n"
 	assert.Equal(t, expected, string(content))
 
 	msgs, err := s.Load(ctx)
