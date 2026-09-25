@@ -262,85 +262,107 @@ func messagePartsWithStrings(texts []string) []MessagePart {
 
 // marshalFunctionCall serializes a FunctionCall for the Responses wire format.
 func marshalFunctionCall(el *FunctionCall) (json.RawMessage, error) {
-	fc := map[string]interface{}{
-		"id":        el.ID,
-		"name":      el.Name,
-		"arguments": json.RawMessage(el.Args),
-		"call_id":   el.CallID,
-		"status":    "completed",
-		"type":      "function_call",
+	type payload struct {
+		ID        string          `json:"id"`
+		Name      string          `json:"name"`
+		Arguments json.RawMessage `json:"arguments"`
+		CallID    string          `json:"call_id"`
+		Status    string          `json:"status"`
+		Type      string          `json:"type"`
 	}
-	return json.Marshal(fc)
+	p := payload{
+		ID:        el.ID,
+		Name:      el.Name,
+		Arguments: el.Args,
+		CallID:    el.CallID,
+		Status:    "completed",
+		Type:      "function_call",
+	}
+	return json.Marshal(p)
 }
 
 // marshalFunctionCallResp serializes a FunctionCallResp for the Responses wire
 // format.
 func marshalFunctionCallResp(el *FunctionCallResp) (json.RawMessage, error) {
-	resp := map[string]interface{}{
-		"call_id": el.CallID,
-		"type":    "function_call_output",
+	type payload struct {
+		ID     string `json:"id,omitempty"`
+		CallID string `json:"call_id"`
+		Type   string `json:"type"`
+		Output string `json:"output"`
 	}
-	if el.ID != "" {
-		resp["id"] = el.ID
+	p := payload{
+		ID:     el.ID,
+		CallID: el.CallID,
+		Type:   "function_call_output",
+		Output: el.Output,
 	}
-	// Use Output which may be JSON-encoded or plain text.
-	resp["output"] = el.Output
-	return json.Marshal(resp)
+	return json.Marshal(p)
 }
 
 // marshalImageGeneration serializes an ImageGeneration for the Responses wire
 // format.
 func marshalImageGeneration(el *ImageGeneration) (json.RawMessage, error) {
-	sig := map[string]interface{}{
-		"id":     el.ID,
-		"type":   "image_generation_call",
-		"status": el.Status,
-		"result": el.Result,
+	type payload struct {
+		ID     string `json:"id"`
+		Type   string `json:"type"`
+		Status string `json:"status"`
+		Result string `json:"result"`
 	}
-	return json.Marshal(sig)
+	p := payload{
+		ID:     el.ID,
+		Type:   "image_generation_call",
+		Status: el.Status,
+		Result: el.Result,
+	}
+	return json.Marshal(p)
 }
 
 // marshalMessageAsUntypedParts serializes a role-typed message whose content
 // is always a structured array and whose wire item carries no "type" field
 // (LM Studio shape).
 func marshalMessageAsUntypedParts(mc MessageContent) (json.RawMessage, error) {
-	payload := map[string]interface{}{
-		"role": mc.Role,
+	type payload struct {
+		ID      string        `json:"id,omitempty"`
+		Role    string        `json:"role"`
+		Status  string        `json:"status,omitempty"`
+		Content []MessagePart `json:"content"`
 	}
-	if mc.ID != "" {
-		payload["id"] = mc.ID
+	content := mc.Content
+	if len(content) == 0 {
+		content = []MessagePart{}
 	}
-	if mc.Status != "" {
-		payload["status"] = mc.Status
+	p := payload{
+		ID:      mc.ID,
+		Role:    mc.Role,
+		Status:  mc.Status,
+		Content: content,
 	}
-	if len(mc.Content) == 0 {
-		payload["content"] = []MessagePart{}
-	} else {
-		payload["content"] = mc.Content
-	}
-	return json.Marshal(payload)
+	return json.Marshal(p)
 }
 
 // marshalMessageAsTypedParts serializes a role-typed message with a
 // "type":"message" field whose content is always a structured array
 // (OpenRouter user-message shape).
 func marshalMessageAsTypedParts(mc MessageContent) (json.RawMessage, error) {
-	payload := map[string]interface{}{
-		"role": mc.Role,
-		"type": "message",
+	type payload struct {
+		ID      string        `json:"id,omitempty"`
+		Role    string        `json:"role"`
+		Type    string        `json:"type"`
+		Status  string        `json:"status,omitempty"`
+		Content []MessagePart `json:"content"`
 	}
-	if mc.ID != "" {
-		payload["id"] = mc.ID
+	content := mc.Content
+	if len(content) == 0 {
+		content = []MessagePart{}
 	}
-	if mc.Status != "" {
-		payload["status"] = mc.Status
+	p := payload{
+		ID:      mc.ID,
+		Role:    mc.Role,
+		Type:    "message",
+		Status:  mc.Status,
+		Content: content,
 	}
-	if len(mc.Content) == 0 {
-		payload["content"] = []MessagePart{}
-	} else {
-		payload["content"] = mc.Content
-	}
-	return json.Marshal(payload)
+	return json.Marshal(p)
 }
 
 // marshalMessageAsTypedText serializes a role-typed message with a
@@ -349,24 +371,29 @@ func marshalMessageAsTypedParts(mc MessageContent) (json.RawMessage, error) {
 // too); multimodal content stays an array (OpenRouter assistant/system
 // shape).
 func marshalMessageAsTypedText(mc MessageContent) (json.RawMessage, error) {
-	payload := map[string]interface{}{
-		"role": mc.Role,
-		"type": "message",
+	type payload struct {
+		ID      string `json:"id,omitempty"`
+		Role    string `json:"role"`
+		Type    string `json:"type"`
+		Status  string `json:"status,omitempty"`
+		Content any    `json:"content"`
 	}
-	if mc.ID != "" {
-		payload["id"] = mc.ID
-	}
-	if mc.Status != "" {
-		payload["status"] = mc.Status
-	}
+	var content any
 	if len(mc.Content) == 0 {
-		payload["content"] = ""
+		content = ""
 	} else if hasImageParts(mc.Content) {
-		payload["content"] = mc.Content
+		content = mc.Content
 	} else {
-		payload["content"] = TextFromContent(mc.Content)
+		content = TextFromContent(mc.Content)
 	}
-	return json.Marshal(payload)
+	p := payload{
+		ID:      mc.ID,
+		Role:    mc.Role,
+		Type:    "message",
+		Status:  mc.Status,
+		Content: content,
+	}
+	return json.Marshal(p)
 }
 
 // hasImageParts reports whether any part carries an image (multimodal content
@@ -390,61 +417,65 @@ func marshalReasoningWithSignature(el *Reasoning) (json.RawMessage, error) {
 	if el.Text == "" && el.Signature == "" && el.EncryptedContent == "" && len(el.Summary) == 0 {
 		return nil, nil
 	}
-	r := map[string]interface{}{
-		"id":   el.ID,
-		"type": "reasoning",
+	type payload struct {
+		ID               string                  `json:"id"`
+		Type             string                  `json:"type"`
+		Status           string                  `json:"status,omitempty"`
+		Summary          *[]ReasoningSummaryPart `json:"summary,omitempty"`
+		Content          []MessagePart           `json:"content,omitempty"`
+		Signature        string                  `json:"signature,omitempty"`
+		EncryptedContent string                  `json:"encrypted_content,omitempty"`
+		Format           string                  `json:"format,omitempty"`
 	}
-
-	if len(el.Status) > 0 {
-		r["status"] = el.Status
+	p := payload{
+		ID:               el.ID,
+		Type:             "reasoning",
+		Status:           el.Status,
+		Signature:        el.Signature,
+		EncryptedContent: el.EncryptedContent,
+		Format:           el.Format,
 	}
 	// Signed and encrypted reasoning blocks are provider continuation state; preserve
 	// their summary field even when it is empty.
 	if len(el.Summary) > 0 {
-		r["summary"] = el.Summary
+		p.Summary = &el.Summary
 	} else if el.Signature != "" || el.EncryptedContent != "" {
-		r["summary"] = []ReasoningSummaryPart{}
+		emptySummary := []ReasoningSummaryPart{}
+		p.Summary = &emptySummary
 	}
 	if el.Text != "" {
-		r["content"] = []MessagePart{{Type: "reasoning_text", Text: el.Text}}
+		p.Content = []MessagePart{{Type: "reasoning_text", Text: el.Text}}
 	}
-	if el.Signature != "" {
-		r["signature"] = el.Signature
-	}
-	if el.EncryptedContent != "" {
-		r["encrypted_content"] = el.EncryptedContent
-	}
-	if el.Format != "" {
-		r["format"] = el.Format
-	}
-	return json.Marshal(r)
+	return json.Marshal(p)
 }
 
 // marshalReasoningWithSummary serializes a Reasoning item, always including
 // the summary field (even when empty) for faithful round-trip; no signature
 // support (LM Studio shape).
 func marshalReasoningWithSummary(el *Reasoning) (json.RawMessage, error) {
-	payload := map[string]interface{}{
-		"id":   el.ID,
-		"type": "reasoning",
+	type payload struct {
+		ID               string                 `json:"id"`
+		Type             string                 `json:"type"`
+		Status           string                 `json:"status,omitempty"`
+		Summary          []ReasoningSummaryPart `json:"summary"`
+		Content          []MessagePart          `json:"content,omitempty"`
+		EncryptedContent string                 `json:"encrypted_content,omitempty"`
+		Format           string                 `json:"format,omitempty"`
 	}
-
-	if len(el.Status) > 0 {
-		payload["status"] = el.Status
+	summary := el.Summary
+	if len(summary) == 0 {
+		summary = []ReasoningSummaryPart{}
 	}
-
-	payload["summary"] = []ReasoningSummaryPart{}
-	if len(el.Summary) > 0 {
-		payload["summary"] = el.Summary
+	p := payload{
+		ID:               el.ID,
+		Type:             "reasoning",
+		Status:           el.Status,
+		Summary:          summary,
+		EncryptedContent: el.EncryptedContent,
+		Format:           el.Format,
 	}
 	if el.Text != "" {
-		payload["content"] = []MessagePart{{Type: "reasoning_text", Text: el.Text}}
+		p.Content = []MessagePart{{Type: "reasoning_text", Text: el.Text}}
 	}
-	if el.EncryptedContent != "" {
-		payload["encrypted_content"] = el.EncryptedContent
-	}
-	if el.Format != "" {
-		payload["format"] = el.Format
-	}
-	return json.Marshal(payload)
+	return json.Marshal(p)
 }

@@ -253,62 +253,109 @@ func unknownElementRepresentation(element *UnknownElement) (json.RawMessage, err
 	return append(json.RawMessage(nil), element.Raw...), nil
 }
 
-// marshalWithKind serializes v and injects the canonical "kind" discriminator.
-func marshalWithKind(kind ElementKind, v any) (json.RawMessage, error) {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return nil, err
-	}
-	var m map[string]json.RawMessage
-	if err := json.Unmarshal(b, &m); err != nil {
-		return nil, err
-	}
-	m["kind"], err = json.Marshal(string(kind))
-	if err != nil {
-		return nil, err
-	}
-	return json.Marshal(m)
-}
-
 // Canonical serialization: storage (and anything else) marshals elements to a
 // self-describing form keyed on "kind". Provider wire serialization stays in
 // ToProviderRepresentation and never goes through these methods.
 
 func (m *UserMessage) MarshalJSON() ([]byte, error) {
-	return marshalWithKind(KindUserMessage, &m.MessageContent)
+	type payload struct {
+		Kind ElementKind `json:"kind"`
+		*MessageContent
+	}
+	p := payload{
+		Kind:           KindUserMessage,
+		MessageContent: &m.MessageContent,
+	}
+	return json.Marshal(p)
 }
 
 func (m *AssistantMessage) MarshalJSON() ([]byte, error) {
-	return marshalWithKind(KindAssistantMessage, &m.MessageContent)
+	type payload struct {
+		Kind ElementKind `json:"kind"`
+		*MessageContent
+	}
+	p := payload{
+		Kind:           KindAssistantMessage,
+		MessageContent: &m.MessageContent,
+	}
+	return json.Marshal(p)
 }
 
 func (m *SystemMessage) MarshalJSON() ([]byte, error) {
-	return marshalWithKind(KindSystemMessage, &m.MessageContent)
+	type payload struct {
+		Kind ElementKind `json:"kind"`
+		*MessageContent
+	}
+	p := payload{
+		Kind:           KindSystemMessage,
+		MessageContent: &m.MessageContent,
+	}
+	return json.Marshal(p)
 }
 
 func (f *FunctionCall) MarshalJSON() ([]byte, error) {
 	type plain FunctionCall
-	return marshalWithKind(KindFunctionCall, (*plain)(f))
+	type payload struct {
+		Kind ElementKind `json:"kind"`
+		*plain
+	}
+	p := payload{
+		Kind:  KindFunctionCall,
+		plain: (*plain)(f),
+	}
+	return json.Marshal(p)
 }
 
 func (f *FunctionCallResp) MarshalJSON() ([]byte, error) {
 	type plain FunctionCallResp
-	return marshalWithKind(KindFunctionCallResp, (*plain)(f))
+	type payload struct {
+		Kind ElementKind `json:"kind"`
+		*plain
+	}
+	p := payload{
+		Kind:  KindFunctionCallResp,
+		plain: (*plain)(f),
+	}
+	return json.Marshal(p)
 }
 
 func (r *Reasoning) MarshalJSON() ([]byte, error) {
 	type plain Reasoning
-	return marshalWithKind(KindReasoning, (*plain)(r))
+	type payload struct {
+		Kind ElementKind `json:"kind"`
+		*plain
+	}
+	p := payload{
+		Kind:  KindReasoning,
+		plain: (*plain)(r),
+	}
+	return json.Marshal(p)
 }
 
 func (i *ImageGeneration) MarshalJSON() ([]byte, error) {
 	type plain ImageGeneration
-	return marshalWithKind(KindImageGeneration, (*plain)(i))
+	type payload struct {
+		Kind ElementKind `json:"kind"`
+		*plain
+	}
+	p := payload{
+		Kind:  KindImageGeneration,
+		plain: (*plain)(i),
+	}
+	return json.Marshal(p)
 }
 
 func (u *UnknownElement) MarshalJSON() ([]byte, error) {
 	type plain UnknownElement
-	return marshalWithKind(KindUnknown, (*plain)(u))
+	type payload struct {
+		Kind ElementKind `json:"kind"`
+		*plain
+	}
+	p := payload{
+		Kind:  KindUnknown,
+		plain: (*plain)(u),
+	}
+	return json.Marshal(p)
 }
 
 // ParseConversationElement decodes a canonical (kind-tagged) element produced
