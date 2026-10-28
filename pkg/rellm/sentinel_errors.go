@@ -32,7 +32,6 @@ var ErrInvalidImageData = errors.New("image data is not a detectable image (http
 var ErrImageFileUnreadable = errors.New("image file is not readable")
 var ErrInvalidImageDetail = errors.New("invalid image detail")
 var ErrEmptyImageFileID = errors.New("image file id is empty")
-var ErrImageURLAndFileID = errors.New("image url and file id are mutually exclusive; use WithImageFileID for file ids")
 var ErrInvalidPromptCacheBreakpointMode = errors.New("invalid prompt cache breakpoint mode")
 var ErrInvalidPromptCacheBreakpointTTL = errors.New("invalid prompt cache breakpoint ttl")
 var ErrEmptyReasoningEffort = errors.New("reasoning effort cannot be empty")

@@ -110,11 +110,12 @@
 // MIME type and base64-encode the data into a data URL at Build.
 // WithImageFileID references an image uploaded via the provider's Files API.
 // The ImageOption of every method carries the doc-mentioned optional fields:
-// Detail (defaults to auto), FileID (WithImageFileID only; mutually exclusive
-// with the image URL), and CacheBreakpoint (an OpenAI-style prompt-cache
-// boundary; OpenRouter converts it for Anthropic-style providers). A message
-// or at least one image is required; repeat calls accumulate images in call
-// order. Data-URL images persist into the conversation history (JSONL) and
+// Detail (defaults to auto) and CacheBreakpoint (an OpenAI-style
+// prompt-cache boundary; OpenRouter converts it for Anthropic-style
+// providers); a file ID is set only through WithImageFileID's own argument
+// because input_image carries either image_url or file_id, never both. A
+// message or at least one image is required; repeat calls accumulate images
+// in call order. Data-URL images persist into the conversation history (JSONL) and
 // are re-sent on every round — host the image, upload it, or pass a URL to
 // keep history small.
 //

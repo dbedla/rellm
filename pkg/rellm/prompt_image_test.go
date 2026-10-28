@@ -207,33 +207,6 @@ func TestPromptBuilder_WithImageFileID(t *testing.T) {
 	assert.ErrorIs(t, err, ErrEmptyImageFileID)
 }
 
-func TestPromptBuilder_FileIDOnOtherDoorsRejected(t *testing.T) {
-	fid := "file-123"
-	_, err := NewPromptBuilder().
-		WithMessage("hi").
-		WithImageURL("https://example.com/a.png", ImageOption{FileID: &fid}).
-		Build()
-	assert.ErrorIs(t, err, ErrImageURLAndFileID)
-
-	_, err = NewPromptBuilder().
-		WithMessage("hi").
-		WithImageDataURL("data:image/png;base64,iVBORw0KGgo=", ImageOption{FileID: &fid}).
-		Build()
-	assert.ErrorIs(t, err, ErrImageURLAndFileID)
-
-	_, err = NewPromptBuilder().
-		WithMessage("hi").
-		WithImageBytes(pngHeader, ImageOption{FileID: &fid}).
-		Build()
-	assert.ErrorIs(t, err, ErrImageURLAndFileID)
-
-	_, err = NewPromptBuilder().
-		WithMessage("hi").
-		WithImageFile(filepath.Join(t.TempDir(), "x.png"), ImageOption{FileID: &fid}).
-		Build()
-	assert.ErrorIs(t, err, ErrImageURLAndFileID)
-}
-
 func TestPromptBuilder_CacheBreakpoint(t *testing.T) {
 	bp := PromptCacheBreakpoint{TTL: PromptCacheTTL30m} // Mode empty → explicit
 	prompt, err := NewPromptBuilder().

@@ -296,13 +296,13 @@ prompt, err := rellm.NewPromptBuilder().
 
 A message or at least one image is required; image-only prompts are valid.
 Repeat calls accumulate images in call order. The `ImageOption` carries the
-optional per-image fields the API docs define: `Detail` (defaults to `auto`),
-`FileID` (`WithImageFileID` only — the wire part carries either `image_url`
-or `file_id`, never both), and `CacheBreakpoint` (`PromptCacheBreakpoint`,
-an OpenAI-style prompt-cache boundary; OpenRouter converts it for
-Anthropic-style providers). Data-URL images persist into the conversation
-history and are re-sent on every round — host the image, upload it, or pass
-a URL to keep the history small.
+optional per-image fields the API docs define: `Detail` (defaults to `auto`)
+and `CacheBreakpoint` (`PromptCacheBreakpoint`, an OpenAI-style prompt-cache
+boundary; OpenRouter converts it for Anthropic-style providers). A file ID
+is set only through `WithImageFileID`'s own argument — the wire part carries
+either `image_url` or `file_id`, never both. Data-URL images persist into the
+conversation history and are re-sent on every round — host the image, upload
+it, or pass a URL to keep the history small.
 
 ### Adding tools to your agent
 

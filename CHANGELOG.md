@@ -5,9 +5,11 @@
 - Added image inputs for vision prompts: `PromptBuilder.WithImageURL`,
   `WithImageDataURL`, `WithImageBytes`, `WithImageFile`, and `WithImageFileID`,
   each taking an `ImageOption` carrying the doc-mentioned optional fields:
-  `Detail` (defaults to `auto`), `FileID` (uploaded-file reference), and
-  `CacheBreakpoint` (`PromptCacheBreakpoint`, an OpenAI-style prompt-cache
-  boundary converted by OpenRouter for Anthropic-style providers); a message
+  `Detail` (defaults to `auto`) and `CacheBreakpoint` (`PromptCacheBreakpoint`,
+  an OpenAI-style prompt-cache boundary converted by OpenRouter for
+  Anthropic-style providers); a file ID is set only through
+  `WithImageFileID`'s argument because a wire part carries either
+  `image_url` or `file_id`, never both; a message
   or at least one image is now required to build a prompt.
 - Fixed `MessagePart.ImageURL` wire type: `input_image.image_url` is a string
   (URL or data URL), not an object — provider echoes of image parts previously

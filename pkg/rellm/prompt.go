@@ -61,11 +61,6 @@ type PromptCacheBreakpoint struct {
 type ImageOption struct {
 	// Detail sets the image detail level; nil defaults to ImageDetailAuto.
 	Detail *ImageDetail `json:"detail,omitempty"`
-	// FileID references an image uploaded via the provider's Files API
-	// (input_image.file_id) instead of inline data or a URL. Only
-	// meaningful with WithImageFileID; rejected on the other doors because
-	// input_image carries either image_url or file_id, never both.
-	FileID *string `json:"file_id,omitempty"`
 	// CacheBreakpoint marks a prompt-cache boundary through this image.
 	CacheBreakpoint *PromptCacheBreakpoint `json:"prompt_cache_breakpoint,omitempty"`
 }
@@ -186,8 +181,7 @@ func (b *PromptBuilder) WithImageFile(path string, opts ImageOption) *PromptBuil
 
 // WithImageFileID adds an image uploaded via the provider's Files API,
 // referenced by its file ID: the part carries input_image.file_id instead
-// of image_url. opts.FileID is redundant here (the door's own ID wins) and
-// rejected on every other door. Repeat calls accumulate images in call order.
+// of image_url. Repeat calls accumulate images in call order.
 func (b *PromptBuilder) WithImageFileID(fileID string, opts ImageOption) *PromptBuilder {
 	b.images = append(b.images, promptImageInput{kind: imageInputFileID, url: fileID, opts: opts})
 	return b
@@ -307,12 +301,6 @@ func resolveImages(inputs []promptImageInput) ([]MessagePart, error) {
 			part.FileID = &fileID
 			parts = append(parts, part)
 			continue
-		}
-
-		// The remaining doors all carry an image_url; a file id alongside
-		// one would send both, and the wire part accepts either, never both.
-		if in.opts.FileID != nil {
-			return nil, errors.Join(ErrImageURLAndFileID, fmt.Errorf("file id set on a url/data door; use WithImageFileID"))
 		}
 
 		var url string
