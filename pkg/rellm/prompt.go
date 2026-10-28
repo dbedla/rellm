@@ -303,46 +303,57 @@ func resolveImages(inputs []promptImageInput) ([]MessagePart, error) {
 			continue
 		}
 
-		var url string
-		switch in.kind {
-		case imageInputURL:
-			url = strings.TrimSpace(in.url)
-			if url == "" {
-				return nil, ErrEmptyImageURL
-			}
-			if strings.HasPrefix(strings.ToLower(url), "data:") {
-				return nil, errors.Join(ErrImageURLIsDataURL, fmt.Errorf("url: %s", in.url))
-			}
-
-		case imageInputDataURL:
-			if !strings.HasPrefix(strings.ToLower(in.url), "data:image/") {
-				return nil, errors.Join(ErrInvalidImageDataURL, fmt.Errorf("data url must start with data:image/, got: %s", in.url))
-			}
-			url = in.url
-
-		case imageInputBytes:
-			dataURL, err := imageDataURL(in.data)
-			if err != nil {
-				return nil, err
-			}
-			url = dataURL
-
-		case imageInputFile:
-			data, err := os.ReadFile(in.url)
-			if err != nil {
-				return nil, errors.Join(ErrImageFileUnreadable, err)
-			}
-			dataURL, err := imageDataURL(data)
-			if err != nil {
-				return nil, err
-			}
-			url = dataURL
+		url, err := extractImgURL(in)
+		if err != nil {
+			return nil, err
 		}
 
 		part.ImageURL = &url
 		parts = append(parts, part)
 	}
 	return parts, nil
+}
+
+func extractImgURL(in promptImageInput) (string, error) {
+	var url string
+	switch in.kind {
+	case imageInputURL:
+		url = strings.TrimSpace(in.url)
+		if url == "" {
+			return "", ErrEmptyImageURL
+		}
+		if strings.HasPrefix(strings.ToLower(url), "data:") {
+			return "", errors.Join(ErrImageURLIsDataURL, fmt.Errorf("url: %s", in.url))
+		}
+
+	case imageInputDataURL:
+		if !strings.HasPrefix(strings.ToLower(in.url), "data:image/") {
+			return "", errors.Join(ErrInvalidImageDataURL, fmt.Errorf("data url must start with data:image/, got: %s", in.url))
+		}
+		url = in.url
+
+	case imageInputBytes:
+		dataURL, err := imageDataURL(in.data)
+		if err != nil {
+			return "", err
+		}
+		url = dataURL
+
+	case imageInputFile:
+		data, err := os.ReadFile(in.url)
+		if err != nil {
+			return "", errors.Join(ErrImageFileUnreadable, err)
+		}
+		dataURL, err := imageDataURL(data)
+		if err != nil {
+			return "", err
+		}
+		url = dataURL
+	default:
+		return "", ErrImageNoContent
+	}
+
+	return url, nil
 }
 
 // resolveDetail validates the option's detail level and defaults to auto.
