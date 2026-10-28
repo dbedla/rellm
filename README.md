@@ -31,6 +31,7 @@ go get github.com/dbedla/rellm/pkg/rellm
   - [Run the example agent](#run-the-example-agent)
   - [Build your own agent](#build-your-own-agent)
   - [Structured output (JSON schema)](#structured-output-json-schema)
+  - [Image inputs (vision)](#image-inputs-vision)
   - [Adding tools to your agent](#adding-tools-to-your-agent)
 - [Tips](#tips)
 - [External links](#external-links)
@@ -275,6 +276,33 @@ func main() {
 > the schema in the system prompt with an extra instruction to return raw
 > JSON only (no markdown) — see how the LMS agent does it in
 > [e2e_tests/e2e_format_text_agent/agent.go](e2e_tests/e2e_format_text_agent/agent.go).
+
+### Image inputs (vision)
+
+Attach images to the prompt with the `PromptBuilder`'s `WithImage*` methods;
+they become `input_image` parts of the user message. Every method takes an
+`ImageOption` as its last parameter — the zero value means "all defaults":
+
+```go
+prompt, err := rellm.NewPromptBuilder().
+	WithMessage("what is in this image?").
+	WithImageURL("https://example.com/cat.png", rellm.ImageOption{}).    // provider fetches
+	WithImageDataURL("data:image/png;base64,...", rellm.ImageOption{}). // sent as-is
+	WithImageBytes(pngBytes, rellm.ImageOption{}).                         // sniffed + encoded
+	WithImageFile("/tmp/cat.png", rellm.ImageOption{}).                   // read at Build
+	WithImageFileID("file-123", rellm.ImageOption{}).                   // uploaded file
+	Build()
+```
+
+A message or at least one image is required; image-only prompts are valid.
+Repeat calls accumulate images in call order. The `ImageOption` carries the
+optional per-image fields the API docs define: `Detail` (defaults to `auto`),
+`FileID` (`WithImageFileID` only — the wire part carries either `image_url`
+or `file_id`, never both), and `CacheBreakpoint` (`PromptCacheBreakpoint`,
+an OpenAI-style prompt-cache boundary; OpenRouter converts it for
+Anthropic-style providers). Data-URL images persist into the conversation
+history and are re-sent on every round — host the image, upload it, or pass
+a URL to keep the history small.
 
 ### Adding tools to your agent
 

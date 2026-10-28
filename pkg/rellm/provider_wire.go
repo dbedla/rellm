@@ -400,7 +400,7 @@ func marshalMessageAsTypedText(mc MessageContent) (json.RawMessage, error) {
 // that must stay a structured array).
 func hasImageParts(parts []MessagePart) bool {
 	for _, p := range parts {
-		if p.ImageURL != nil {
+		if p.ImageURL != nil || p.FileID != nil {
 			return true
 		}
 	}

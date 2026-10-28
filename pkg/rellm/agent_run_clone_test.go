@@ -65,10 +65,16 @@ func TestCloneConversationElementReasoning(t *testing.T) {
 
 func TestCloneConversationElementMessages(t *testing.T) {
 	mkContent := func() []MessagePart {
+		url := "http://example.com/i.png"
+		fid := "file-123"
+		detail := ImageDetailLow
 		return []MessagePart{{
-			Type:     "input_text",
-			Text:     "hello",
-			ImageURL: &ImageURL{URL: "http://example.com/i.png"},
+			Type:            "input_text",
+			Text:            "hello",
+			ImageURL:        &url,
+			FileID:          &fid,
+			Detail:          &detail,
+			CacheBreakpoint: &PromptCacheBreakpoint{TTL: PromptCacheTTL30m},
 		}}
 	}
 
@@ -103,10 +109,14 @@ func assertMessageContentClone(t *testing.T, orig, clone *MessageContent) {
 	assert.NotSame(t, orig.Content[0].ImageURL, clone.Content[0].ImageURL)
 
 	clone.Content[0].Text = "MUTATED"
-	clone.Content[0].ImageURL.URL = "MUTATED"
+	*clone.Content[0].ImageURL = "MUTATED"
+	*clone.Content[0].FileID = "MUTATED"
+	clone.Content[0].CacheBreakpoint.TTL = "12h"
 
 	assert.Equal(t, "hello", orig.Content[0].Text)
-	assert.Equal(t, "http://example.com/i.png", orig.Content[0].ImageURL.URL)
+	assert.Equal(t, "http://example.com/i.png", *orig.Content[0].ImageURL)
+	assert.Equal(t, "file-123", *orig.Content[0].FileID)
+	assert.Equal(t, PromptCacheTTL30m, orig.Content[0].CacheBreakpoint.TTL)
 }
 
 func TestCloneConversationElementUnknownElement(t *testing.T) {

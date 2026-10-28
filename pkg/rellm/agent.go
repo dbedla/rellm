@@ -175,12 +175,13 @@ type StepStat struct {
 }
 
 // Execute runs a prompt built with PromptBuilder, whose parameters control
-// this interaction. A nil prompt or empty message returns ErrEmptyPrompt.
+// this interaction. A nil prompt, or one with neither message nor images,
+// returns ErrEmptyPrompt.
 func (a *Agent) Execute(ctx context.Context, p *Prompt) (Report, error) {
-	if p == nil || p.msg == "" {
+	if p == nil || p.empty() {
 		return Report{}, ErrEmptyPrompt
 	}
-	return a.run(ctx, p.msg, p.params)
+	return a.run(ctx, p)
 }
 
 // Ask is a minimal entry point for a plain-text question. An empty question

@@ -8,8 +8,8 @@ import (
 	"strings"
 )
 
-func (a *Agent) run(ctx context.Context, msg string, params promptParams) (Report, error) {
-	conversation, err := a.appendConversation(ctx, msg)
+func (a *Agent) run(ctx context.Context, p *Prompt) (Report, error) {
+	conversation, err := a.appendConversation(ctx, p)
 	if err != nil {
 		return Report{}, err
 	}
@@ -19,7 +19,7 @@ func (a *Agent) run(ctx context.Context, msg string, params promptParams) (Repor
 		return Report{}, errors.Join(ErrConversationElementConversion, err)
 	}
 
-	req := toBaseResponsesAPIReq(params, wire)
+	req := toBaseResponsesAPIReq(p.params, wire)
 
 	if a.textFormat != nil {
 		req.Text = &TextConfig{Format: a.textFormat}
@@ -258,14 +258,14 @@ func toBaseResponsesAPIReq(params promptParams, conversation []json.RawMessage) 
 	}
 }
 
-func (a *Agent) appendConversation(ctx context.Context, msg string) ([]ConversationElement, error) {
+func (a *Agent) appendConversation(ctx context.Context, p *Prompt) ([]ConversationElement, error) {
 	conversation, err := a.conversation.Load(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	if len(conversation) == 0 && len(a.sysMsg) != 0 {
-		systemMessage, err := promptMessageToConversation(a.sysMsg, "system")
+		systemMessage, err := promptMessageToConversation(a.sysMsg, "system", nil)
 		if err != nil {
 			return nil, err
 		}
@@ -276,7 +276,7 @@ func (a *Agent) appendConversation(ctx context.Context, msg string) ([]Conversat
 		conversation = append(conversation, systemMessage)
 	}
 
-	userMsg, err := promptMessageToConversation(msg, "user")
+	userMsg, err := promptMessageToConversation(p.msg, "user", p.images)
 	if err != nil {
 		return nil, errors.Join(ErrUserMsgConversionFailed, err)
 	}

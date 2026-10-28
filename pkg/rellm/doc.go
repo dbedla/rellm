@@ -89,6 +89,35 @@
 // A narrow toolset and a strict output schema constrain the model at both
 // ends: what it can do and what it can say.
 //
+// # Image inputs
+//
+// Vision prompts attach images to the user message as input_image parts,
+// built with the PromptBuilder's WithImage* methods. Every method takes an
+// ImageOption as its last parameter; its zero value means "all defaults"
+// (detail defaults to auto):
+//
+//	prompt, err := rellm.NewPromptBuilder().
+//		WithMessage("what is in this image?").
+//		WithImageURL("https://example.com/cat.png", rellm.ImageOption{}).
+//		WithImageDataURL("data:image/png;base64,...", rellm.ImageOption{}).
+//		WithImageBytes(pngBytes, rellm.ImageOption{}).
+//		WithImageFile("/tmp/cat.png", rellm.ImageOption{}).
+//		WithImageFileID("file-123", rellm.ImageOption{}).
+//		Build()
+//
+// WithImageURL sends a web URL the provider fetches (data URLs are rejected
+// there; use WithImageDataURL). WithImageBytes and WithImageFile sniff the
+// MIME type and base64-encode the data into a data URL at Build.
+// WithImageFileID references an image uploaded via the provider's Files API.
+// The ImageOption of every method carries the doc-mentioned optional fields:
+// Detail (defaults to auto), FileID (WithImageFileID only; mutually exclusive
+// with the image URL), and CacheBreakpoint (an OpenAI-style prompt-cache
+// boundary; OpenRouter converts it for Anthropic-style providers). A message
+// or at least one image is required; repeat calls accumulate images in call
+// order. Data-URL images persist into the conversation history (JSONL) and
+// are re-sent on every round — host the image, upload it, or pass a URL to
+// keep history small.
+//
 // # Examples
 //
 // The examples/ and e2e_tests/ directories in the repository contain

@@ -211,9 +211,10 @@ func TestOpenRouterToProviderRepresentation_AssistantMessage(t *testing.T) {
 
 func TestOpenRouterToProviderRepresentation_UserStructuredContent(t *testing.T) {
 	p := &OpenRouterProvider{}
+	url := "https://example.com/img.png"
 	msg := UserMessage{MessageContent{Role: "user", Content: []MessagePart{
 		{Type: "input_text", Text: "hello"},
-		{Type: "image_url", ImageURL: &ImageURL{URL: "https://example.com/img.png"}},
+		{Type: "input_image", ImageURL: &url},
 	}}}
 	raw, err := p.ToProviderRepresentation([]ConversationElement{&msg})
 	assert.NoError(t, err)
