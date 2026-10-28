@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Improved marshaling performance: conversation elements' `MarshalJSON` and
+  the wire marshal helpers now serialize typed payload structs in a single
+  pass instead of round-tripping through `map[string]` and re-injecting the
+  kind discriminator (`marshalWithKind` is gone). Persisted JSONL lines
+  changed key order from alphabetical to struct declaration order
+  (`kind`, `role`, `content`, ...) — parsing is unaffected, but
+  byte-comparisons of stored history will differ.
 - Added image inputs for vision prompts: `PromptBuilder.WithImageURL`,
   `WithImageDataURL`, `WithImageBytes`, `WithImageFile`, and `WithImageFileID`,
   each taking an `ImageOption` carrying the doc-mentioned optional fields:
