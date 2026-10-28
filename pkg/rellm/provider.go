@@ -446,23 +446,38 @@ func JoinTextParts(parts []string) string {
 	return sb.String()
 }
 
-type ImageURL struct {
-	URL string `json:"url"`
-}
-
+// MessagePart is one part of a message's content array. Type selects the
+// wire part: "input_text"/"output_text" carries Text, "input_image" carries
+// ImageURL — a web URL or a base64 data URL — or FileID (an uploaded file),
+// never both, together with Detail, the image detail level (always sent for
+// input_image; OpenRouter requires it), and optionally CacheBreakpoint, a
+// prompt-cache boundary through this part.
 type MessagePart struct {
-	Type     string    `json:"type"`
-	Text     string    `json:"text,omitempty"`
-	ImageURL *ImageURL `json:"image_url,omitempty"`
+	Type            string                 `json:"type"`
+	Text            string                 `json:"text,omitempty"`
+	ImageURL        *string                `json:"image_url,omitempty"`
+	FileID          *string                `json:"file_id,omitempty"`
+	Detail          *ImageDetail           `json:"detail,omitempty"`
+	CacheBreakpoint *PromptCacheBreakpoint `json:"prompt_cache_breakpoint,omitempty"`
 }
 
 func cloneMessageParts(parts []MessagePart) []MessagePart {
 	clones := make([]MessagePart, len(parts))
 	for i, p := range parts {
 		clones[i] = p
+		// Deep-copy pointers: writing through a shared one must not
+		// reach the stored history.
 		if p.ImageURL != nil {
 			u := *p.ImageURL
 			clones[i].ImageURL = &u
+		}
+		if p.FileID != nil {
+			f := *p.FileID
+			clones[i].FileID = &f
+		}
+		if p.CacheBreakpoint != nil {
+			bp := *p.CacheBreakpoint
+			clones[i].CacheBreakpoint = &bp
 		}
 	}
 	return clones
