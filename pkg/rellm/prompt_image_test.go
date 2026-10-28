@@ -55,6 +55,19 @@ func TestPromptBuilder_WithImageURL_Validation(t *testing.T) {
 	}
 }
 
+func TestPromptBuilder_WithImageURL_Trims(t *testing.T) {
+	prompt, err := NewPromptBuilder().
+		WithMessage("hi").
+		WithImageURL("  https://example.com/cat.png  ", ImageOption{}).
+		Build()
+	assert.NoError(t, err)
+	assert.Len(t, prompt.images, 1)
+	assert.Equal(t, "input_image", prompt.images[0].Type)
+	assert.Equal(t, "https://example.com/cat.png", *prompt.images[0].ImageURL)
+	assert.Equal(t, ImageDetailAuto, *prompt.images[0].Detail)
+	assert.Nil(t, prompt.images[0].FileID) // url part, no file id
+}
+
 func TestPromptBuilder_WithImageDataURL_Validation(t *testing.T) {
 	_, err := NewPromptBuilder().
 		WithMessage("hi").
@@ -67,6 +80,14 @@ func TestPromptBuilder_WithImageDataURL_Validation(t *testing.T) {
 		WithImageDataURL("data:image/png;base64,iVBORw0KGgo=", ImageOption{}).
 		Build()
 	assert.NoError(t, err)
+
+	// The prefix check is case-insensitive; the data url itself stays verbatim.
+	prompt, err := NewPromptBuilder().
+		WithMessage("hi").
+		WithImageDataURL("DATA:image/png;base64,iVBORw0KGgo=", ImageOption{}).
+		Build()
+	assert.NoError(t, err)
+	assert.Equal(t, "DATA:image/png;base64,iVBORw0KGgo=", *prompt.images[0].ImageURL)
 }
 
 func TestPromptBuilder_WithImageBytes_Validation(t *testing.T) {
@@ -288,4 +309,17 @@ func TestFilesystemConversation_ImagePartRoundTrip(t *testing.T) {
 	assert.Len(t, userMsg.Content, 2)
 	assert.Equal(t, "input_image", userMsg.Content[1].Type)
 	assert.Equal(t, url, *userMsg.Content[1].ImageURL)
+}
+
+// TestExtractImgURL_DefaultOption pins extractImgURL's default branch — an
+// unknown kind, or the file-id kind that resolveImages routes around it. Both
+// are unreachable through the builder (kinds are internal and every With*
+// door maps to one), so this small test is the only place they are covered;
+// everything else is tested through the builder interface.
+func TestExtractImgURL_DefaultOption(t *testing.T) {
+	for _, kind := range []imageInputKind{imageInputFileID, imageInputKind(99)} {
+		url, err := extractImgURL(promptImageInput{kind: kind, url: "file-123"})
+		assert.ErrorIs(t, err, ErrImageNoContent)
+		assert.Empty(t, url) // errors never carry a half-built url
+	}
 }
